@@ -38,16 +38,16 @@
 
 .dark {
     /* Dark Mode */
-    --bg-primary: #000000;
-    /* Black */
+    --bg-primary: #111111;
+    /* Deep Dark Gray */
     --text-primary: #f3f3f1;
     /* Quartz Light */
     --bg-secondary: #0a0a0a;
     /* Dark Gray */
     --text-secondary: #d4b887;
     /* Quartz Accent */
-    --border-primary: rgba(243, 243, 241, 0.1);
-    /* Quartz Light with opacity */
+    --border-primary: rgba(243, 243, 241, 0.2);
+    /* Increased visibility */
 }
 
 @layer base {
@@ -59,11 +59,9 @@
         @apply bg-bg-primary text-text-primary antialiased transition-colors duration-300;
     }
 
-    /* Dark Mode Gradient Background */
+    /* Solid Dark Background */
     :global(.dark) body {
-        background-image: linear-gradient(to bottom, #032d29 0%, #000000 400px);
-        background-attachment: fixed;
-        background-repeat: no-repeat;
+        background-color: var(--bg-primary);
     }
 
     h1,

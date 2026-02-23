@@ -1,6 +1,6 @@
 ---
-title: "Understanding AI through Mathematical Rigor and Intuition"
-description: "An exploration of deep learning and mathematical engineering, focused on first-principles implementations and the hunt for clear intuition behind the complexity."
+title: "Deep Learning: Bridging Rigor and Intuition"
+description: "A look into the mathematical foundations of AI, with a focus on first-principles implementations and building clear intuition."
 pubDate: 2026-02-23
 author: "Léonel VODOUNOU"
 image: "/images/blog-manifesto.jpg"
@@ -10,7 +10,7 @@ readTime: 3
 draft: false
 ---
 
-Hello there! 👋
+# Why I'm starting this blog
 
 Welcome to my corner of the internet. If you’ve landed here, you’re likely someone who doesn’t just want to know *that* a model works, but *why* it works. 
 

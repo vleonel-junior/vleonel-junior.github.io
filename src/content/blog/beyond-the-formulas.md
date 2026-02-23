@@ -1,6 +1,6 @@
 ---
-title: "The Architecture of Intuition: Reconciling Mathematical Rigor with Artificial Intelligence"
-description: "A manifesto for a systematic exploration of Machine Learning and Mathematical Engineering—where formal elegance meets the pragmatic craft of building from first principles."
+title: "Understanding AI through Mathematical Rigor and Intuition"
+description: "An exploration of deep learning and mathematical engineering, focused on first-principles implementations and the hunt for clear intuition behind the complexity."
 pubDate: 2026-02-23
 author: "Léonel VODOUNOU"
 image: "/images/blog-manifesto.jpg"

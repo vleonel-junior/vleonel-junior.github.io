@@ -31,12 +31,65 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
     image={post.data.image}
     type="article"
 >
-    <main class="flex-1 pt-32 pb-24">
-        <div class="container-custom">
+    <main class="flex-1 pt-32 pb-24 text-quartz dark:text-quartz-light">
+        <div class="container-custom max-w-7xl mx-auto px-4 md:px-6">
+            <!-- Header Section: Aligned with the body column -->
+            <div class="lg:ml-[240px] lg:pl-16 mb-16">
+                <header>
+                    <h1
+                        class="text-3xl md:text-5xl font-sans font-bold mb-8 leading-tight tracking-tight text-quartz dark:text-quartz-light"
+                    >
+                        {post.data.title}
+                    </h1>
+
+                    <p
+                        class="text-lg md:text-xl text-quartz/70 dark:text-quartz-light/70 leading-relaxed mb-12 max-w-3xl"
+                    >
+                        {post.data.description}
+                    </p>
+
+                    <!-- Metadata Grid -->
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+                        <div>
+                            <span
+                                class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                                >Authors</span
+                            >
+                            <span class="text-sm font-medium"
+                                >{post.data.author || "Léonel VODOUNOU"}</span
+                            >
+                        </div>
+                        <div>
+                            <span
+                                class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                                >Affiliations</span
+                            >
+                            <span class="text-sm font-medium"
+                                >Mathematical Engineering & AI</span
+                            >
+                        </div>
+                        <div>
+                            <span
+                                class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                                >Published</span
+                            >
+                            <span class="text-sm font-medium"
+                                >{formattedDate}</span
+                            >
+                        </div>
+                    </div>
+                </header>
+            </div>
+
+            <!-- Main Horizontal Divider -->
             <div
-                class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0"
+                class="border-t border-quartz/10 dark:border-quartz-light/10 mb-16"
             >
-                <!-- Sidebar (TOC) - Left side with divider -->
+            </div>
+
+            <!-- Split Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0">
+                <!-- Sidebar (TOC) - Left side with vertical divider -->
                 <aside
                     class="hidden lg:block pr-12 border-r border-quartz/10 dark:border-quartz-light/10"
                 >
@@ -47,59 +100,6 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
 
                 <!-- Article Content Column -->
                 <div class="min-w-0 lg:pl-16">
-                    <!-- Article Header -->
-                    <header class="mb-16">
-                        <h1
-                            class="text-5xl md:text-7xl font-sans font-bold text-quartz dark:text-quartz-light mb-8 leading-[1.1] tracking-tight"
-                        >
-                            {post.data.title}
-                        </h1>
-
-                        <p
-                            class="text-xl md:text-2xl text-quartz/80 dark:text-quartz-light/80 leading-relaxed mb-12 max-w-2xl"
-                        >
-                            {post.data.description}
-                        </p>
-
-                        <!-- Metadata Grid -->
-                        <div
-                            class="grid grid-cols-2 md:grid-cols-3 gap-8 py-8 border-t border-quartz/10 dark:border-quartz-light/10 mb-8"
-                        >
-                            <div>
-                                <span
-                                    class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                                    >Authors</span
-                                >
-                                <span
-                                    class="text-sm font-medium text-quartz dark:text-quartz-light"
-                                    >{
-                                        post.data.author || "Léonel VODOUNOU"
-                                    }</span
-                                >
-                            </div>
-                            <div>
-                                <span
-                                    class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                                    >Affiliations</span
-                                >
-                                <span
-                                    class="text-sm font-medium text-quartz dark:text-quartz-light"
-                                    >Mathematical Engineering & AI</span
-                                >
-                            </div>
-                            <div>
-                                <span
-                                    class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                                    >Published</span
-                                >
-                                <span
-                                    class="text-sm font-medium text-quartz dark:text-quartz-light"
-                                    >{formattedDate}</span
-                                >
-                            </div>
-                        </div>
-                    </header>
-
                     <article
                         class="prose prose-lg dark:prose-invert max-w-3xl
                         prose-headings:font-sans prose-headings:font-bold prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32

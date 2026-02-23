@@ -203,16 +203,24 @@ const featuredProjects = projectsData.filter((p) => p.featured).slice(0, 4);
 								<span class="font-bold text-quartz dark:text-quartz-light">
 									{pub.title}
 								</span>
-								.
-								<span class="italic text-quartz/80 dark:text-quartz-light/80">
-									{" "}
-									{pub.journal}
-								</span>
-								.
-								<span class="text-quartz/60 dark:text-quartz-light/60">
-									{" "}
-									{pub.authors}
-								</span>
+								{pub.journal && (
+									<>
+										.
+										<span class="italic text-quartz/80 dark:text-quartz-light/80">
+											{" "}
+											{pub.journal}
+										</span>
+									</>
+								)}
+								{pub.authors && (
+									<>
+										.
+										<span class="text-quartz/60 dark:text-quartz-light/60">
+											{" "}
+											{pub.authors}
+										</span>
+									</>
+								)}
 								{pub.url && (
 									<a
 										href={pub.url}

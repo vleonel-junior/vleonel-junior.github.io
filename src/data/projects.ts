@@ -13,14 +13,6 @@ export interface ProjectItem {
 
 export const academicProjects: ProjectItem[] = [
     {
-        title: "Sparse FTT+ (Transformer)",
-        description: "Development of Sparse FT-Transformer+, a new architecture for tabular data combining the performance of Transformers with interpretability. Features include a shared Value matrix across heads and a Sparsemax-based attention mechanism to identify key features.",
-        technologies: ["Deep Learning", "Transformers", "Tabular Data", "Interpretability"],
-        githubUrl: "https://github.com/vleonel-junior/Sparse-FT_Transformer-Plus",
-        year: "2026",
-        category: "Academic"
-    },
-    {
         title: "Gomory - Cutting Plane Method",
         description: "A pure Python implementation of the Gomory cutting plane method for solving Integer Linear Programming (ILP) problems. Designed for educational purposes, it features exact fractional arithmetic and step-by-step simplex tableaux generation.",
         technologies: ["Python", "Linear Programming", "Optimization"],

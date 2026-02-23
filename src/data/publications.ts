@@ -9,10 +9,8 @@ export interface PublicationItem {
 
 export const publicationsData: PublicationItem[] = [
     {
-        title: "Sparse FT-Transformer+: An Interpretable Deep Learning Framework for Knowledge Extraction from Tabular Data (Application to Customer Churn Prediction)",
-        journal: "International Journal of Data Science and Analytics (Under Review)",
+        title: "Coming soon 😎",
         year: "2026",
-        authors: "L. Vodounou, et al.",
-        url: "#"
+        authors: ""
     }
 ];

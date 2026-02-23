@@ -18,7 +18,7 @@ type Props = CollectionEntry<"blog">;
 const post = Astro.props;
 const { Content, headings } = await post.render();
 
-const formattedDate = post.data.pubDate.toLocaleDateString("fr-FR", {
+const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -31,39 +31,42 @@ const formattedDate = post.data.pubDate.toLocaleDateString("fr-FR", {
     image={post.data.image}
     type="article"
 >
-    <main class="flex-1 pt-24 pb-16">
-        <!-- Article Header (Full Width) -->
-        <header class="container px-4 md:px-6 mb-12">
-            <div class="max-w-4xl mx-auto text-center">
+    <main class="flex-1 pt-32 pb-24">
+        <!-- Article Header -->
+        <header class="container-custom mb-16">
+            <div class="max-w-3xl mx-auto">
                 <h1
-                    class="text-4xl md:text-5xl font-serif font-bold text-quartz dark:text-quartz-light mb-6"
+                    class="text-4xl md:text-6xl font-serif font-bold text-quartz dark:text-quartz-light mb-8 leading-tight"
                 >
                     {post.data.title}
                 </h1>
 
                 <div
-                    class="flex items-center justify-center gap-4 text-gray-600 dark:text-gray-400 text-sm"
+                    class="flex items-center gap-6 text-quartz/60 dark:text-quartz-light/60 font-sans text-sm tracking-wide uppercase"
                 >
-                    <time datetime={post.data.pubDate.toISOString()}>
-                        {formattedDate}
-                    </time>
+                    <div class="flex items-center gap-2">
+                        <span>🗓️</span>
+                        <time datetime={post.data.pubDate.toISOString()}>
+                            {formattedDate}
+                        </time>
+                    </div>
                     {
                         post.data.readTime && (
-                            <>
-                                <span>•</span>
-                                <span>{post.data.readTime} min de lecture</span>
-                            </>
+                            <div class="flex items-center gap-2 border-l border-quartz/20 dark:border-quartz-light/20 pl-6">
+                                <span>⏱️</span>
+                                <span>{post.data.readTime} min read</span>
+                            </div>
                         )
                     }
                 </div>
             </div>
         </header>
 
-        <div class="container px-4 md:px-6">
+        <div class="container-custom">
             <div
-                class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-12"
+                class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-16"
             >
-                <!-- Sidebar (TOC) - Desktop Only -->
+                <!-- Sidebar (TOC) -->
                 <aside class="hidden lg:block">
                     <div class="sticky top-32">
                         <TableOfContents headings={headings} />
@@ -72,23 +75,27 @@ const formattedDate = post.data.pubDate.toLocaleDateString("fr-FR", {
 
                 <!-- Main Content Column -->
                 <div class="min-w-0">
-                    <!-- Article Content -->
                     <article
-                        class="prose prose-lg dark:prose-invert max-w-none
-                        prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-white prose-headings:scroll-mt-32
-                        prose-p:text-gray-700 dark:prose-p:text-gray-300
-                        prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
-                        prose-strong:text-gray-900 dark:prose-strong:text-white
-                        prose-code:text-blue-600 dark:prose-code:text-blue-400 prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-                        prose-pre:bg-gray-900 dark:prose-pre:bg-gray-800 prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-gray-700
-                        prose-blockquote:border-l-blue-500 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/20 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r
-                        prose-img:rounded-lg prose-img:shadow-lg mb-16"
+                        class="prose prose-lg dark:prose-invert max-w-3xl
+                        prose-headings:font-serif prose-headings:font-bold prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32
+                        prose-p:text-quartz/80 dark:prose-p:quartz-light/80 prose-p:leading-relaxed prose-p:mb-6
+                        prose-a:text-quartz-accent dark:prose-a:text-quartz-accent prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                        prose-strong:text-quartz dark:prose-strong:text-quartz-light
+                        prose-code:text-quartz-accent dark:prose-code:text-quartz-accent prose-code:bg-quartz/5 dark:prose-code:bg-quartz-light/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+                        prose-pre:bg-quartz/5 dark:prose-pre:bg-black/40 prose-pre:border prose-pre:border-quartz/10 dark:prose-pre:border-quartz-light/10
+                        prose-blockquote:border-l-quartz-accent prose-blockquote:bg-quartz/5 dark:prose-blockquote:bg-quartz-accent/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r prose-blockquote:italic
+                        prose-ul:list-disc prose-ol:list-decimal
+                        prose-img:rounded-xl prose-img:shadow-2xl mb-24"
                     >
                         <Content />
                     </article>
 
                     <!-- Comments Section -->
-                    <Comments />
+                    <div
+                        class="max-w-3xl border-t border-quartz/10 dark:border-quartz-light/10 pt-16"
+                    >
+                        <Comments />
+                    </div>
                 </div>
             </div>
         </div>

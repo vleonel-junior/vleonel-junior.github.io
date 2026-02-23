@@ -10,8 +10,6 @@ readTime: 3
 draft: false
 ---
 
-# Beyond the Formulas: Bridging Mathematical Rigor and AI Intuition
-
 Hello there! 👋
 
 Welcome to my corner of the internet. If you’ve landed here, you’re likely someone who doesn’t just want to know *that* a model works, but *why* it works. 

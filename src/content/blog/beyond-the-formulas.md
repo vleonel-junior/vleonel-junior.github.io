@@ -1,6 +1,6 @@
 ---
-title: "Beyond the Formulas: Bridging Mathematical Rigor and AI Intuition"
-description: "A manifesto for a journey through the fascinating landscapes of Machine Learning, Deep Learning, and Mathematical Engineering."
+title: "The Architecture of Intuition: Reconciling Mathematical Rigor with Artificial Intelligence"
+description: "A manifesto for a systematic exploration of Machine Learning and Mathematical Engineering—where formal elegance meets the pragmatic craft of building from first principles."
 pubDate: 2026-02-23
 author: "Léonel VODOUNOU"
 image: "/images/blog-manifesto.jpg"

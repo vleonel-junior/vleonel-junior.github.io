@@ -49,6 +49,7 @@ export default function CommentSection({ slug }: { slug: string }) {
     const [likerAvatars, setLikerAvatars] = useState<string[]>([]);
     const [uploading, setUploading] = useState(false);
     const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+    const [userCommentLikes, setUserCommentLikes] = useState<Record<string, boolean>>({}); // tracking likes for current user
 
     const AUTHOR_EMAIL = "vleoneljunior@gmail.com";
 
@@ -65,6 +66,9 @@ export default function CommentSection({ slug }: { slug: string }) {
             if (currentUser) {
                 setDisplayName(currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "");
                 checkIfPostLiked(currentUser.email || "");
+                fetchUserCommentLikes(currentUser.email || "");
+            } else {
+                setUserCommentLikes({});
             }
         });
 
@@ -140,6 +144,19 @@ export default function CommentSection({ slug }: { slug: string }) {
         setIsPostLiked(!!data);
     };
 
+    const fetchUserCommentLikes = async (email: string) => {
+        if (!supabase || !email) return;
+        const { data } = await supabase
+            .from('comment_likes')
+            .select('comment_id')
+            .eq('user_email', email);
+        if (data) {
+            const likes: Record<string, boolean> = {};
+            data.forEach((l: { comment_id: string }) => likes[l.comment_id] = true);
+            setUserCommentLikes(likes);
+        }
+    };
+
     const handleEmailLogin = async (e: Event) => {
         e.preventDefault();
         if (!email.trim()) return;
@@ -201,8 +218,24 @@ export default function CommentSection({ slug }: { slug: string }) {
             return;
         }
 
-        if (isPostLiked) return; // Simple: once liked, remains liked for now
+        if (isPostLiked) {
+            // UNLIKE
+            setIsPostLiked(false);
+            setPostLikes(prev => prev - 1);
+            const { error } = await supabase.from('post_likes')
+                .delete()
+                .eq('post_slug', slug)
+                .eq('user_email', user.email);
 
+            if (error) {
+                setIsPostLiked(true);
+                setPostLikes(prev => prev + 1);
+                alert(error.message);
+            }
+            return;
+        }
+
+        // LIKE
         setIsPostLiked(true);
         setPostLikes(prev => prev + 1);
 
@@ -279,7 +312,39 @@ export default function CommentSection({ slug }: { slug: string }) {
             return;
         }
 
-        // Optimistic update
+        const isLiked = userCommentLikes[commentId];
+
+        if (isLiked) {
+            // UNLIKE
+            const newLikes = { ...userCommentLikes };
+            delete newLikes[commentId];
+            setUserCommentLikes(newLikes);
+
+            setComments(comments.map(c =>
+                c.id === commentId ? { ...c, likes: c.likes - 1 } : c
+            ));
+
+            if (user.email === AUTHOR_EMAIL) {
+                const updated = { ...authorLikes };
+                delete updated[commentId];
+                setAuthorLikes(updated);
+            }
+
+            const { error } = await supabase.from('comment_likes')
+                .delete()
+                .eq('comment_id', commentId)
+                .eq('user_email', user.email);
+
+            if (error) {
+                alert(error.message);
+                fetchComments();
+                fetchUserCommentLikes(user.email || "");
+            }
+            return;
+        }
+
+        // LIKE
+        setUserCommentLikes({ ...userCommentLikes, [commentId]: true });
         setComments(comments.map(c =>
             c.id === commentId ? { ...c, likes: c.likes + 1 } : c
         ));
@@ -295,15 +360,11 @@ export default function CommentSection({ slug }: { slug: string }) {
 
         if (error) {
             if (error.code === '23505') {
-                alert("You've already liked this comment!");
-            }
-            setComments(comments.map(c =>
-                c.id === commentId ? { ...c, likes: c.likes - 1 } : c
-            ));
-            if (user.email === AUTHOR_EMAIL) {
-                const updated = { ...authorLikes };
-                delete updated[commentId];
-                setAuthorLikes(updated);
+                // Keep it liked if it was already in DB
+            } else {
+                alert(error.message);
+                fetchComments();
+                fetchUserCommentLikes(user.email || "");
             }
         }
     };
@@ -509,9 +570,9 @@ export default function CommentSection({ slug }: { slug: string }) {
                                     <div class="flex items-center gap-4">
                                         <button
                                             onClick={() => handleLike(comment.id)}
-                                            class="text-xs font-medium text-gray-400 hover:text-quartz dark:hover:text-white flex items-center gap-1 transition"
+                                            class={`text-xs font-medium flex items-center gap-1 transition ${userCommentLikes[comment.id] ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-quartz dark:hover:text-white'}`}
                                         >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill={userCommentLikes[comment.id] ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                             Like {comment.likes > 0 && `(${comment.likes})`}
                                         </button>
                                         <button

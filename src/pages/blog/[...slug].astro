@@ -32,53 +32,78 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
     type="article"
 >
     <main class="flex-1 pt-32 pb-24">
-        <!-- Article Header -->
-        <header class="container-custom mb-16">
-            <div class="max-w-3xl mx-auto">
+        <!-- Article Header (Yang Song Style) -->
+        <header class="container-custom mb-20">
+            <div class="max-w-4xl mx-auto">
                 <h1
-                    class="text-4xl md:text-6xl font-serif font-bold text-quartz dark:text-quartz-light mb-8 leading-tight"
+                    class="text-5xl md:text-7xl font-sans font-bold text-quartz dark:text-quartz-light mb-10 leading-[1.1] tracking-tight"
                 >
                     {post.data.title}
                 </h1>
 
-                <div
-                    class="flex items-center gap-6 text-quartz/60 dark:text-quartz-light/60 font-sans text-sm tracking-wide uppercase"
+                <p
+                    class="text-xl md:text-2xl text-quartz/80 dark:text-quartz-light/80 leading-relaxed mb-12 max-w-3xl"
                 >
-                    <div class="flex items-center gap-2">
-                        <span>🗓️</span>
-                        <time datetime={post.data.pubDate.toISOString()}>
-                            {formattedDate}
-                        </time>
+                    {post.data.description}
+                </p>
+
+                <!-- Metadata Grid -->
+                <div
+                    class="grid grid-cols-2 md:grid-cols-3 gap-8 py-8 border-t border-quartz/10 dark:border-quartz-light/10"
+                >
+                    <div>
+                        <span
+                            class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                            >Authors</span
+                        >
+                        <span
+                            class="text-sm font-medium text-quartz dark:text-quartz-light"
+                            >{post.data.author || "Léonel VODOUNOU"}</span
+                        >
                     </div>
-                    {
-                        post.data.readTime && (
-                            <div class="flex items-center gap-2 border-l border-quartz/20 dark:border-quartz-light/20 pl-6">
-                                <span>⏱️</span>
-                                <span>{post.data.readTime} min read</span>
-                            </div>
-                        )
-                    }
+                    <div>
+                        <span
+                            class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                            >Affiliations</span
+                        >
+                        <span
+                            class="text-sm font-medium text-quartz dark:text-quartz-light"
+                            >Mathematical Engineering & AI</span
+                        >
+                    </div>
+                    <div>
+                        <span
+                            class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                            >Published</span
+                        >
+                        <span
+                            class="text-sm font-medium text-quartz dark:text-quartz-light"
+                            >{formattedDate}</span
+                        >
+                    </div>
                 </div>
             </div>
         </header>
 
         <div class="container-custom">
             <div
-                class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-16"
+                class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0"
             >
-                <!-- Sidebar (TOC) -->
-                <aside class="hidden lg:block">
+                <!-- Sidebar (TOC) - Left side with divider -->
+                <aside
+                    class="hidden lg:block pr-12 border-r border-quartz/10 dark:border-quartz-light/10"
+                >
                     <div class="sticky top-32">
                         <TableOfContents headings={headings} />
                     </div>
                 </aside>
 
                 <!-- Main Content Column -->
-                <div class="min-w-0">
+                <div class="min-w-0 lg:pl-16">
                     <article
                         class="prose prose-lg dark:prose-invert max-w-3xl
-                        prose-headings:font-serif prose-headings:font-bold prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32
-                        prose-p:text-quartz/80 dark:prose-p:quartz-light/80 prose-p:leading-relaxed prose-p:mb-6
+                        prose-headings:font-sans prose-headings:font-bold prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32
+                        prose-p:text-quartz/90 dark:prose-p:text-quartz-light/90 prose-p:leading-relaxed prose-p:mb-8 text-justify
                         prose-a:text-quartz-accent dark:prose-a:text-quartz-accent prose-a:font-medium prose-a:no-underline hover:prose-a:underline
                         prose-strong:text-quartz dark:prose-strong:text-quartz-light
                         prose-code:text-quartz-accent dark:prose-code:text-quartz-accent prose-code:bg-quartz/5 dark:prose-code:bg-quartz-light/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none

@@ -15,23 +15,17 @@ const filteredHeadings = headings.filter(
 
 <nav class="toc-container">
     <h2
-        class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 pl-4"
+        class="text-base font-bold text-quartz dark:text-quartz-light mb-6 uppercase tracking-[0.1em]"
     >
-        Dans cet article
+        Contents
     </h2>
-    <ul class="space-y-1 text-sm border-l border-gray-200 dark:border-gray-800">
+    <ul class="space-y-3 text-sm">
         {
             filteredHeadings.map((heading) => (
-                <li>
+                <li class={heading.depth > 2 ? "pl-4" : ""}>
                     <a
                         href={`#${heading.slug}`}
-                        class={`block py-1.5 pl-4 border-l-2 -ml-[1px] transition-colors duration-200
-              ${
-                  heading.depth === 2
-                      ? "text-gray-600 dark:text-gray-400 hover:text-quartz dark:hover:text-quartz-light hover:border-quartz dark:hover:border-quartz-light border-transparent"
-                      : "text-gray-500 dark:text-gray-500 hover:text-quartz dark:hover:text-quartz-light ml-2 border-transparent"
-              }
-            `}
+                        class="block text-quartz/60 dark:text-quartz-light/50 hover:text-quartz dark:hover:text-quartz-light transition-colors duration-200"
                         data-toc-link
                     >
                         {heading.text}

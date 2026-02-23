@@ -1,4 +1,5 @@
 
+// Supabase client initialization - verified production deployment
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;

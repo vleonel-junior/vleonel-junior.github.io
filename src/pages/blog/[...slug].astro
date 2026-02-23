@@ -31,79 +31,88 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
     image={post.data.image}
     type="article"
 >
-    <main class="flex-1 pt-32 pb-24 text-quartz dark:text-quartz-light">
-        <div class="container-custom max-w-7xl mx-auto px-4 md:px-6">
-            <!-- Header Section: Aligned with the body column -->
-            <div class="lg:ml-[240px] lg:pl-16 mb-16">
-                <header>
-                    <h1
-                        class="text-4xl md:text-5xl font-sans font-bold mb-8 leading-tight tracking-tight text-quartz dark:text-quartz-light"
-                    >
-                        {post.data.title}
-                    </h1>
+    <main
+        class="flex-1 pt-32 pb-24 text-quartz dark:text-quartz-light overflow-x-hidden"
+    >
+        <!-- Header Section -->
+        <div class="max-w-5xl mx-auto px-4 md:px-6">
+            <header class="mb-12">
+                <h1
+                    class="text-3xl md:text-5xl font-sans font-black mb-8 leading-tight tracking-tight text-quartz dark:text-quartz-light"
+                >
+                    {post.data.title}
+                </h1>
 
-                    <p
-                        class="text-lg md:text-xl text-quartz/70 dark:text-quartz-light/70 leading-relaxed mb-12 max-w-3xl"
-                    >
-                        {post.data.description}
-                    </p>
+                <p
+                    class="text-md md:text-lg text-quartz/70 dark:text-quartz-light/70 leading-relaxed max-w-3xl"
+                >
+                    {post.data.description}
+                </p>
+            </header>
+        </div>
 
-                    <!-- Metadata Grid -->
-                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-                        <div>
-                            <span
-                                class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                                >Authors</span
-                            >
-                            <span class="text-sm font-medium"
-                                >{post.data.author || "Léonel VODOUNOU"}</span
-                            >
-                        </div>
-                        <div>
-                            <span
-                                class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                                >Affiliations</span
-                            >
-                            <span class="text-sm font-medium"
-                                >Mathematical Engineering & AI</span
-                            >
-                        </div>
-                        <div>
-                            <span
-                                class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                                >Published</span
-                            >
-                            <span class="text-sm font-medium"
-                                >{formattedDate}</span
-                            >
-                        </div>
+        <!-- Metadata Section: True edge-to-edge lines -->
+        <div
+            class="w-full border-y border-quartz/10 dark:border-quartz-light/10 mb-16 py-8"
+        >
+            <div class="max-w-5xl mx-auto px-4 md:px-6">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div>
+                        <span
+                            class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                            >Authors</span
+                        >
+                        <span class="text-sm font-medium"
+                            >{post.data.author || "Léonel VODOUNOU"}</span
+                        >
                     </div>
-                </header>
+                    <div>
+                        <span
+                            class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                            >Affiliations</span
+                        >
+                        <span class="text-sm font-medium"
+                            >Mathematical Engineering & AI</span
+                        >
+                    </div>
+                    <div>
+                        <span
+                            class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                            >Published</span
+                        >
+                        <span class="text-sm font-medium">{formattedDate}</span>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <!-- Horizontal Divider -->
-            <div
-                class="border-t border-quartz/10 dark:border-quartz-light/10 mb-16"
-            >
-            </div>
-
-            <!-- Main Content Split -->
-            <div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0">
-                <!-- Sidebar (TOC) - Left side with vertical divider -->
+        <!-- Main Content Area -->
+        <div class="max-w-5xl mx-auto px-4 md:px-6">
+            <div class="flex flex-col lg:flex-row gap-0">
+                <!-- Sidebar TOC - Desktop only -->
                 <aside
-                    class="hidden lg:block pr-12 border-r border-quartz/10 dark:border-quartz-light/10"
+                    class="hidden lg:block w-[240px] flex-shrink-0 pr-12 border-r border-quartz/10 dark:border-quartz-light/10"
                 >
                     <div class="sticky top-32">
                         <TableOfContents headings={headings} />
                     </div>
                 </aside>
 
-                <!-- Article Content Column -->
-                <div class="min-w-0 lg:pl-16">
+                <!-- Article & Mobile TOC -->
+                <div class="flex-1 min-w-0 lg:pl-16">
+                    <!-- Mobile TOC: Boxed style -->
+                    <div
+                        class="lg:hidden mb-12 p-8 border border-quartz/10 dark:border-quartz-light/10 bg-quartz/[0.02] dark:bg-white/[0.02] rounded-lg"
+                    >
+                        <TableOfContents headings={headings} />
+                    </div>
+
                     <article
-                        class="prose prose-lg dark:prose-invert max-w-3xl
-                        prose-headings:font-sans prose-headings:font-bold prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32
-                        prose-p:text-quartz/90 dark:prose-p:text-quartz-light/90 prose-p:leading-relaxed prose-p:mb-8 text-justify
+                        class="prose prose-lg dark:prose-invert max-w-none
+                        prose-headings:font-sans prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32
+                        prose-h1:font-black prose-h2:font-extrabold prose-h2:border-b prose-h2:border-quartz/10 dark:prose-h2:border-quartz-light/10 prose-h2:pb-4 prose-h2:mt-10 prose-h2:mb-6
+                        prose-h3:font-bold prose-h3:mt-8 prose-h3:mb-4
+                        prose-p:text-quartz/90 dark:prose-p:text-quartz-light/90 prose-p:leading-normal prose-p:mb-6 prose-p:text-justify
                         prose-a:text-quartz-accent dark:prose-a:text-quartz-accent prose-a:font-medium prose-a:no-underline hover:prose-a:underline
                         prose-strong:text-quartz dark:prose-strong:text-quartz-light
                         prose-code:text-quartz-accent dark:prose-code:text-quartz-accent prose-code:bg-quartz/5 dark:prose-code:bg-quartz-light/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
@@ -117,7 +126,7 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
 
                     <!-- Comments Section -->
                     <div
-                        class="max-w-3xl border-t border-quartz/10 dark:border-quartz-light/10 pt-16"
+                        class="border-t border-quartz/10 dark:border-quartz-light/10 pt-16"
                     >
                         <Comments />
                     </div>

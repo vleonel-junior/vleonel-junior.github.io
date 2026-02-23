@@ -14,18 +14,20 @@ const filteredHeadings = headings.filter(
 ---
 
 <nav class="toc-container">
-    <h2
-        class="text-base font-bold text-quartz dark:text-quartz-light mb-6 uppercase tracking-[0.1em]"
-    >
+    <h2 class="text-2xl font-extrabold text-quartz dark:text-quartz-light mb-8">
         Contents
     </h2>
-    <ul class="space-y-3 text-sm">
+    <ul class="space-y-4 text-sm">
         {
             filteredHeadings.map((heading) => (
                 <li class={heading.depth > 2 ? "pl-4" : ""}>
                     <a
                         href={`#${heading.slug}`}
-                        class="block text-quartz/60 dark:text-quartz-light/50 hover:text-quartz dark:hover:text-quartz-light transition-colors duration-200"
+                        class={`block transition-colors duration-200 ${
+                            heading.depth === 2
+                                ? "font-bold text-quartz dark:text-quartz-light"
+                                : "font-medium text-quartz/60 dark:text-quartz-light/60"
+                        } hover:text-quartz dark:hover:text-quartz-light`}
                         data-toc-link
                     >
                         {heading.text}
@@ -53,7 +55,6 @@ const filteredHeadings = headings.filter(
                                 "dark:text-quartz-light",
                                 "border-quartz",
                                 "dark:border-quartz-light",
-                                "font-medium",
                             );
                             l.classList.add("border-transparent");
                         });
@@ -70,7 +71,6 @@ const filteredHeadings = headings.filter(
                             "dark:text-quartz-light",
                             "border-quartz",
                             "dark:border-quartz-light",
-                            "font-medium",
                         );
                     }
                 }

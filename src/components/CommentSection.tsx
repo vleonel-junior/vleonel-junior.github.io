@@ -26,6 +26,7 @@ interface Comment {
     id: string;
     content: string;
     author_name: string;
+    author_email: string;
     author_avatar: string; // URL or null
     created_at: string;
     parent_id: string | null;
@@ -555,7 +556,14 @@ export default function CommentSection({ slug }: { slug: string }) {
                                 </div>
                                 <div class="flex-1">
                                     <div class="flex items-baseline justify-between mb-1">
-                                        <h4 class="text-sm font-bold text-quartz dark:text-quartz-light">{comment.author_name}</h4>
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="text-sm font-bold text-quartz dark:text-quartz-light">{comment.author_name}</h4>
+                                            {comment.author_email === AUTHOR_EMAIL && (
+                                                <span class="text-[10px] font-bold bg-quartz/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-quartz/60 dark:text-quartz-light/60">
+                                                    Author
+                                                </span>
+                                            )}
+                                        </div>
                                         <span class="text-xs text-gray-400">{timeAgo(comment.created_at)}</span>
                                     </div>
                                     {authorLikes[comment.id] && (

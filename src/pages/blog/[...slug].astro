@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Comments from "../../components/Comments.astro";
+import Newsletter from "../../components/Newsletter.astro";
 import TableOfContents from "../../components/TableOfContents.astro";
 import { getCollection } from "astro:content";
 import type { CollectionEntry } from "astro:content";
@@ -124,10 +125,11 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
                         <Content />
                     </article>
 
-                    <!-- Comments Section -->
+                    <!-- Newsletter & Comments Section -->
                     <div
                         class="border-t border-quartz/10 dark:border-quartz-light/10 pt-16"
                     >
+                        <Newsletter />
                         <Comments />
                     </div>
                 </div>

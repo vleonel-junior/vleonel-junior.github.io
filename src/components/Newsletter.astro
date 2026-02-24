@@ -1,0 +1,65 @@
+---
+
+---
+
+<section
+    class="my-16 p-8 border border-quartz/10 dark:border-quartz-light/10 bg-quartz/[0.02] dark:bg-white/[0.02] rounded-xl"
+>
+    <div class="max-w-2xl">
+        <h3
+            class="text-xl font-bold text-quartz dark:text-quartz-light mb-2 flex items-center gap-2"
+        >
+            <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="text-quartz-accent"
+            >
+                <path
+                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                ></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            Weekly Notes
+        </h3>
+        <p
+            class="text-sm text-quartz/70 dark:text-quartz-light/70 mb-6 leading-relaxed"
+        >
+            Every Sunday, I share what I’ve been learning — papers, ideas,
+            experiments, and questions that stayed with me.
+        </p>
+
+        <form
+            action="https://buttondown.email/api/emails/embed-subscribe/vleonel-junior"
+            method="post"
+            target="popupwindow"
+            onsubmit="window.open('https://buttondown.email/vleonel-junior', 'popupwindow')"
+            class="flex flex-col sm:flex-row gap-3"
+        >
+            <input
+                type="email"
+                name="email"
+                placeholder="your@email.com"
+                required
+                class="flex-1 px-4 py-2.5 rounded-lg border-2 border-quartz/10 dark:border-quartz-light/10 bg-white dark:bg-black/20 text-sm focus:border-quartz-accent outline-none transition-all shadow-sm"
+            />
+            <input type="hidden" value="1" name="embed" />
+            <button
+                type="submit"
+                class="bg-quartz dark:bg-quartz-light text-white dark:text-quartz px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-quartz-accent hover:text-white dark:hover:bg-quartz-accent dark:hover:text-white transition-all shadow-md active:scale-95"
+            >
+                Subscribe
+            </button>
+        </form>
+        <p
+            class="mt-4 text-[10px] text-quartz/40 dark:text-quartz-light/40 italic"
+        >
+            You can unsubscribe at any time with a single click.
+        </p>
+    </div>
+</section>

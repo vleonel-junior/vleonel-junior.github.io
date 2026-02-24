@@ -3,7 +3,7 @@ title: "From Math to Models"
 description: "On studying machine learning in depth — from formal foundations to systems that truly work."
 pubDate: 2026-02-23
 author: "Léonel VODOUNOU"
-category: "Research"
+category: "Prologue"
 tags: ["Machine Learning", "Philosophy", "Research"]
 ---
 

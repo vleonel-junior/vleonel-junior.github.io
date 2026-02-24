@@ -504,6 +504,11 @@ export default function CommentSection({ slug }: { slug: string }) {
                                 ) : (
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="text-xs font-bold">{displayName || "Set your name"}</span>
+                                        {user.email === AUTHOR_EMAIL && (
+                                            <span class="text-[10px] font-bold bg-quartz/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-quartz/60 dark:text-quartz-light/60">
+                                                Author
+                                            </span>
+                                        )}
                                         <button type="button" onClick={() => setIsEditingName(true)} class="text-[10px] text-gray-400 hover:text-red-500 transition">Edit profile</button>
                                     </div>
                                 )}

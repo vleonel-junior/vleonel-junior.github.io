@@ -619,7 +619,14 @@ export default function CommentSection({ slug }: { slug: string }) {
                                         </div>
                                         <div class="flex-1">
                                             <div class="flex items-baseline justify-between mb-1">
-                                                <h4 class="text-xs font-bold text-quartz dark:text-quartz-light">{reply.author_name}</h4>
+                                                <div class="flex items-center gap-2">
+                                                    <h4 class="text-xs font-bold text-quartz dark:text-quartz-light">{reply.author_name}</h4>
+                                                    {reply.author_email === AUTHOR_EMAIL && (
+                                                        <span class="text-[9px] font-bold bg-quartz/5 dark:bg-white/10 px-1 py-0.5 rounded text-quartz/60 dark:text-quartz-light/60">
+                                                            Author
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <span class="text-[10px] text-gray-400">{timeAgo(reply.created_at)}</span>
                                             </div>
                                             <div class="text-sm text-quartz/80 dark:text-quartz-light/80 leading-relaxed whitespace-pre-wrap">

@@ -6,6 +6,13 @@ const posts = (await getCollection("blog")).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
+// Calculate reading time for each post
+const processedPosts = posts.map((post) => {
+	const words = post.body.split(/\s+/).length;
+	const readingTime = post.data.readTime || Math.ceil(words / 200);
+	return { ...post, readingTime };
+});
+
 const title = "Blog - Léonel VODOUNOU";
 const description =
 	"Articles sur le Génie Mathématique, l'IA et le Deep Learning.";
@@ -22,7 +29,7 @@ const description =
 
 			<div class="divide-y divide-quartz/5 dark:divide-white/5">
 				{
-					posts.map((post) => (
+					processedPosts.map((post) => (
 						<article class="group py-12 first:pt-0 last:pb-0">
 							<div class="flex flex-col md:flex-row gap-8 items-start">
 								{/* Content Left */}
@@ -44,15 +51,8 @@ const description =
 												},
 											)}
 										</time>
-										{post.data.readTime && (
-											<>
-												<span>•</span>
-												<span>
-													{post.data.readTime} min
-													read
-												</span>
-											</>
-										)}
+										<span>•</span>
+										<span>{post.readingTime} min read</span>
 									</div>
 
 									<h2 class="text-2xl md:text-3xl font-serif font-bold text-quartz dark:text-quartz-light group-hover:text-green-800 dark:group-hover:text-green-400 transition-colors mb-3 leading-tight">

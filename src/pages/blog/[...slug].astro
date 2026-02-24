@@ -24,6 +24,9 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
 });
+
+const words = post.body.split(/\s+/).length;
+const readingTime = Math.ceil(words / 200);
 ---
 
 <Layout
@@ -57,7 +60,7 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
             class="w-full border-y border-quartz/10 dark:border-quartz-light/10 mb-16 py-8"
         >
             <div class="max-w-5xl mx-auto px-4 md:px-6">
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
                     <div>
                         <span
                             class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
@@ -82,6 +85,15 @@ const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
                             >Published</span
                         >
                         <span class="text-sm font-medium">{formattedDate}</span>
+                    </div>
+                    <div>
+                        <span
+                            class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
+                            >Read Time</span
+                        >
+                        <span class="text-sm font-medium"
+                            >{readingTime} min read</span
+                        >
                     </div>
                 </div>
             </div>

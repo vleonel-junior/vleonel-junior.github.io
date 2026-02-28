@@ -71,7 +71,9 @@ export default function CommentSection({ slug }: { slug: string }) {
     const [likerAvatars, setLikerAvatars] = useState<Liker[]>([]);
     const [uploading, setUploading] = useState(false);
     const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
-    const [userCommentLikes, setUserCommentLikes] = useState<Record<string, boolean>>({}); // tracking likes for current user
+    const [userCommentLikes, setUserCommentLikes] = useState<Record<string, boolean>>({});
+    const [commentLikerMap, setCommentLikerMap] = useState<Record<string, Liker[]>>({});
+    const [showLikerPanel, setShowLikerPanel] = useState(false); // tracking likes for current user
 
     const AUTHOR_EMAIL = "vleoneljunior@gmail.com";
 
@@ -97,6 +99,7 @@ export default function CommentSection({ slug }: { slug: string }) {
         fetchComments();
         fetchAuthorLikes();
         fetchPostStats();
+        fetchCommentLikers();
 
         return () => subscription.unsubscribe();
     }, [slug]);
@@ -156,6 +159,37 @@ export default function CommentSection({ slug }: { slug: string }) {
                 }
             });
             setLikerAvatars(likers);
+        }
+    };
+
+    const fetchCommentLikers = async () => {
+        if (!supabase) return;
+        // Get all comment IDs for this post
+        const { data: commentData } = await supabase
+            .from('comments')
+            .select('id')
+            .eq('post_slug', slug);
+
+        if (!commentData || commentData.length === 0) return;
+
+        const commentIds = commentData.map((c: { id: string }) => c.id);
+
+        const { data: likesData } = await supabase
+            .from('comment_likes')
+            .select('comment_id, user_email, user_name, user_avatar')
+            .in('comment_id', commentIds);
+
+        if (likesData) {
+            const map: Record<string, Liker[]> = {};
+            likesData.forEach((d: { comment_id: string; user_email: string; user_name: string | null; user_avatar: string | null }) => {
+                if (!map[d.comment_id]) map[d.comment_id] = [];
+                map[d.comment_id].push({
+                    avatar: d.user_avatar,
+                    name: d.user_name || d.user_email.split('@')[0],
+                    email: d.user_email
+                });
+            });
+            setCommentLikerMap(map);
         }
     };
 
@@ -336,8 +370,14 @@ export default function CommentSection({ slug }: { slug: string }) {
                 .update({ user_avatar: publicUrl })
                 .eq('user_email', user.email);
 
+            // Also update avatar in comment_likes
+            await supabase.from('comment_likes')
+                .update({ user_avatar: publicUrl })
+                .eq('user_email', user.email);
+
             // Refresh the liker avatars display
             fetchPostStats();
+            fetchCommentLikers();
 
             alert('Avatar updated successfully!');
         } catch (error: any) {
@@ -396,7 +436,9 @@ export default function CommentSection({ slug }: { slug: string }) {
 
         const { error } = await supabase.from('comment_likes').insert({
             comment_id: commentId,
-            user_email: user.email || ''
+            user_email: user.email || '',
+            user_name: displayName || user.email?.split('@')[0] || 'Anonymous',
+            user_avatar: user.user_metadata?.avatar_url || null
         });
 
         if (error) {
@@ -408,6 +450,7 @@ export default function CommentSection({ slug }: { slug: string }) {
                 fetchUserCommentLikes(user.email || "");
             }
         }
+        fetchCommentLikers();
     };
 
     // Organize comments into threads (simple 1-level nesting for now)
@@ -420,20 +463,42 @@ export default function CommentSection({ slug }: { slug: string }) {
             <div class="border-y border-gray-100 dark:border-white/10 py-3 mb-10">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <div class="flex -space-x-2 overflow-hidden">
-                            {likerAvatars.length > 0 ? (
-                                likerAvatars.map((liker, i) => (
-                                    liker.avatar ? (
-                                        <img key={i} class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 object-cover" src={liker.avatar} alt={liker.name} title={liker.name} />
-                                    ) : (
-                                        <div key={i} class="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 text-white text-xs font-bold" style={{ backgroundColor: emailToColor(liker.email) }} title={liker.name}>
-                                            {liker.name.charAt(0).toUpperCase()}
-                                        </div>
-                                    )
-                                ))
-                            ) : (
-                                <div class="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
-                                    <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                        <div class="relative">
+                            <div class="flex -space-x-2 overflow-hidden cursor-pointer" onClick={() => setShowLikerPanel(!showLikerPanel)}>
+                                {likerAvatars.length > 0 ? (
+                                    likerAvatars.map((liker, i) => (
+                                        liker.avatar ? (
+                                            <img key={i} class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 object-cover hover:scale-110 transition-transform" src={liker.avatar} alt={liker.name} title={liker.name} />
+                                        ) : (
+                                            <div key={i} class="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 text-white text-xs font-bold hover:scale-110 transition-transform" style={{ backgroundColor: emailToColor(liker.email) }} title={liker.name}>
+                                                {liker.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )
+                                    ))
+                                ) : (
+                                    <div class="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
+                                        <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                                    </div>
+                                )}
+                            </div>
+                            {/* Liker Panel Popover */}
+                            {showLikerPanel && likerAvatars.length > 0 && (
+                                <div class="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-white/10 p-3 z-50 min-w-[200px] animate-in fade-in slide-in-from-top-1 duration-150">
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Liked by</p>
+                                    <div class="space-y-2 max-h-[200px] overflow-y-auto">
+                                        {likerAvatars.map((liker, i) => (
+                                            <div key={i} class="flex items-center gap-2">
+                                                {liker.avatar ? (
+                                                    <img class="w-6 h-6 rounded-full object-cover" src={liker.avatar} alt={liker.name} />
+                                                ) : (
+                                                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ backgroundColor: emailToColor(liker.email) }}>
+                                                        {liker.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span class="text-xs font-medium text-quartz dark:text-quartz-light">{liker.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -600,7 +665,7 @@ export default function CommentSection({ slug }: { slug: string }) {
                                             onClick={() => setPreviewAvatar(comment.author_avatar)}
                                         />
                                     ) : (
-                                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-xs font-bold">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: emailToColor(comment.author_email) }}>
                                             {comment.author_name[0].toUpperCase()}
                                         </div>
                                     )}
@@ -634,6 +699,22 @@ export default function CommentSection({ slug }: { slug: string }) {
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill={userCommentLikes[comment.id] ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                             Like {comment.likes > 0 && `(${comment.likes})`}
                                         </button>
+                                        {commentLikerMap[comment.id] && commentLikerMap[comment.id].length > 0 && (
+                                            <div class="flex -space-x-1.5 items-center" title={commentLikerMap[comment.id].map(l => l.name).join(', ')}>
+                                                {commentLikerMap[comment.id].slice(0, 3).map((liker, i) => (
+                                                    liker.avatar ? (
+                                                        <img key={i} class="w-5 h-5 rounded-full ring-1 ring-white dark:ring-gray-900 object-cover" src={liker.avatar} alt={liker.name} />
+                                                    ) : (
+                                                        <div key={i} class="w-5 h-5 rounded-full ring-1 ring-white dark:ring-gray-900 flex items-center justify-center text-white text-[8px] font-bold" style={{ backgroundColor: emailToColor(liker.email) }}>
+                                                            {liker.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )
+                                                ))}
+                                                {commentLikerMap[comment.id].length > 3 && (
+                                                    <span class="text-[10px] text-gray-400 ml-1">+{commentLikerMap[comment.id].length - 3}</span>
+                                                )}
+                                            </div>
+                                        )}
                                         <button
                                             onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
                                             class="text-xs font-medium text-gray-400 hover:text-quartz dark:hover:text-white flex items-center gap-1 transition"
@@ -658,7 +739,7 @@ export default function CommentSection({ slug }: { slug: string }) {
                                                     onClick={() => setPreviewAvatar(reply.author_avatar)}
                                                 />
                                             ) : (
-                                                <div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 text-[10px] font-bold">
+                                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ backgroundColor: emailToColor(reply.author_email) }}>
                                                     {reply.author_name[0].toUpperCase()}
                                                 </div>
                                             )}
@@ -692,6 +773,22 @@ export default function CommentSection({ slug }: { slug: string }) {
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill={userCommentLikes[reply.id] ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                                     Like {reply.likes > 0 && `(${reply.likes})`}
                                                 </button>
+                                                {commentLikerMap[reply.id] && commentLikerMap[reply.id].length > 0 && (
+                                                    <div class="flex -space-x-1 items-center" title={commentLikerMap[reply.id].map(l => l.name).join(', ')}>
+                                                        {commentLikerMap[reply.id].slice(0, 3).map((liker, i) => (
+                                                            liker.avatar ? (
+                                                                <img key={i} class="w-4 h-4 rounded-full ring-1 ring-white dark:ring-gray-900 object-cover" src={liker.avatar} alt={liker.name} />
+                                                            ) : (
+                                                                <div key={i} class="w-4 h-4 rounded-full ring-1 ring-white dark:ring-gray-900 flex items-center justify-center text-white text-[7px] font-bold" style={{ backgroundColor: emailToColor(liker.email) }}>
+                                                                    {liker.name.charAt(0).toUpperCase()}
+                                                                </div>
+                                                            )
+                                                        ))}
+                                                        {commentLikerMap[reply.id].length > 3 && (
+                                                            <span class="text-[9px] text-gray-400 ml-1">+{commentLikerMap[reply.id].length - 3}</span>
+                                                        )}
+                                                    </div>
+                                                )}
                                                 <button
                                                     onClick={() => {
                                                         setReplyTo(replyTo === comment.id ? null : comment.id);

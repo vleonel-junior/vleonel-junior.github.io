@@ -421,6 +421,8 @@ export default function CommentSection({ slug }: { slug: string }) {
                 alert(error.message);
                 fetchComments();
                 fetchUserCommentLikes(user.email || "");
+            } else {
+                fetchCommentLikers();
             }
             return;
         }

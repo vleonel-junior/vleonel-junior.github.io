@@ -33,6 +33,27 @@ interface Comment {
     likes: number;
 }
 
+interface Liker {
+    avatar: string | null;
+    name: string;
+    email: string;
+}
+
+// Generate a consistent color from an email string
+function emailToColor(email: string): string {
+    const colors = [
+        '#E57373', '#F06292', '#BA68C8', '#9575CD',
+        '#7986CB', '#64B5F6', '#4FC3F7', '#4DD0E1',
+        '#4DB6AC', '#81C784', '#AED581', '#FFD54F',
+        '#FFB74D', '#FF8A65', '#A1887F', '#90A4AE'
+    ];
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+        hash = email.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+}
+
 export default function CommentSection({ slug }: { slug: string }) {
     const [comments, setComments] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -47,7 +68,7 @@ export default function CommentSection({ slug }: { slug: string }) {
     const [authorLikes, setAuthorLikes] = useState<Record<string, boolean>>({}); // comment_id -> likedByAuthor
     const [postLikes, setPostLikes] = useState<number>(0);
     const [isPostLiked, setIsPostLiked] = useState<boolean>(false);
-    const [likerAvatars, setLikerAvatars] = useState<string[]>([]);
+    const [likerAvatars, setLikerAvatars] = useState<Liker[]>([]);
     const [uploading, setUploading] = useState(false);
     const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
     const [userCommentLikes, setUserCommentLikes] = useState<Record<string, boolean>>({}); // tracking likes for current user
@@ -118,17 +139,23 @@ export default function CommentSection({ slug }: { slug: string }) {
 
         if (!error && count !== null) setPostLikes(count);
 
-        // Get recent avatars
-        const { data: avatarData } = await supabase
+        // Get recent likers (avatars + names for initials)
+        const { data: likerData } = await supabase
             .from('post_likes')
-            .select('user_avatar')
+            .select('user_avatar, user_name, user_email')
             .eq('post_slug', slug)
-            .not('user_avatar', 'is', null)
             .limit(5);
 
-        if (avatarData) {
-            const avatars = avatarData.map((d: { user_avatar: string | null }) => d.user_avatar).filter((av: string | null): av is string => !!av);
-            setLikerAvatars(Array.from(new Set(avatars)));
+        if (likerData) {
+            const seen = new Set<string>();
+            const likers: Liker[] = [];
+            likerData.forEach((d: { user_avatar: string | null; user_name: string | null; user_email: string }) => {
+                if (!seen.has(d.user_email)) {
+                    seen.add(d.user_email);
+                    likers.push({ avatar: d.user_avatar, name: d.user_name || d.user_email.split('@')[0], email: d.user_email });
+                }
+            });
+            setLikerAvatars(likers);
         }
     };
 
@@ -244,7 +271,8 @@ export default function CommentSection({ slug }: { slug: string }) {
         const { error } = await supabase.from('post_likes').insert({
             post_slug: slug,
             user_email: user.email || '',
-            user_avatar: user.user_metadata?.avatar_url || null
+            user_avatar: user.user_metadata?.avatar_url || null,
+            user_name: displayName || user.email?.split('@')[0] || 'Anonymous'
         });
 
         if (error) {
@@ -302,6 +330,14 @@ export default function CommentSection({ slug }: { slug: string }) {
                 ...user,
                 user_metadata: { ...user.user_metadata, avatar_url: publicUrl }
             });
+
+            // Also update avatar in post_likes so stacked circles stay current
+            await supabase.from('post_likes')
+                .update({ user_avatar: publicUrl })
+                .eq('user_email', user.email);
+
+            // Refresh the liker avatars display
+            fetchPostStats();
 
             alert('Avatar updated successfully!');
         } catch (error: any) {
@@ -386,8 +422,14 @@ export default function CommentSection({ slug }: { slug: string }) {
                     <div class="flex items-center gap-4">
                         <div class="flex -space-x-2 overflow-hidden">
                             {likerAvatars.length > 0 ? (
-                                likerAvatars.map((av, i) => (
-                                    <img key={i} class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 object-cover" src={av} alt="" />
+                                likerAvatars.map((liker, i) => (
+                                    liker.avatar ? (
+                                        <img key={i} class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 object-cover" src={liker.avatar} alt={liker.name} title={liker.name} />
+                                    ) : (
+                                        <div key={i} class="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 text-white text-xs font-bold" style={{ backgroundColor: emailToColor(liker.email) }} title={liker.name}>
+                                            {liker.name.charAt(0).toUpperCase()}
+                                        </div>
+                                    )
                                 ))
                             ) : (
                                 <div class="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center ring-2 ring-white dark:ring-gray-900">

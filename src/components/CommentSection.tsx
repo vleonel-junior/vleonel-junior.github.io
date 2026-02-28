@@ -118,17 +118,16 @@ export default function CommentSection({ slug }: { slug: string }) {
 
         if (!error && count !== null) setPostLikes(count);
 
-        // Get recent avatars (mocking some for the stack look if table is empty or just getting unique authors from comments)
-        // Ideally we'd join but let's keep it simple: get first 5 distinct avatars from commenters + likers
+        // Get recent avatars
         const { data: avatarData } = await supabase
-            .from('comments')
-            .select('author_avatar')
+            .from('post_likes')
+            .select('user_avatar')
             .eq('post_slug', slug)
-            .not('author_avatar', 'is', null)
+            .not('user_avatar', 'is', null)
             .limit(5);
 
         if (avatarData) {
-            const avatars = avatarData.map((d: { author_avatar: string | null }) => d.author_avatar).filter((av: string | null): av is string => !!av);
+            const avatars = avatarData.map((d: { user_avatar: string | null }) => d.user_avatar).filter((av: string | null): av is string => !!av);
             setLikerAvatars(Array.from(new Set(avatars)));
         }
     };
@@ -242,7 +241,8 @@ export default function CommentSection({ slug }: { slug: string }) {
 
         const { error } = await supabase.from('post_likes').insert({
             post_slug: slug,
-            user_email: user.email || ''
+            user_email: user.email || '',
+            user_avatar: user.user_metadata?.avatar_url || null
         });
 
         if (error) {
@@ -629,8 +629,33 @@ export default function CommentSection({ slug }: { slug: string }) {
                                                 </div>
                                                 <span class="text-[10px] text-gray-400">{timeAgo(reply.created_at)}</span>
                                             </div>
-                                            <div class="text-sm text-quartz/80 dark:text-quartz-light/80 leading-relaxed whitespace-pre-wrap">
+                                            {authorLikes[reply.id] && (
+                                                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-red-100 bg-red-50 text-red-600 text-[10px] font-bold mb-2">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                                    Liked by Léonel
+                                                </div>
+                                            )}
+                                            <div class="text-sm text-quartz/80 dark:text-quartz-light/80 leading-relaxed whitespace-pre-wrap mb-2">
                                                 {reply.content}
+                                            </div>
+                                            <div class="flex items-center gap-4">
+                                                <button
+                                                    onClick={() => handleLike(reply.id)}
+                                                    class={`text-[11px] font-medium flex items-center gap-1 transition ${userCommentLikes[reply.id] ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-quartz dark:hover:text-white'}`}
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill={userCommentLikes[reply.id] ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                                    Like {reply.likes > 0 && `(${reply.likes})`}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setReplyTo(replyTo === comment.id ? null : comment.id);
+                                                        setNewComment(`@${reply.author_name} `);
+                                                    }}
+                                                    class="text-[11px] font-medium text-gray-400 hover:text-quartz dark:hover:text-white flex items-center gap-1 transition"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
+                                                    Reply
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

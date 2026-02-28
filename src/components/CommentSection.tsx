@@ -231,6 +231,8 @@ export default function CommentSection({ slug }: { slug: string }) {
                 setIsPostLiked(true);
                 setPostLikes(prev => prev + 1);
                 alert(error.message);
+            } else {
+                fetchPostStats();
             }
             return;
         }
@@ -249,6 +251,8 @@ export default function CommentSection({ slug }: { slug: string }) {
             setIsPostLiked(false);
             setPostLikes(prev => prev - 1);
             alert(error.message);
+        } else {
+            fetchPostStats();
         }
     };
 

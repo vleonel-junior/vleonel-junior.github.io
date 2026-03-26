@@ -1,0 +1,394 @@
+---
+
+title: "Statistiques Descriptives"
+description: "Avant de plonger dans les algorithmes de machine learning, nous avons besoin d'une base solide en statistiques descriptives — les outils qui nous permettent de résumer et de comprendre les données en un coup d'œil."
+pubDate: 2026-03-26
+author: "Léonel VODOUNOU"
+category: "Fondamentaux"
+tags: ["Statistiques", "Machine Learning", "Mathématiques"]
+---
+
+import SkewnessExplorer from '../../components/SkewnessExplorer.jsx';
+import KurtosisExplorer from '../../components/KurtosisExplorer.jsx';
+import BoxPlotExplorer from '../../components/BoxPlotExplorer.jsx';
+
+## Introduction
+
+Avant de plonger dans les algorithmes de machine learning, nous avons besoin d'une base solide en statistiques descriptives. Ce sont les outils qui nous permettent de résumer et de comprendre les données en un coup d'œil.
+
+Pensez à vos notes d'examen du semestre dernier. Au lieu de mémoriser chaque note individuellement, ne serait-il pas plus simple de connaître simplement votre moyenne ? C'est cela, les statistiques en action : prendre un ensemble de nombres et les condenser en une information utile.
+
+---
+
+## Qu'est-ce que les statistiques descriptives ?
+
+Les statistiques descriptives sont des outils que nous utilisons pour résumer et décrire des données. Au lieu d'examiner des milliers de nombres, nous en extrayons quelques indicateurs clés qui racontent l'essentiel.
+
+Par exemple : « Cette application a une note de 4,2 étoiles basée sur 10 000 avis. » Ce seul chiffre résume des milliers d'opinions individuelles en une information unique et utile.
+
+Dans ce guide, nous allons couvrir les éléments fondamentaux : la moyenne, la médiane, le mode (où se situe le « centre » de vos données ?), ainsi que la variance et l'écart-type (dans quelle mesure vos données sont-elles dispersées ?).
+
+Ces concepts apparaissent partout : de la compréhension des résultats d'enquêtes à la construction de modèles de machine learning, en passant par l'analyse des distributions de probabilité.
+
+---
+
+## Les mesures de tendance centrale
+
+### La Moyenne (Mean)
+
+La moyenne est la mesure de tendance centrale la plus répandue. Elle représente le point d'équilibre d'un ensemble de données.
+
+#### Définition
+La moyenne arithmétique est la somme de toutes les valeurs divisée par l'effectif total.
+
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i = \frac{x_1 + x_2 + \dots + x_n}{n}$$
+
+**Exemple : Températures stables**
+
+Vous mesurez la température d'une salle serveur sur 5 jours : 20°C, 21°C, 20°C, 22°C, 22°C.
+
+* **Moyenne :** $(20 + 21 + 20 + 22 + 22) / 5 = 21$ °C.
+
+Ici, la moyenne décrit parfaitement la situation.
+
+---
+
+### La Médiane (Middle Value)
+
+La médiane est la valeur qui sépare l'ensemble des données en deux groupes égaux : 50 % des valeurs sont inférieures et 50 % sont supérieures. Elle est privilégiée pour sa **robustesse**.
+
+#### Définition
+Une fois les données triées par ordre croissant :
+
+$$\text{Médiane} = \begin{cases} x_{\frac{n+1}{2}} & \text{si } n \text{ est impair} \\ \frac{x_{\frac{n}{2}} + x_{\frac{n}{2} + 1}}{2} & \text{si } n \text{ est pair} \end{cases}$$
+
+**Exemple : L'impact d'une valeur aberrante (Outlier)**
+
+Imaginons les revenus mensuels de 5 personnes.
+
+* **Cas A (Distribution homogène) :** 1500, 1600, **1700**, 1800, 1900 €
+    * **Moyenne :** 1700 €
+    * **Médiane :** 1700 € (Les deux mesures concordent).
+
+* **Cas B (Avec un outlier extrême) :** 1500, 1600, **1700**, 1800, **100 000** €
+    * **Médiane :** **1700 €** (Elle reste stable, elle représente toujours le groupe).
+    * **Moyenne :** **21 320 €** (Elle explose et ne représente plus personne dans le groupe).
+
+---
+
+### Le Mode (Most Frequent)
+
+Le mode correspond à la valeur la plus fréquente. C'est la seule mesure de tendance centrale utilisable pour des données qualitatives (catégorielles).
+
+#### Définition
+Le mode est la valeur dont l'effectif est le plus élevé. Une distribution peut être :
+
+* **Unimodale** (un seul mode).
+* **Bimodale** (deux modes, souvent le signe de deux sous-populations distinctes).
+* **Multimodale** (plus de deux modes).
+
+**Exemple : Maintenance industrielle**
+
+On note la cause de panne sur une ligne de production :
+*Électrique, Mécanique, Électrique, Électrique, Logiciel, Mécanique, Électrique.*
+
+* **Mode :** Électrique (4 occurrences).
+
+C'est l'information cruciale pour orienter les réparations !!!
+
+---
+
+## Les Quantiles Empiriques
+
+Les quantiles empiriques sont des valeurs qui partagent l'échantillon ordonné en un certain nombre de parties de même effectif. C'est une généralisation de la médiane.
+
+* S'il y a **2 parties**, on retrouve la médiane empirique : $\tilde{x}_n$.
+* S'il y a **4 parties**, on parle de **quartiles**, notés $\tilde{q}_{n, 1/4}$, $\tilde{q}_{n, 1/2}$ et $\tilde{q}_{n, 3/4}$. On a naturellement $\tilde{q}_{n, 1/2} = \tilde{x}_n$.
+* S'il y a **10 parties**, on parle de **déciles**, notés $\tilde{q}_{n, 1/10}, \dots, \tilde{q}_{n, 9/10}$.
+* S'il y a **100 parties**, on parle de **centiles** (ou percentiles), notés $\tilde{q}_{n, 1/100}, \dots, \tilde{q}_{n, 99/100}$.
+
+### Définition Mathématique
+
+Pour un échantillon de taille $n$, le quantile empirique d'ordre $p$ (où $p \in ]0, 1[$) est calculé à partir des données triées par ordre croissant, notées $(x^*_1, x^*_2, \dots, x^*_n)$.
+
+Il est défini par l'expression suivante :
+
+$$\tilde{q}_{n,p} = \begin{cases} \frac{1}{2}(x^*_{np} + x^*_{np+1}) & \text{si } np \text{ est un entier} \\ x^*_{\lfloor np \rfloor + 1} & \text{sinon} \end{cases}$$
+
+> **Note :** $\lfloor np \rfloor$ représente la partie entière de $n \times p$. Par exemple, si $n=10$ et que l'on cherche le premier quartile ($p=0{,}25$), alors $np = 2{,}5$. Comme $2{,}5$ n'est pas entier, le quantile sera la valeur de rang $\lfloor 2{,}5 \rfloor + 1 = 3$, soit la troisième valeur de l'échantillon trié.
+
+---
+
+### Pourquoi est-ce utile ?
+
+L'analyse des quantiles est fondamentale pour comprendre la structure des données. Par exemple, comparer le **9ème décile** ($D_9$) au **1er décile** ($D_1$) est une méthode standard pour mesurer les inégalités de revenus dans une population, là où la simple moyenne masquerait les écarts réels.
+
+---
+
+## Les Mesures de Forme
+
+### L'Asymétrie (Skewness)
+
+Jusqu'à présent, nous avons étudié trois façons de trouver le centre de vos données : la moyenne, la médiane et le mode. Mais voici une question : que faire si la moyenne et la médiane donnent des résultats différents ? Cela se produit lorsque vos données ne sont pas symétriques.
+
+L'asymétrie décrit la forme de la distribution de vos données.
+
+#### Rappel : la notion de distribution
+
+Imaginons que vous soyez chargé, au sein de la Direction des Ressources Humaines, d'une enquête sur la structure de la rémunération de votre entreprise.
+
+Pour représenter ces données, vous utilisez un axe horizontal gradué par tranches de salaires. Pour chaque collaborateur, vous superposez une unité de mesure (une brique élémentaire) dans la colonne correspondante.
+
+L'ensemble de ces colonnes forme ce que l'on appelle un **histogramme**. La courbe qui suit le sommet de ces colonnes définit la **distribution** de vos données. En statistiques, cette distribution constitue la représentation exhaustive de la répartition des effectifs selon la variable étudiée. Elle permet de visualiser instantanément la densité des observations et d'identifier les fréquences dominantes.
+
+![Distribution des salaires](/Portfolio-main/images/descriptive-statistics/distribution-salaires.png)
+
+---
+
+Est-ce que la distribution est **équilibrée de part et d'autre**, ou possède-t-elle une **longue queue qui s'étire dans une direction** ?
+
+* **Symétrique** : Asymétrie ≈ 0 (Moyenne ≈ Médiane ≈ Mode)
+* **Asymétrie à droite (positif)** : Asymétrie > 0 (La queue s'étire vers la droite. Mode < Médiane < Moyenne)
+* **Asymétrie à gauche (négatif)** : Asymétrie < 0 (La queue s'étire vers la gauche. Moyenne < Médiane < Mode)
+
+Pour un échantillon de $n$ données, l'expression du coefficient d'asymétrie est la suivante :
+
+$$S = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{s^3}$$
+
+Où :
+* $x_i$ représente chaque valeur de votre échantillon.
+* $\bar{x}$ est la **moyenne** arithmétique.
+* $s$ est l'**écart-type**.
+* $n$ est la taille de l'échantillon.
+
+#### Analyse de la formule : Pourquoi la puissance 3 ?
+
+C'est ici que réside toute l'astuce statistique. Analysons le numérateur, que l'on appelle le **moment d'ordre 3** : $\sum (x_i - \bar{x})^3$.
+
+1.  **L'écart à la moyenne :** On calcule d'abord la distance entre chaque donnée et la moyenne $(x_i - \bar{x})$.
+2.  **L'élévation au cube :**
+    * Contrairement au calcul de la variance (où l'on élève au carré, ce qui rend tout positif), **le cube conserve le signe**.
+    * Si une donnée est très supérieure à la moyenne (à droite), l'écart est positif et son cube est **très positif**.
+    * Si une donnée est très inférieure à la moyenne (à gauche), l'écart est négatif et son cube est **très négatif**.
+3.  **L'accentuation des extrêmes :** En élevant au cube, on donne un "poids" disproportionné aux valeurs situées loin du centre. Une seule valeur très éloignée dans la traîne va dominer toute la somme.
+
+#### La normalisation par l'écart-type ($s^3$)
+
+On divise le résultat par $s^3$ pour obtenir un coefficient **sans unité** (adimensionnel). Cela permet de comparer l'asymétrie de deux distributions différentes, par exemple des salaires en euros et des âges en années, car le résultat ne dépend plus de l'échelle des données.
+
+#### Interprétation du résultat
+
+* **$S \approx 0$ :** Les écarts positifs et négatifs au cube s'annulent globalement. La distribution est **symétrique**.
+* **$S > 0$ :** Les grands écarts positifs l'emportent. La traîne s'étire vers la **droite** (Asymétrie positive).
+* **$S < 0$ :** Les grands écarts négatifs dominent. La traîne s'étire vers la **gauche** (Asymétrie négative).
+
+
+
+<SkewnessExplorer client:load />
+
+> **Astuce ML :** De nombreux modèles de machine learning sont moins performants sur des données asymétriques. Si vos données sont fortement asymétriques (comme le prix des maisons, où quelques luxueuses demeures faussent la moyenne), nous appliquons souvent des astuces mathématiques pour les rendre plus symétriques avant l'entraînement.
+
+---
+
+### Le Kurtosis
+
+Alors que l'asymétrie nous renseigne sur la symétrie de nos données, le kurtosis nous renseigne sur les queues de distribution. Plus précisément : quelle est la probabilité d'avoir des valeurs extrêmes (valeurs aberrantes) par rapport à une distribution normale ?
+
+#### Définition
+
+Le kurtosis mesure l'épaisseur des extrémités (queues) d'une distribution. Il vous indique si vos données ont des queues lourdes (plus de valeurs aberrantes) ou des queues légères (moins de valeurs aberrantes) par rapport à une distribution normale.
+
+$$K = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^4}{s^4}$$
+
+La puissance quatrième amplifie les écarts extrêmes, ce qui rend le kurtosis très sensible aux valeurs aberrantes.
+
+* **Platykurtique** — Kurtosis < 3 : Pic plus plat, queues plus fines. Moins de valeurs extrêmes que la normale.
+* **Mésokurtique** — Kurtosis = 3 : Distribution normale. La base de comparaison.
+* **Leptokurtique** — Kurtosis > 3 : Pic plus pointu, queues plus épaisses. Plus de valeurs extrêmes que la normale.
+
+<KurtosisExplorer client:load />
+
+Si la valeur 3 vous intrigue, sachez qu'elle correspond simplement à la kurtosis d'une distribution normale standard, utilisée comme point de référence pour évaluer les autres distributions.
+
+En effet, la fonction de densité de la loi normale centrée réduite ($\mu = 0, \sigma = 1$) est donnée par :
+
+$$f(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}$$
+
+Le kurtosis est défini par l'espérance de la variable à la puissance 4, soit $E[X^4]$. Mathématiquement, cela revient à calculer l'intégrale suivante :
+
+$$I = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx$$
+
+Par symétrie de la fonction (qui est paire), nous pouvons simplifier l'étude sur $[0, +\infty[$ et multiplier le résultat par 2 :
+
+$$I = \frac{2}{\sqrt{2\pi}} \int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx$$
+
+#### Première Intégration par Parties (IPP)
+
+Nous décomposons le terme $x^4 e^{-\frac{x^2}{2}}$ en deux parties pour faire apparaître la dérivée de l'exposant :
+
+* Posons $u = x^3 \implies du = 3x^2 \, dx$
+* Posons $dv = x e^{-\frac{x^2}{2}} \, dx \implies v = -e^{-\frac{x^2}{2}}$
+
+La formule de l'IPP ($\int u \, dv = [uv] - \int v \, du$) donne :
+
+$$\int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x^3 e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -3x^2 e^{-\frac{x^2}{2}} \, dx$$
+
+Le premier terme s'annule car l'exponentielle l'emporte sur la puissance en $+\infty$. Il nous reste :
+
+$$3 \int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx$$
+
+#### Deuxième Intégration par Parties (IPP)
+
+Réitérons le procédé sur l'intégrale restante $\int x^2 e^{-\frac{x^2}{2}} \, dx$ :
+
+* Posons $u = x \implies du = dx$
+* Posons $dv = x e^{-\frac{x^2}{2}} \, dx \implies v = -e^{-\frac{x^2}{2}}$
+
+L'IPP donne :
+
+$$\int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -e^{-\frac{x^2}{2}} \, dx$$
+
+Il nous reste alors :
+
+$$\int_{0}^{+\infty} e^{-\frac{x^2}{2}} \, dx$$
+
+Cette expression est l'intégrale de Gauss classique. On sait que $\int_{-\infty}^{+\infty} e^{-\frac{x^2}{2}} \, dx = \sqrt{2\pi}$. Par symétrie, sur $[0, +\infty[$, elle vaut $\frac{\sqrt{2\pi}}{2}$.
+
+#### Synthèse du résultat
+
+Remontons la chaîne des calculs :
+
+1.  La deuxième IPP nous a donné $\frac{\sqrt{2\pi}}{2}$.
+2.  La première IPP multipliait ce résultat par $3$, soit $3 \times \frac{\sqrt{2\pi}}{2}$.
+3.  Enfin, n'oublions pas le coefficient multiplicateur initial $\frac{2}{\sqrt{2\pi}}$ devant l'intégrale totale.
+
+Le calcul final est donc :
+
+$$I = \frac{2}{\sqrt{2\pi}} \times \left( 3 \times \frac{\sqrt{2\pi}}{2} \right)$$
+
+En simplifiant par $2$ et par $\sqrt{2\pi}$, on obtient :
+
+$$\boxed{I = 3}$$
+
+C'est ainsi que l'on démontre que pour une distribution normale, le rapport entre l'étalement des extrêmes (moment d'ordre 4) et le carré de la variance donne précisément cette constante **3**.
+
+---
+
+## Les Mesures de Dispersion
+
+Nous avons étudié le centre (moyenne, médiane) et la forme (asymétrie). Cependant, il manque une pièce essentielle au puzzle : la **dispersion**.
+
+Imaginez deux entreprises, A et B, affichant exactement le même salaire moyen de **100 000 \$**.
+
+* Dans l'**Entreprise A**, la structure est parfaitement égalitaire : tout le monde gagne 100 000 \$.
+* Dans l'**Entreprise B**, la réalité est différente : le dirigeant gagne 460 000 \$ et les quatre autres employés gagnent 10 000 \$ chacun.
+
+La moyenne est identique (100k\$), mais la dispersion raconte une tout autre histoire. Nous avons donc besoin d'un outil pour calculer à quelle distance, en moyenne, les points de données se situent par rapport au centre.
+
+---
+
+### Variance et Écart-Type
+
+Ce sont les mesures de dispersion les plus utilisées en statistiques et en science des données. Elles permettent de quantifier l'écart de chaque point de donnée par rapport à la moyenne.
+
+#### La Variance ($\sigma^2$)
+
+La variance est la moyenne des carrés des écarts à la moyenne. Plus la variance est élevée, plus les données sont dispersées.
+
+$$\sigma^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2$$
+
+#### L'Écart-Type ($\sigma$)
+
+L'écart-type est la racine carrée de la variance. Son avantage majeur est qu'il s'exprime dans la **même unité** que les données d'origine (par exemple en heures ou en dollars), ce qui facilite l'interprétation.
+
+$$\sigma = \sqrt{\sigma^2} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2}$$
+
+#### Exemple détaillé : Durée de vie d'ampoules
+
+Vous testez 5 ampoules dont les durées de vie sont : 980, 1000, 1010, 1020 et 1040 heures.
+
+1.  **Calcul de la moyenne ($\bar{x}$)** :
+$$\bar{x} = \frac{980 + 1000 + 1010 + 1020 + 1040}{5} = 1010 \text{ heures}$$
+
+2.  **Calcul des écarts à la moyenne ($x_i - \bar{x}$)** :
+    * $980 - 1010 = -30$
+    * $1000 - 1010 = -10$
+    * $1010 - 1010 = 0$
+    * $1020 - 1010 = +10$
+    * $1040 - 1010 = +30$
+
+3.  **Élévation au carré des écarts** :
+$$(-30)^2 = 900 \quad | \quad (-10)^2 = 100 \quad | \quad (0)^2 = 0 \quad | \quad (10)^2 = 100 \quad | \quad (30)^2 = 900$$
+
+4.  **Calcul de la Variance ($\sigma^2$)** :
+$$\sigma^2 = \frac{900 + 100 + 0 + 100 + 900}{5} = 400 \text{ heures}^2$$
+
+5.  **Calcul de l'Écart-Type ($\sigma$)** :
+$$\sigma = \sqrt{400} = 20 \text{ heures}$$
+
+#### Pourquoi élever les écarts au carré ?
+
+Il existe deux raisons fondamentales à ce choix mathématique :
+1.  **Neutraliser les signes** : Si l'on se contentait d'additionner les écarts simples, les valeurs positives et négatives s'annuleraient systématiquement. Le carré rend chaque distance positive.
+2.  **Pénaliser les valeurs extrêmes** : L'élévation au carré accorde un poids disproportionné aux grands écarts. Cela rend la variance et l'écart-type très sensibles aux valeurs aberrantes.
+
+---
+
+### L'Étendue et l'Écart Interquartile (IQR)
+
+#### L'Étendue (Range)
+
+C'est la mesure de dispersion la plus simple. Elle représente la différence entre la valeur maximale et la valeur minimale d'un ensemble de données.
+
+$$\text{Étendue} = \text{Max} - \text{Min}$$
+
+* **Faiblesse :** Elle est extrêmement sensible aux valeurs aberrantes.
+
+#### L'Écart Interquartile (IQR)
+
+L'écart interquartile se concentre sur la dispersion des **50 % centraux** des données. Il correspond à la différence entre le troisième quartile ($Q_3$) et le premier quartile ($Q_1$).
+
+$$\text{IQR} = Q_3 - Q_1$$
+
+* **Composantes :**
+    * **$Q_1$ (25ème centile) :** La valeur en dessous de laquelle se trouvent 25 % des données.
+    * **$Q_3$ (75ème centile) :** La valeur en dessous de laquelle se trouvent 75 % des données.
+
+* **Force :** Il est **robuste** face aux valeurs aberrantes.
+
+---
+
+## La Détection des Valeurs Aberrantes (Outliers)
+
+Une règle couramment admise consiste à signaler comme **valeur aberrante** tout point de donnée qui se situe en dehors des « barrières » calculées à partir de l'écart interquartile (IQR).
+
+### La règle des 1.5 × IQR
+
+On définit deux seuils critiques pour identifier ces anomalies :
+
+* **Le seuil inférieur :** Toute valeur en dessous de $Q_1 - 1.5 \times \text{IQR}$.
+* **Le seuil supérieur :** Toute valeur au-dessus de $Q_3 + 1.5 \times \text{IQR}$.
+
+C'est selon cette règle que sont tracées les « moustaches » (*whiskers*) des boîtes à moustaches (**box plots**).
+
+<BoxPlotExplorer client:load />
+
+### Origine et Logique : Pourquoi 1.5 ?
+
+Le choix du coefficient **1.5** a été popularisé par le statisticien **John Tukey**. Il ne s'agit pas d'une loi mathématique absolue, mais d'une **heuristique** (une règle pratique) qui repose sur un compromis statistique lié à la loi normale. L'idée était de trouver un équilibre entre une détection trop sensible et une détection trop permissive des outliers.
+
+---
+
+## Référence des Formules
+
+| Métrique | Formule | Quand l'utiliser |
+|---|---|---|
+| **Moyenne** | $\bar{x} = \frac{1}{n}\sum x_i$ | Les données sont symétriques, sans valeurs extrêmes aberrantes |
+| **Médiane** | Valeur centrale des données triées | Les données sont asymétriques ou présentent des valeurs aberrantes |
+| **Mode** | Valeur la plus fréquente | Données catégorielles ou recherche de pics |
+| **Variance** | $\sigma^2 = \frac{1}{n}\sum(x_i - \bar{x})^2$ | Mesure de l'étalement (unités au carré) |
+| **Écart-type** | $\sigma = \sqrt{\sigma^2}$ | Mesure de l'étalement (unités d'origine) |
+| **Asymétrie** | $S = \frac{\frac{1}{n}\sum(x_i-\bar{x})^3}{s^3}$ | Vérification de la symétrie de la distribution |
+| **Kurtosis** | $K = \frac{\frac{1}{n}\sum(x_i-\bar{x})^4}{s^4}$ | Vérification de l'épaisseur des queues de distribution |
+| **Étendue** | $\text{Max} - \text{Min}$ | Estimation rapide de l'étalement |
+| **IQR** | $Q_3 - Q_1$ | Étalement robuste, détection des valeurs aberrantes |

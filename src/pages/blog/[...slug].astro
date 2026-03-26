@@ -36,7 +36,7 @@ const readingTime = Math.ceil(words / 200);
     type="article"
 >
     <main
-        class="flex-1 pt-32 pb-24 text-quartz dark:text-quartz-light overflow-x-hidden"
+        class="flex-1 pt-32 pb-24 text-quartz dark:text-quartz-light overflow-x-clip"
     >
         <!-- Header Section -->
         <div class="max-w-5xl mx-auto px-4 md:px-6">
@@ -104,7 +104,7 @@ const readingTime = Math.ceil(words / 200);
             <div class="flex flex-col lg:flex-row gap-0">
                 <!-- Sidebar TOC - Desktop only -->
                 <aside
-                    class="hidden lg:block w-[240px] flex-shrink-0 pr-12 border-r border-quartz/10 dark:border-quartz-light/10"
+                    class="hidden lg:block w-[260px] flex-shrink-0 pr-8 border-r border-quartz/10 dark:border-quartz-light/10"
                 >
                     <div class="sticky top-32">
                         <TableOfContents headings={headings} />

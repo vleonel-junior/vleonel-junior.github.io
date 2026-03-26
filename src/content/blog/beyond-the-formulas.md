@@ -38,23 +38,23 @@ The ambition is simple to state and difficult to achieve: To move fluently from 
 
 Each post will follow a recurring structure. Not rigid, but disciplined.
 
-### 1. Begin with the Foundations
+### Begin with the Foundations
 
 We start with the formalism. If a method arises from optimizing a specific objective, we derive it. If it approximates a cleaner mathematical object, we describe that object first. If assumptions are made, we state them clearly. The math is not there to intimidate. It is there to remove ambiguity. When the formalism is understood, the method stops feeling like magic.
 
-### 2. Build the Intuition
+### Build the Intuition
 
 Formal derivations are necessary — but insufficient. After the equations, I will always ask: What is actually happening here? What is the mental model? What is the geometric picture? What is the one core idea that survives when the notation fades?
 
 Intuition is what lets you adapt knowledge. It is what allows transfer from one domain to another. Without it, formulas remain isolated facts.
 
-### 3. Rebuild from Scratch
+### Rebuild from Scratch
 
 Implementation is the real test. Not calling a high-level API — but reconstructing the method from its equations. Every update rule justified. Every approximation examined. This is where understanding becomes concrete.
 
 It is also where hidden gaps appear: details omitted in the paper, numerical instabilities, implicit design decisions, and trade-offs that only emerge in practice. Rebuilding from scratch forces honesty. If something cannot be implemented from first principles, it is not yet understood.
 
-### 4. Push Beyond the Paper
+### Push Beyond the Paper
 
 Once the method works, the real questions begin. Where does it break? What assumptions limit it? What would happen if we relaxed them? How does it connect to ideas we already know? This is the step that turns understanding into research thinking. Even if the answer is incomplete, asking the question changes how you read the next paper.
 

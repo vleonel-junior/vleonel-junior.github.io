@@ -196,7 +196,7 @@ export default function SkewnessExplorer() {
           Fréquence
         </div>
         {/* X Axis Label */}
-        <div className="absolute bottom-0 left-1/2 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
+        <div className="absolute -bottom-6 left-1/2 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
           Valeur
         </div>
 

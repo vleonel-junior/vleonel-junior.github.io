@@ -101,25 +101,16 @@ const readingTime = Math.ceil(words / 200);
 
         <!-- Main Content Area -->
         <div class="max-w-5xl mx-auto px-4 md:px-6">
-            <div class="flex flex-col lg:flex-row gap-0">
-                <!-- Sidebar TOC - Desktop only -->
-                <aside
-                    class="hidden lg:block w-[260px] flex-shrink-0 pr-8 border-r border-quartz/10 dark:border-quartz-light/10"
-                >
+            <div class="blog-layout">
+                <!-- Left Sidebar TOC — Desktop only -->
+                <aside class="blog-sidebar">
                     <div class="sticky top-32">
-                        <TableOfContents headings={headings} />
+                        <TableOfContents headings={headings} mode="sidebar" />
                     </div>
                 </aside>
 
-                <!-- Article & Mobile TOC -->
-                <div class="flex-1 min-w-0 lg:pl-16">
-                    <!-- Mobile TOC: Boxed style -->
-                    <div
-                        class="lg:hidden mb-12 p-8 border border-quartz/10 dark:border-quartz-light/10 bg-quartz/[0.02] dark:bg-white/[0.02] rounded-lg"
-                    >
-                        <TableOfContents headings={headings} />
-                    </div>
-
+                <!-- Article content -->
+                <div class="blog-content">
                     <article
                         class="prose prose-lg dark:prose-invert max-w-none
                         prose-headings:font-sans prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32
@@ -147,5 +138,53 @@ const readingTime = Math.ceil(words / 200);
                 </div>
             </div>
         </div>
+
+        <!-- Mobile TOC — Floating button + overlay (rendered at root level, outside aside) -->
+        <div class="blog-mobile-toc">
+            <TableOfContents headings={headings} mode="mobile" />
+        </div>
     </main>
 </Layout>
+
+<style>
+    .blog-layout {
+        display: block;
+    }
+
+    .blog-sidebar {
+        display: none;
+    }
+
+    .blog-content {
+        min-width: 0;
+    }
+
+    /* Hide mobile TOC on desktop */
+    .blog-mobile-toc {
+        display: block;
+    }
+
+    @media (min-width: 1024px) {
+        .blog-layout {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .blog-sidebar {
+            display: block;
+            width: 280px;
+            flex-shrink: 0;
+            padding-right: 2rem;
+            border-right: 1px solid var(--border-primary);
+        }
+
+        .blog-content {
+            flex: 1;
+            padding-left: 3rem;
+        }
+
+        .blog-mobile-toc {
+            display: none;
+        }
+    }
+</style>

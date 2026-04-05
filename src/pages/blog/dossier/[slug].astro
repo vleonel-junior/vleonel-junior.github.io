@@ -1,0 +1,148 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { dossiers } from "../../../data/dossiers";
+
+export async function getStaticPaths() {
+	return dossiers.map((dossier) => ({
+		params: { slug: dossier.slug },
+		props: { dossier },
+	}));
+}
+
+const { dossier } = Astro.props;
+
+// Fetch all chapters from the dossiers collection matching this dossier
+const chapterEntries = await getCollection("dossiers", ({ data }) => {
+	return data.dossier === dossier.slug;
+});
+
+// Calculate reading time
+const processedChapters = chapterEntries.map((chapter) => {
+	const words = chapter.body.split(/\s+/).length;
+	const readingTime = chapter.data.readTime || Math.ceil(words / 200);
+	return { ...chapter, readingTime };
+});
+
+const title = `${dossier.title} - Notes de lecture`;
+const description = dossier.description;
+---
+
+<Layout title={title} description={description} image={dossier.cover}>
+	<section class="py-20 md:py-32">
+		<div class="container-custom max-w-4xl">
+			
+			<div class="mb-12">
+				<a href={`${import.meta.env.BASE_URL}blog/`} class="inline-flex items-center gap-2 text-sm font-bold text-quartz/60 dark:text-quartz-light/60 hover:text-green-700 dark:hover:text-green-400 transition-colors">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<line x1="19" y1="12" x2="5" y2="12" />
+						<polyline points="12 19 5 12 12 5" />
+					</svg>
+					Retour au Blog
+				</a>
+			</div>
+
+			<header class="flex flex-col md:flex-row gap-8 items-start mb-16 pb-12 border-b border-quartz/10 dark:border-white/10">
+				{dossier.cover && (
+					<div class="w-48 md:w-64 aspect-[3/4] flex-shrink-0 relative overflow-hidden rounded-xl shadow-xl border border-quartz/10 dark:border-white/10">
+						<img
+							src={
+								dossier.cover.startsWith("/")
+									? `${import.meta.env.BASE_URL}${dossier.cover.slice(1)}`
+									: dossier.cover
+							}
+							alt={dossier.title}
+							class="absolute inset-0 w-full h-full object-cover"
+						/>
+					</div>
+				)}
+				<div>
+					<div class="flex items-center gap-3 text-xs font-medium uppercase tracking-wider text-quartz/50 dark:text-quartz-light/50 mb-4">
+						<span class="text-green-700 dark:text-green-400 font-bold bg-green-700/10 dark:bg-green-400/10 px-3 py-1 rounded-full">
+							Série de Lecture
+						</span>
+					</div>
+					<h1 class="text-4xl md:text-5xl font-serif font-bold text-quartz dark:text-quartz-light mb-4 leading-tight">
+						{dossier.title}
+					</h1>
+					<p class="text-xl text-quartz/70 dark:text-quartz-light/70 font-serif italic mb-6">
+						Par {dossier.bookAuthor}
+					</p>
+					<p class="text-lg text-quartz/80 dark:text-quartz-light/80 leading-relaxed mb-6">
+						{dossier.description}
+					</p>
+					
+					<div class="flex gap-2 flex-wrap">
+						{dossier.tags.map(tag => (
+							<span class="text-xs font-bold text-quartz/60 dark:text-quartz-light/60 bg-quartz/5 dark:bg-white/5 px-3 py-1.5 rounded-full border border-quartz/10 dark:border-white/10">
+								{tag}
+							</span>
+						))}
+					</div>
+				</div>
+			</header>
+
+			<h2 class="text-3xl font-serif font-bold text-quartz dark:text-quartz-light mb-8 flex items-center gap-3">
+				Chapitres
+				<span class="text-lg text-quartz/50 dark:text-quartz-light/50 font-sans ml-2">({processedChapters.length}/{dossier.totalChapters})</span>
+			</h2>
+
+			<div class="flex flex-col gap-4 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-quartz/10 dark:before:via-white/10 before:to-transparent">
+				{dossier.chapters.map((chapterObj) => {
+					// Check if chapter is published in collection
+					const publishedEntry = processedChapters.find(c => c.data.chapter === chapterObj.number);
+					const isPublished = !!publishedEntry;
+					
+					return (
+						<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+							{/* Timeline dot */}
+							<div class="flex items-center justify-center w-12 h-12 rounded-full border-4 border-bg-primary bg-bg-secondary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 transition-colors">
+								{isPublished ? (
+									<svg class="w-5 h-5 text-green-700 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+									</svg>
+								) : (
+									<span class="text-quartz/40 dark:text-quartz-light/40 font-bold">{chapterObj.number}</span>
+								)}
+							</div>
+							
+							{/* Card */}
+							<div class="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-4 rounded-xl border border-quartz/10 dark:border-white/10 shadow-sm bg-bg-secondary transition-all">
+								<div class="flex flex-col gap-2">
+									<div class="flex items-center gap-2">
+										<span class="text-xs font-bold uppercase tracking-widest text-green-700 dark:text-green-400">Chapitre {chapterObj.number}</span>
+										{isPublished && publishedEntry && (
+											<>
+												<span class="text-quartz/40 dark:text-quartz-light/40">•</span>
+												<span class="text-xs font-medium text-quartz/50 dark:text-quartz-light/50">{publishedEntry.readingTime} min</span>
+											</>
+										)}
+									</div>
+									<h3 class={`text-xl font-serif font-bold leading-tight ${isPublished ? 'text-quartz dark:text-quartz-light' : 'text-quartz/50 dark:text-quartz-light/50'}`}>
+										{isPublished ? (
+											<a href={`${import.meta.env.BASE_URL}blog/dossier/${dossier.slug}/${chapterObj.slug}/`} class="hover:text-green-700 dark:hover:text-green-400 hover:underline">
+												{chapterObj.title}
+											</a>
+										) : (
+											chapterObj.title
+										)}
+									</h3>
+									{isPublished && publishedEntry && (
+										<p class="text-sm text-quartz/70 dark:text-quartz-light/70 line-clamp-2 mt-2">
+											{publishedEntry.data.description}
+										</p>
+									)}
+									{!isPublished && (
+										<span class="inline-flex mt-2 text-xs font-bold text-quartz/40 dark:text-quartz-light/40 bg-quartz/5 dark:bg-white/5 self-start px-2 py-1 rounded">
+											À venir
+										</span>
+									)}
+								</div>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</div>
+	</section>
+</Layout>

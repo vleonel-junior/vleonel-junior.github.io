@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { dossiers } from "../../data/dossiers";
 
 const posts = (await getCollection("blog")).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
@@ -26,6 +27,75 @@ const description =
 			>
 				Blog
 			</h1>
+
+			{/* Dossiers / Series Section */}
+			{dossiers.length > 0 && (
+				<div class="mb-20">
+					<div class="grid gap-12">
+						{dossiers.map(dossier => (
+							<div class="dossier-section">
+								<h2 class="text-3xl font-serif font-bold text-quartz dark:text-quartz-light mb-8 flex items-center gap-3 leading-tight">
+									<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-700 dark:text-green-400 flex-shrink-0"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+									{dossier.title} <span class="text-xl md:text-2xl text-quartz/60 dark:text-quartz-light/60 font-normal ml-2">(Notes de lecture)</span>
+								</h2>
+								<article class="group relative bg-quartz/5 dark:bg-white/5 rounded-2xl p-6 md:p-8 transition-transform hover:-translate-y-1 border border-quartz/10 dark:border-white/10">
+									<div class="flex flex-col md:flex-row gap-8 items-start">
+										{dossier.cover && (
+											<div class="w-full md:w-56 aspect-[3/4] flex-shrink-0 relative overflow-hidden rounded-xl border border-quartz/10 dark:border-white/10 shadow-lg">
+												<img
+													src={
+														dossier.cover.startsWith("/")
+															? `${import.meta.env.BASE_URL}${dossier.cover.slice(1)}`
+															: dossier.cover
+													}
+													alt={dossier.title}
+													class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+												/>
+											</div>
+										)}
+										<div class="flex-1 min-w-0 flex flex-col justify-between h-full py-2">
+											<div>
+												<div class="flex items-center gap-3 text-xs font-medium uppercase tracking-wider text-quartz/50 dark:text-quartz-light/50 mb-4">
+													<span class="text-green-700 dark:text-green-400 font-bold bg-green-700/10 dark:bg-green-400/10 px-3 py-1 rounded-full">
+														Série de {dossier.totalChapters} chapitres
+													</span>
+													<span>•</span>
+													<span>{dossier.chapters.length} publié(s)</span>
+												</div>
+												
+												<h3 class="text-2xl md:text-3xl font-serif font-bold text-quartz dark:text-quartz-light mb-2 leading-tight">
+													Par {dossier.bookAuthor}
+												</h3>
+												
+												<p class="text-quartz/80 dark:text-quartz-light/80 leading-relaxed line-clamp-4 mb-6 mt-4">
+													{dossier.description}
+												</p>
+											</div>
+											
+											<div class="mt-auto">
+												<a href={`${import.meta.env.BASE_URL}blog/dossier/${dossier.slug}/`} class="inline-flex items-center gap-2 font-bold text-bg-primary bg-text-primary px-6 py-3 rounded-lg hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-primary dark:focus:ring-offset-bg-primary">
+													Ouvrir les notes de lecture
+													<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+														<line x1="5" y1="12" x2="19" y2="12" />
+														<polyline points="12 5 19 12 12 19" />
+													</svg>
+												</a>
+											</div>
+										</div>
+									</div>
+								</article>
+							</div>
+						))}
+					</div>
+					
+					<div class="w-full h-px bg-quartz/10 dark:bg-white/10 mt-16 mb-16"></div>
+				</div>
+			)}
+
+			<h2 class="text-3xl font-serif font-bold text-quartz dark:text-quartz-light mb-8 flex items-center gap-3">
+				<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-700 dark:text-green-400"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+				Articles
+			</h2>
 
 			<div class="divide-y divide-quartz/5 dark:divide-white/5">
 				{

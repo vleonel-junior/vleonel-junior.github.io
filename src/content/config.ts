@@ -15,6 +15,23 @@ const blog = defineCollection({
     }),
 });
 
+const dossiers = defineCollection({
+    type: 'content',
+    schema: z.object({
+        title: z.string(),
+        description: z.string(),
+        pubDate: z.date(),
+        author: z.string().default('Léonel VODOUNOU'),
+        dossier: z.string(),
+        chapter: z.number(),
+        order: z.number(),
+        tags: z.array(z.string()).default([]),
+        readTime: z.number().optional(),
+        draft: z.boolean().default(false),
+    }),
+});
+
 export const collections = {
     blog,
+    dossiers,
 };

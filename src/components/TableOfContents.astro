@@ -18,6 +18,16 @@ let h2Counter = 0;
 let h3Counter = 0;
 
 const numberedHeadings = filteredHeadings.map((heading) => {
+    // Check if heading already starts with a number (e.g., "1.2 ", "1 ", "1. ", "3.1.2 ")
+    const manualNumberMatch = heading.text.match(/^(\d+(?:\.\d+)*)\.?\s+(.+)$/);
+    
+    if (manualNumberMatch) {
+        // Heading already has manual numbering, so we extract it
+        // We don't increment auto-counters here as manual numbers take precedence
+        return { ...heading, number: manualNumberMatch[1], text: manualNumberMatch[2] };
+    }
+
+    // Auto-numbering logic for headings without manual numbers
     if (heading.depth === 2) {
         h2Counter++;
         h3Counter = 0;

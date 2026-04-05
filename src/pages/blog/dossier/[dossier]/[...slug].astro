@@ -1,0 +1,244 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import Comments from "../../../../components/Comments.astro";
+import Newsletter from "../../../../components/Newsletter.astro";
+import TableOfContents from "../../../../components/TableOfContents.astro";
+import { getCollection } from "astro:content";
+import { getDossierBySlug } from "../../../../data/dossiers";
+
+export async function getStaticPaths() {
+	const chapters = await getCollection("dossiers");
+	return chapters.map((chapter) => {
+		const dossierMeta = getDossierBySlug(chapter.data.dossier);
+		const chapterMeta = dossierMeta?.chapters.find(c => c.number === chapter.data.chapter);
+		const slug = chapterMeta?.slug || `chapitre-${chapter.data.chapter}`;
+		
+		return {
+			params: { 
+				dossier: chapter.data.dossier,
+				slug: slug 
+			},
+			props: { chapter, dossierMeta, slug },
+		};
+	});
+}
+
+const { chapter, dossierMeta, slug } = Astro.props;
+const { Content, headings } = await chapter.render();
+
+const formattedDate = chapter.data.pubDate.toLocaleDateString("en-US", {
+	year: "numeric",
+	month: "long",
+	day: "numeric",
+});
+
+const words = chapter.body.split(/\s+/).length;
+const readingTime = Math.ceil(words / 200);
+
+// Find prev/next chapters
+let prevChapter = null;
+let nextChapter = null;
+
+if (dossierMeta) {
+    const allDossierChapters = await getCollection("dossiers", ({ data }) => data.dossier === dossierMeta.slug);
+    const sortedPublishedChapters = allDossierChapters.sort((a, b) => a.data.chapter - b.data.chapter);
+    
+    const currentIndex = sortedPublishedChapters.findIndex(c => c.id === chapter.id);
+    
+    if (currentIndex > 0) {
+        const prev = sortedPublishedChapters[currentIndex - 1];
+        const prevMeta = dossierMeta.chapters.find(c => c.number === prev.data.chapter);
+        if (prevMeta) {
+            prevChapter = { slug: prevMeta.slug, title: prevMeta.title, number: prev.data.chapter };
+        }
+    }
+    
+    if (currentIndex < sortedPublishedChapters.length - 1) {
+        const next = sortedPublishedChapters[currentIndex + 1];
+        const nextMeta = dossierMeta.chapters.find(c => c.number === next.data.chapter);
+        if (nextMeta) {
+            nextChapter = { slug: nextMeta.slug, title: nextMeta.title, number: next.data.chapter };
+        }
+    }
+}
+---
+
+<Layout
+	title={`${chapter.data.title} - ${dossierMeta?.title}`}
+	description={chapter.data.description}
+	type="article"
+>
+	<main class="flex-1 pt-32 pb-24 text-quartz dark:text-quartz-light overflow-x-clip">
+		
+		<!-- Header Section -->
+		<div class="max-w-5xl mx-auto px-4 md:px-6">
+			<div class="mb-8">
+				<a href={`${import.meta.env.BASE_URL}blog/dossier/${dossierMeta?.slug}/`} class="inline-flex items-center gap-2 text-sm font-bold text-quartz/60 dark:text-quartz-light/60 hover:text-green-700 dark:hover:text-green-400 transition-colors">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<line x1="19" y1="12" x2="5" y2="12" />
+						<polyline points="12 19 5 12 12 5" />
+					</svg>
+					Retour au sommaire : {dossierMeta?.title}
+				</a>
+			</div>
+			
+			<header class="mb-12">
+				<div class="flex items-center gap-3 text-xs font-medium uppercase tracking-wider text-quartz/50 dark:text-quartz-light/50 mb-6">
+					<span class="text-green-700 dark:text-green-400 font-bold bg-green-700/10 dark:bg-green-400/10 px-3 py-1 rounded-full">
+						Chapitre {chapter.data.chapter}
+					</span>
+				</div>
+				<h1 class="text-3xl md:text-5xl font-sans font-black mb-8 leading-tight tracking-tight text-quartz dark:text-quartz-light">
+					{chapter.data.title}
+				</h1>
+
+				<p class="text-md md:text-lg text-quartz/70 dark:text-quartz-light/70 leading-relaxed max-w-3xl">
+					{chapter.data.description}
+				</p>
+			</header>
+		</div>
+
+		<!-- Metadata Section: True edge-to-edge lines -->
+		<div class="w-full border-y border-quartz/10 dark:border-quartz-light/10 mb-16 py-8">
+			<div class="max-w-5xl mx-auto px-4 md:px-6">
+				<div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+					<div>
+						<span class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2">Auteur</span>
+						<span class="text-sm font-medium">{chapter.data.author}</span>
+					</div>
+					<div>
+						<span class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2">Dossier</span>
+						<span class="text-sm font-medium line-clamp-1" title={dossierMeta?.title}>{dossierMeta?.title}</span>
+					</div>
+					<div>
+						<span class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2">Publié le</span>
+						<span class="text-sm font-medium">{formattedDate}</span>
+					</div>
+					<div>
+						<span class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2">Temps de lecture</span>
+						<span class="text-sm font-medium">{readingTime} min read</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Main Content Area -->
+		<div class="max-w-5xl mx-auto px-4 md:px-6">
+			<div class="blog-layout">
+				<!-- Left Sidebar TOC — Desktop only -->
+				<aside class="blog-sidebar">
+					<div class="sticky top-32">
+						<TableOfContents headings={headings} mode="sidebar" />
+					</div>
+				</aside>
+
+				<!-- Article content -->
+				<div class="blog-content">
+					<article
+						class="prose prose-lg dark:prose-invert max-w-none
+                        prose-headings:font-sans prose-headings:text-quartz dark:prose-headings:text-quartz-light prose-headings:scroll-mt-32
+                        prose-h1:font-black prose-h2:font-extrabold prose-h2:border-b prose-h2:border-quartz/10 dark:prose-h2:border-quartz-light/10 prose-h2:pb-4 prose-h2:mt-10 prose-h2:mb-6
+                        prose-h3:font-bold prose-h3:mt-8 prose-h3:mb-4
+                        prose-p:text-quartz/90 dark:prose-p:text-quartz-light/90 prose-p:leading-normal prose-p:mb-6 prose-p:text-justify
+                        prose-a:text-quartz-accent dark:prose-a:text-quartz-accent prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                        prose-strong:text-quartz dark:prose-strong:text-quartz-light
+                        prose-code:text-quartz-accent dark:prose-code:text-quartz-accent prose-code:bg-quartz/5 dark:prose-code:bg-quartz-light/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+                        prose-pre:bg-quartz/5 dark:prose-pre:bg-black/40 prose-pre:border prose-pre:border-quartz/10 dark:prose-pre:border-quartz-light/10
+                        prose-blockquote:border-l-quartz-accent prose-blockquote:bg-quartz/5 dark:prose-blockquote:bg-quartz-accent/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r prose-blockquote:italic
+                        prose-ul:list-disc prose-ol:list-decimal
+                        prose-img:rounded-xl prose-img:shadow-2xl mb-16"
+					>
+						<Content />
+					</article>
+					
+					<!-- Chapter Navigation -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-24 pt-8 border-t border-quartz/10 dark:border-white/10">
+					    {/* Previous Chapter */}
+					    <div>
+					        {prevChapter && (
+					            <a href={`${import.meta.env.BASE_URL}blog/dossier/${dossierMeta?.slug}/${prevChapter.slug}/`} class="group block p-4 rounded-xl border border-quartz/10 dark:border-white/10 hover:border-green-700/50 dark:hover:border-green-400/50 hover:bg-green-700/5 dark:hover:bg-green-400/5 transition-all text-left h-full">
+					                <div class="flex items-center gap-2 text-quartz/50 dark:text-quartz-light/50 mb-2">
+					                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-hover:-translate-x-1"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+					                    <span class="text-xs font-bold uppercase tracking-widest">Chapitre {prevChapter.number}</span>
+					                </div>
+					                <div class="font-serif font-bold text-lg text-quartz dark:text-quartz-light group-hover:text-green-700 dark:group-hover:text-green-400 line-clamp-2">
+					                    {prevChapter.title}
+					                </div>
+					            </a>
+					        )}
+					    </div>
+					    
+					    {/* Next Chapter */}
+					    <div>
+					        {nextChapter && (
+					            <a href={`${import.meta.env.BASE_URL}blog/dossier/${dossierMeta?.slug}/${nextChapter.slug}/`} class="group block p-4 rounded-xl border border-quartz/10 dark:border-white/10 hover:border-green-700/50 dark:hover:border-green-400/50 hover:bg-green-700/5 dark:hover:bg-green-400/5 transition-all text-right h-full">
+					                <div class="flex items-center justify-end gap-2 text-quartz/50 dark:text-quartz-light/50 mb-2">
+					                    <span class="text-xs font-bold uppercase tracking-widest">Chapitre {nextChapter.number}</span>
+					                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-hover:translate-x-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+					                </div>
+					                <div class="font-serif font-bold text-lg text-quartz dark:text-quartz-light group-hover:text-green-700 dark:group-hover:text-green-400 line-clamp-2">
+					                    {nextChapter.title}
+					                </div>
+					            </a>
+					        )}
+					    </div>
+					</div>
+
+					<!-- Newsletter & Comments Section -->
+					<div class="border-t border-quartz/10 dark:border-quartz-light/10 pt-16">
+						<Newsletter />
+						<Comments />
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Mobile TOC -->
+		<div class="blog-mobile-toc">
+			<TableOfContents headings={headings} mode="mobile" />
+		</div>
+	</main>
+</Layout>
+
+<style>
+	.blog-layout {
+		display: block;
+	}
+
+	.blog-sidebar {
+		display: none;
+	}
+
+	.blog-content {
+		min-width: 0;
+	}
+
+	/* Hide mobile TOC on desktop */
+	.blog-mobile-toc {
+		display: block;
+	}
+
+	@media (min-width: 1024px) {
+		.blog-layout {
+			display: flex;
+			flex-direction: row;
+		}
+
+		.blog-sidebar {
+			display: block;
+			width: 280px;
+			flex-shrink: 0;
+			padding-right: 2rem;
+			border-right: 1px solid var(--border-primary);
+		}
+
+		.blog-content {
+			flex: 1;
+			padding-left: 3rem;
+		}
+
+		.blog-mobile-toc {
+			display: none;
+		}
+	}
+</style>

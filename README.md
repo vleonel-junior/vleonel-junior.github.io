@@ -169,7 +169,7 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 ## 📞 Contact
 
 - **Email** : votre.email@example.com
-- **LinkedIn** : [Votre Profil](https://linkedin.com/in/votre-profile)
+- **LinkedIn** : [Léonel Junior Sêdjro VODOUNOU](https://www.linkedin.com/in/léonel-junior-sêdjro-vodounou)
 - **GitHub** : [Votre Username](https://github.com/votre-username)
 
 ---

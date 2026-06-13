@@ -1,12 +1,15 @@
-# Portfolio Personnel
+# Portfolio — Léonel VODOUNOU
 
-Un portfolio moderne et performant développé avec Astro.js et Tailwind CSS.
+Portfolio personnel moderne et performant développé avec **Astro.js** et **Tailwind CSS**.
+
+🔗 **Site en ligne** : [vleonel-junior.github.io](https://vleonel-junior.github.io/)
 
 ## 🚀 Fonctionnalités
 
 - ⚡ **Performance optimale** avec Astro.js
 - 🎨 **Design responsive** avec Tailwind CSS
 - 📝 **Blog intégré** avec support Markdown/MDX
+- 📚 **Dossiers de lecture** — Notes de lecture structurées par chapitres
 - 🌙 **Mode sombre/clair** automatique
 - 🔍 **SEO optimisé** avec meta tags et sitemap
 - 📱 **Mobile-first** design
@@ -14,17 +17,19 @@ Un portfolio moderne et performant développé avec Astro.js et Tailwind CSS.
 
 ## 🛠 Technologies
 
-- [Astro.js](https://astro.build/) - Framework de génération de sites statiques
-- [Tailwind CSS](https://tailwindcss.com/) - Framework CSS utilitaire
-- [TypeScript](https://www.typescriptlang.org/) - Typage statique JavaScript
-- [MDX](https://mdxjs.com/) - Markdown enrichi avec composants
+- [Astro.js](https://astro.build/) — Framework de génération de sites statiques
+- [Tailwind CSS](https://tailwindcss.com/) — Framework CSS utilitaire
+- [TypeScript](https://www.typescriptlang.org/) — Typage statique JavaScript
+- [MDX](https://mdxjs.com/) — Markdown enrichi avec composants
+- [Preact](https://preactjs.com/) — Composants interactifs légers
+- [KaTeX](https://katex.org/) — Rendu de formules mathématiques
 
 ## 📦 Installation
 
 1. **Cloner le repository**
    ```bash
-   git clone https://github.com/votre-username/portfolio.git
-   cd portfolio
+   git clone https://github.com/vleonel-junior/vleonel-junior.github.io.git
+   cd vleonel-junior.github.io
    ```
 
 2. **Installer les dépendances**
@@ -44,10 +49,10 @@ Un portfolio moderne et performant développé avec Astro.js et Tailwind CSS.
 
 ## 📝 Scripts disponibles
 
-- `npm run dev` - Démarrer le serveur de développement
-- `npm run build` - Construire le site pour la production
-- `npm run preview` - Prévisualiser le build de production
-- `npm run astro` - Lancer les commandes Astro CLI
+- `npm run dev` — Démarrer le serveur de développement
+- `npm run build` — Construire le site pour la production
+- `npm run preview` — Prévisualiser le build de production
+- `npm run astro` — Lancer les commandes Astro CLI
 
 ## 📁 Structure du projet
 
@@ -56,28 +61,31 @@ Un portfolio moderne et performant développé avec Astro.js et Tailwind CSS.
 │   ├── components/          # Composants réutilisables
 │   │   ├── ui/             # Composants UI de base
 │   │   ├── Navigation.astro
+│   │   ├── TableOfContents.astro
 │   │   └── Footer.astro
-│   ├── content/            # Contenu du blog (Markdown)
+│   ├── content/            # Contenu (Markdown / MDX)
 │   │   ├── blog/           # Articles de blog
+│   │   ├── dossiers/       # Dossiers de lecture (notes par chapitres)
 │   │   └── config.ts       # Configuration des collections
+│   ├── data/               # Données structurées (expériences, projets, etc.)
 │   ├── layouts/            # Layouts de page
 │   │   └── Layout.astro
 │   ├── pages/              # Pages du site
-│   │   ├── index.astro     # Page d'accueil
+│   │   ├── index.astro     # Page d'accueil (CV / Resume)
 │   │   ├── projects.astro  # Page projets
-│   │   └── blog/           # Pages du blog
+│   │   └── blog/           # Pages du blog et des dossiers
 │   └── styles/             # Styles globaux
 │       └── global.css
 ├── public/                 # Assets statiques
 │   └── images/             # Images du site
-└── docs/                   # Documentation
+└── astro.config.mjs        # Configuration Astro
 ```
 
 ## ✍️ Ajouter un article de blog
 
 1. **Créer un nouveau fichier** dans `src/content/blog/`
    ```bash
-   touch src/content/blog/mon-article.md
+   touch src/content/blog/mon-article.mdx
    ```
 
 2. **Ajouter le front matter** et le contenu
@@ -85,8 +93,8 @@ Un portfolio moderne et performant développé avec Astro.js et Tailwind CSS.
    ---
    title: "Titre de l'article"
    description: "Description courte"
-   pubDate: 2025-08-19
-   author: "Votre Nom"
+   pubDate: 2026-06-13
+   author: "Léonel VODOUNOU"
    image: "/images/article-cover.jpg"
    tags: ["tech", "web"]
    category: "Development"
@@ -96,54 +104,19 @@ Un portfolio moderne et performant développé avec Astro.js et Tailwind CSS.
    Contenu de l'article en Markdown...
    ```
 
-## 🎨 Personnalisation
-
-### Couleurs
-Les couleurs principales peuvent être modifiées dans `src/styles/global.css` :
-```css
-.text-gradient {
-  background: linear-gradient(to right, #2563eb, #9333ea);
-}
-```
-
-### Navigation
-Modifier les liens de navigation dans `src/components/Navigation.astro` :
-```javascript
-const navItems = [
-  { name: 'Resume', href: '/', icon: '📝' },
-  { name: 'Blog', href: '/blog', icon: '📖' },
-  // Ajouter vos liens...
-];
-```
-
-### Informations personnelles
-Mettre à jour les informations dans :
-- `src/layouts/Layout.astro` (meta tags)
-- `src/pages/index.astro` (contenu de la page d'accueil)
-- `src/components/Footer.astro` (nom et liens)
-
 ## 🚀 Déploiement
 
 ### GitHub Pages (Automatique)
 
-1. **Pousser sur GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
+Le site est déployé automatiquement via GitHub Actions à chaque push sur `main`.
 
-2. **Activer GitHub Pages** dans les paramètres du repository
-   - Aller dans Settings > Pages
-   - Source: GitHub Actions
+```bash
+git add .
+git commit -m "Update"
+git push origin main
+```
 
-3. **Le site sera disponible** à `https://votre-username.github.io/portfolio`
-
-### Autres plateformes
-
-- **Vercel** : Connecter le repository GitHub
-- **Netlify** : Glisser-déposer le dossier `dist/` après `npm run build`
-- **Cloudflare Pages** : Connecter le repository GitHub
+Le site est disponible à : **https://vleonel-junior.github.io/**
 
 ## 📈 Performance
 
@@ -154,23 +127,11 @@ Ce portfolio est optimisé pour la performance :
 - Génération de sitemap automatique
 - Meta tags SEO complets
 
-## 🤝 Contribution
-
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
-
-## � Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
 ## 📞 Contact
 
-- **Email** : votre.email@example.com
+- **Email** : [vleoneljunior@gmail.com](mailto:vleoneljunior@gmail.com)
 - **LinkedIn** : [Léonel Junior Sêdjro VODOUNOU](https://www.linkedin.com/in/léonel-junior-sêdjro-vodounou)
-- **GitHub** : [Votre Username](https://github.com/votre-username)
+- **GitHub** : [vleonel-junior](https://github.com/vleonel-junior)
 
 ---
 

@@ -15,5 +15,12 @@ export const certificationsData: CertificationItem[] = [
         date: "2024",
         image: "/images/certifications/ATUT-data-scientist.png",
         description: "Specialization acquired through the Africa Tech Up Tour program, including Deep Learning, Time Series Analysis, SQL, NLP, and ML Model Deployment."
+    },
+    {
+        title: "ML Engineer",
+        issuer: "iSheero x DataCamp",
+        date: "2026",
+        image: "/images/certifications/ATTESTATION iSHEEROxDataCamp 2026-24.png",
+        description: "12-month program combining online training, applied projects, and a final hackathon — covering Machine Learning Engineering with DataCamp."
     }
 ];

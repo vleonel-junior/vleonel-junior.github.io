@@ -20,7 +20,7 @@ export const certificationsData: CertificationItem[] = [
         title: "ML Engineer",
         issuer: "iSheero x DataCamp",
         date: "2026",
-        image: "/images/certifications/ATTESTATION iSHEEROxDataCamp 2026-24.png",
+        image: "/images/certifications/isheero-datacamp.png",
         description: "12-month program combining online training, applied projects, and a final hackathon — covering Machine Learning Engineering with DataCamp."
     }
 ];

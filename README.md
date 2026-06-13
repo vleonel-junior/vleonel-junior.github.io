@@ -130,7 +130,8 @@ Ce portfolio est optimisé pour la performance :
 ## 📞 Contact
 
 - **Email** : [vleoneljunior@gmail.com](mailto:vleoneljunior@gmail.com)
-- **LinkedIn** : [Léonel Junior Sêdjro VODOUNOU](https://www.linkedin.com/in/léonel-junior-sêdjro-vodounou)
+- **LinkedIn** : [Léonel Junior Sêdjro VODOUNOU](https://www.linkedin.com/in/leonel-vodounou)
+- **X (Twitter)** : [@leonelvodounou](https://x.com/leonelvodounou)
 - **GitHub** : [vleonel-junior](https://github.com/vleonel-junior)
 
 ---

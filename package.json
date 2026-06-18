@@ -16,7 +16,7 @@
     "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.12",
-    "astro": "^5.13.2",
+    "astro": "^5.17.1",
     "preact": "^10.28.3",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",

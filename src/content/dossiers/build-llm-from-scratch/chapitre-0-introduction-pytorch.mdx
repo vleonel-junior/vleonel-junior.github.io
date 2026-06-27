@@ -224,7 +224,7 @@ training algorithm for neural networks.
 
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-7.png" width="600">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-7.png" width="600" />
   <p><em>Logistic regression forward pass as a computation graph. The input feature x1 is multiplied by a model weight w1 and passed through an activation function σ after adding the bias. The loss is computed by comparing the model output a with a given label y.</em></p>
 </div>
 
@@ -263,7 +263,7 @@ loss = F.binary_cross_entropy(a, y)
 Si nous effectuons des calculs dans PyTorch, il construira par défaut un graphe de calcul en interne si l'un de ses nœuds terminaux possède l'attribut `requires_grad` défini sur `True`. Cela s'avère utile si nous souhaitons calculer des gradients. Les gradients sont indispensables lors de l'entraînement des réseaux de neurones via le célèbre algorithme de rétropropagation (ou *backpropagation*), que l'on peut considérer comme une application de la règle de dérivation en chaîne (*chain rule*) du calcul différentiel pour les réseaux de neurones, comme l'illustre la figure ci-dessous :
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-8.png" width="600">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-8.png" width="600" />
   <p><em>The most common way of computing the loss gradients in a computation graph involves applying the chain rule from right to left, also called reverse-model automatic differentiation or backpropagation. We start from the output layer (or the loss itself) and work backward through the network to the input layer. We do this to compute the gradient of the loss with respect to each parameter (weights and biases) in the network, which informs how we update these parameters during training.</em></p>
 </div>
 
@@ -337,7 +337,7 @@ Let’s look at a multilayer perceptron, a fully connected neural network, as il
 
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-9.png" width="600">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-9.png" width="600" />
   <p><em>A multilayer perceptron with two hidden layers. Each node representsa unit in the respective layer. For illustration purposes, each layer has a very small number of nodes.</em></p>
 </div>
 
@@ -575,7 +575,7 @@ tensor([[0.3113, 0.3934, 0.2952]])
 The overall idea behind data loading in PyTorch is illustrated in the figure below :
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-10.png" width="600">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-10.png" width="600" />
   <p><em>PyTorch implements a Dataset and a DataLoader class. The Dataset class is used to instantiate objects that define how each data record is loaded. The DataLoader handles how the data is shuffled and assembled into batches.</em></p>
 </div>
 
@@ -882,7 +882,7 @@ L’idée est que le GPU ne doive presque jamais attendre les données : pendant
 
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-11.png" width="800">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-11.png" width="800" />
   <p><em>Loading data without multiple workers (setting num_workers=0) will create a data loading bottleneck where the model sits idle until the next batch is loaded (left). If multiple workers are enabled, the data loader can queue up the next batch in the background (right).</em></p>
 </div>
 
@@ -1033,7 +1033,7 @@ Ces deux défauts — la centralisation sur le GPU 0 et le GIL — ne sont pas d
 ##### 2.3 DistributedDataParallel (DDP) : le standard actuel
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-12.png" width="800">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-12.png" width="800" />
   <p><em>The model and data transfer in DDP involves two key steps. First, we create a copy of the model on each of the GPUs. 
          Then we divide the input data into unique minibatches that we pass on to each model copy.</em></p>
 </div>
@@ -1041,7 +1041,7 @@ Ces deux défauts — la centralisation sur le GPU 0 et le GIL — ne sont pas d
 ---
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-13.png" width="800">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-13.png" width="800" />
   <p><em>The forward and backward passes in DDP are executed independently on each GPU with its corresponding data subset. 
   Once the forward and backward passes are completed, gradients from each model replica (on each GPU) are synchronized across all GPUs. 
   This ensures that every model replica has the same updated weights.</em></p>
@@ -1090,12 +1090,7 @@ Le **Ring-AllReduce** élimine ce goulot en supprimant le réducteur central. Vo
 
 **L'optimisation supplémentaire.** Puisque la rétropropagation calcule les gradients depuis la dernière couche vers la première, les gradients des couches de sortie sont disponibles bien avant ceux des couches d'entrée. On peut donc démarrer le Ring-AllReduce sur les premiers gradients disponibles pendant que les autres sont encore en cours de calcul, chevauchant communication et calcul. Dans les expériences du papier sur un modèle de 300 millions de paramètres, cela permettait d'économiser 70 à 120 ms par itération.
 
-<div>
-    Pour plus de détails, vous pouvez consulter 
-    <a href="../Introduction to PyTorch/baidu_allreduce_oct6.pdf">
-        Bringing HPC Techniques to Deep Learning
-    </a>.
-</div>
+Pour plus de détails, vous pouvez consulter [Bringing HPC Techniques to Deep Learning](../Introduction to PyTorch/baidu_allreduce_oct6.pdf).
 
 ---
 
@@ -1111,7 +1106,7 @@ Mais cette analogie révèle aussi immédiatement le défaut majeur de l'approch
 
 La solution consiste à ne plus faire circuler un seul batch, mais à le découper en **micro-batchs** injectés en rafale dans le pipeline. Dès que le GPU 0 a traité le micro-batch 1 et l'a transmis au GPU 1, il n'attend pas le résultat final : il attaque immédiatement le micro-batch 2. Pendant ce temps, le GPU 1 reçoit le micro-batch 1 et commence à le traiter. Le GPU 2 fait de même un cycle plus tard. Les premiers cycles servent à remplir le pipeline — c'est inévitable, comme le début de toute chaîne de montage. Mais une fois ce remplissage terminé, tous les GPUs travaillent en permanence, chacun sur un micro-batch différent au même instant. Cette technique, introduite par GPipe et PipeDream, a rendu l'entraînement des très grands modèles économiquement viable.
 <div align="center">
-  <img src="../Introduction to PyTorch/Pipeline parallelism diagram.png" width="1000">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/Pipeline parallelism diagram.png" width="1000" />
 </div>
 
 
@@ -1906,7 +1901,7 @@ Pytorch launches a separates process on each GPU, and each process receives and 
 To illustrate this, suppose we have two GPUs that we want to use to train a neural network as show in figure below :
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-12.png" width="800">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-12.png" width="800" />
   <p><em>The model and data transfer in DDP involves two key steps. First, we create a copy of the model on each of the GPUs. 
          Then we divide the input data into unique minibatches that we pass on to each model copy.</em></p>
 </div>
@@ -1917,7 +1912,7 @@ We can use a `DistributedSampler` to ensure that each GPU will receive a differe
 Since each model copy will see a different sample of training data, the model copies will return different logits as outputs and compute different gradients during the backward pass. These gradients are then averaged and synchronized during trainig to update the models. This way, we ensure that the models don't diverge as illustrated in figure below :
 
 <div align="center">
-  <img src="../Introduction to PyTorch/A-13.png" width="800">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-13.png" width="800" />
   <p><em>The forward and backward passes in DDP are executed independently on each GPU with its corresponding data subset. 
   Once the forward and backward passes are completed, gradients from each model replica (on each GPU) are synchronized across all GPUs. 
   This ensures that every model replica has the same updated weights.</em></p>

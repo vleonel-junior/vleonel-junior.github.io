@@ -19,16 +19,16 @@ Pour pouvoir traiter du texte, un LLM ne lit pas des phrases brutes, mais conver
 2. **L'échantillonnage :** Grâce à une approche par « fenêtre glissante » (sliding window), on extrait des paires d'entrées et de sorties permettant d'entraîner le modèle à la tâche de prédiction du mot suivant.
 3. **La vectorisation :** Les tokens extraits sont ensuite convertis en vecteurs de nombres (embeddings) que le réseau de neurones va pouvoir ingérer et traiter mathématiquement.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.1](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.1.png)
 
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.1 : Les trois grandes étapes pour coder un LLM. Ce chapitre se concentre sur l'étape 1 de la phase 1 : l'implémentation du pipeline d'échantillonnage de données.*</figcaption>
+</figure>
 
-*Figure 2.1 : Les trois grandes étapes pour coder un LLM. Ce chapitre se concentre sur l'étape 1 de la phase 1 : l'implémentation du pipeline d'échantillonnage de données.*
 
-</div>
 
-<br/>
 
 ### 2.1 Comprendre les embeddings de mots
 
@@ -36,25 +36,25 @@ Les réseaux de neurones ne peuvent pas traiter directement le texte brut, car l
 
 Un embedding consiste à projeter des objets discrets (mots, phrases, audios, images) vers des points dans un format que la machine peut traiter : un espace vectoriel continu (une suite de nombres). Il est essentiel de comprendre qu'il existe un type de modèle d'embedding pour chaque type de format de données (on ne peut pas utiliser un modèle textuel sur de la vidéo).
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.2](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.2.png)
 
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.2 : Les modèles de deep learning ne peuvent pas traiter des formats de données tels que la vidéo, l'audio et le texte dans leur forme brute. Ainsi, nous utilisons un modèle d'embedding pour transformer ces données brutes en une représentation vectorielle dense que les architectures de deep learning peuvent facilement comprendre et traiter. Plus précisément, cette figure illustre le processus de conversion de données brutes en un vecteur numérique tridimensionnel.*</figcaption>
+</figure>
 
-*Figure 2.2 : Les modèles de deep learning ne peuvent pas traiter des formats de données tels que la vidéo, l'audio et le texte dans leur forme brute. Ainsi, nous utilisons un modèle d'embedding pour transformer ces données brutes en une représentation vectorielle dense que les architectures de deep learning peuvent facilement comprendre et traiter. Plus précisément, cette figure illustre le processus de conversion de données brutes en un vecteur numérique tridimensionnel.*
-
-</div>
 
 Dans ce livre, nous nous intéressons uniquement aux **embeddings de mots** puisque la génération des LLM opère un mot à la fois. Historiquement, on utilisait des modèles tiers comme **Word2Vec** pour transformer chaque mot en vecteur. La logique mathématique est élégante : les mots partageant des contextes similaires acquièrent des valeurs mathématiques similaires et se retrouvent par conséquent regroupés (clustered) géométriquement lorsqu'on les affiche dans un espace en deux dimensions. 
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.3](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.3.png)
 
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.3 : Si les embeddings de mots sont bidimensionnels, nous pouvons les tracer dans un nuage de points en 2D pour les visualiser, comme montré ici. Lors de l'utilisation de techniques d'embedding de mots, telles que Word2Vec, les mots correspondant à des concepts similaires apparaissent souvent proches les uns des autres dans l'espace d'embedding. Par exemple, différents types d'oiseaux apparaissent plus proches les uns des autres dans l'espace d'embedding qu'ils ne le sont des pays et des villes.*</figcaption>
+</figure>
 
-*Figure 2.3 : Si les embeddings de mots sont bidimensionnels, nous pouvons les tracer dans un nuage de points en 2D pour les visualiser, comme montré ici. Lors de l'utilisation de techniques d'embedding de mots, telles que Word2Vec, les mots correspondant à des concepts similaires apparaissent souvent proches les uns des autres dans l'espace d'embedding. Par exemple, différents types d'oiseaux apparaissent plus proches les uns des autres dans l'espace d'embedding qu'ils ne le sont des pays et des villes.*
-
-</div>
 
 Cependant, les LLM modernes ne s'appuient pas sur Word2Vec. Ils utilisent leur propre **couche d'embedding intégrée**, qui s'entraîne et s'optimise en même temps que le reste du modèle, permettant d'adapter les vecteurs aux spécificités exactes des données cibles.
 
@@ -64,14 +64,14 @@ Enfin, la **dimensionnalité** de ces vecteurs est clé : un espace à deux dime
 
 La tokenization (ou segmentation en lexèmes) est une étape de prétraitement indispensable avant la création d'embeddings pour un LLM. Elle consiste à diviser le texte d'entrée en *tokens* individuels, qui peuvent être des mots isolés ou des caractères spéciaux, y compris la ponctuation.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.4](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.4.png)
 
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.4 : Une vue des étapes de traitement du texte dans le contexte d'un LLM. Ici, nous divisons un texte d'entrée en tokens individuels (mots ou caractères spéciaux).*</figcaption>
+</figure>
 
-*Figure 2.4 : Une vue des étapes de traitement du texte dans le contexte d'un LLM. Ici, nous divisons un texte d'entrée en tokens individuels (mots ou caractères spéciaux).*
-
-</div>
 
 Dans cette section, nous utiliserons la courte nouvelle *"The Verdict"* d'Edith Wharton, disponible dans le domaine public.
 
@@ -165,14 +165,14 @@ print(result)
 ['Hello', ',', 'world', '.', 'Is', 'this', '--', 'a', 'test', '?']
 ```
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.5](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.5.png)
 
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.5 : Le schéma de tokenization sépare correctement le texte en mots individuels et ponctuations.*</figcaption>
+</figure>
 
-*Figure 2.5 : Le schéma de tokenization sépare correctement le texte en mots individuels et ponctuations.*
-
-</div>
 
 Maintenant que nous avons un tokenizer de base fonctionnel, appliquons-le à l'entièreté de la nouvelle d'Edith Wharton :
 
@@ -197,13 +197,14 @@ Une fois le texte divisé en tokens (chaînes de caractères), l'étape suivante
 
 Pour transformer les tokens en identifiants, nous devons d'abord construire un **vocabulaire**. Ce vocabulaire mappe chaque mot et caractère spécial unique à un nombre entier de façon unique.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.6](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.6.png)
 
-*Figure 2.6 : Construction d'un vocabulaire en tokenisant l'ensemble du dataset d'entraînement. Les tokens sont extraits, triés par ordre alphabétique, et les doublons retirés. Le vocabulaire fait correspondre chaque token unique à une valeur entière unique.*
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.6 : Construction d'un vocabulaire en tokenisant l'ensemble du dataset d'entraînement. Les tokens sont extraits, triés par ordre alphabétique, et les doublons retirés. Le vocabulaire fait correspondre chaque token unique à une valeur entière unique.*</figcaption>
+</figure>
 
-</div>
 
 Créons la liste de tous les tokens uniques et trions-les pour déterminer la taille de notre vocabulaire :
 
@@ -238,13 +239,14 @@ for i, item in enumerate(vocab.items()):
 ('Hermia', 50)
 ```
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.7](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.7.png)
 
-*Figure 2.7 : À partir d'un nouvel échantillon de texte, nous le tokenisons et utilisons le vocabulaire pour convertir les tokens textuels en token IDs.*
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.7 : À partir d'un nouvel échantillon de texte, nous le tokenisons et utilisons le vocabulaire pour convertir les tokens textuels en token IDs.*</figcaption>
+</figure>
 
-</div>
 
 ### Implémentation d'une classe Tokenizer
 
@@ -271,13 +273,14 @@ class SimpleTokenizerV1:
         return text
 ```
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.8](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.8.png)
 
-*Figure 2.8 : Les implémentations de tokenizers partagent deux méthodes communes : encode (convertit le texte en ID via le vocabulaire) et decode (reconvertit les IDs en texte naturel).*
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.8 : Les implémentations de tokenizers partagent deux méthodes communes : encode (convertit le texte en ID via le vocabulaire) et decode (reconvertit les IDs en texte naturel).*</figcaption>
+</figure>
 
-</div>
 
 Testons notre classe sur un extrait de la nouvelle :
 
@@ -323,23 +326,25 @@ KeyError: 'Hello'
 
 Il est indispensable de modifier le tokenizer pour gérer les mots inconnus. De plus, l'ajout de tokens de contexte spéciaux permet d'améliorer la compréhension du modèle, par exemple pour marquer la fin ou le début d'un document. Nous allons ajouter deux nouveaux tokens : `<|unk|>` pour les mots inconnus, et `<|endoftext|>` pour séparer des documents textuels indépendants.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.9](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.9.png)
 
-*Figure 2.9 : Ajout des tokens spéciaux `<|unk|>` (pour les mots inconnus) et `<|endoftext|>` (pour séparer deux sources de texte non liées) au vocabulaire.*
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.9 : Ajout des tokens spéciaux `<|unk|>` (pour les mots inconnus) et `<|endoftext|>` (pour séparer deux sources de texte non liées) au vocabulaire.*</figcaption>
+</figure>
 
-</div>
 
 L'ajout du token `<|endoftext|>` est crucial lorsqu'on entraîne des LLMs de type GPT sur de multiples documents ou livres indépendants. Cela aide le modèle à comprendre que, bien que concaténés à la chaîne pour l'entraînement, ces textes n'ont aucun lien contextuel entre eux.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.10](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.10.png)
 
-*Figure 2.10 : Lors du traitement de plusieurs sources de texte indépendantes, le token `<|endoftext|>` agit comme un marqueur signalant le début ou la fin d'un segment.*
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.10 : Lors du traitement de plusieurs sources de texte indépendantes, le token `<|endoftext|>` agit comme un marqueur signalant le début ou la fin d'un segment.*</figcaption>
+</figure>
 
-</div>
 
 ### Mise à jour du vocabulaire
 
@@ -522,7 +527,7 @@ Cette expérimentation met en évidence **deux faits remarquables** inhérents a
 
 La force du BPE réside dans sa capacité à **fractionner** un mot totalement inconnu. Au lieu de lever une erreur ou de le remplacer brutalement par `<|unk|>`, le BPE segmente le mot en fragments plus petits : des syllabes / sous-mots ("subwords") connus ou, s'il le faut en dernier recours, en caractères ou octets individuels.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 > ![Figure 2.11](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.11.png)
 >
@@ -572,7 +577,7 @@ En bref, le BPE construit son vocabulaire de manière progressive, en partant de
 
 Pour entraîner un LLM, on génère des paires entrée-cible (input-target pairs). La tâche du modèle étant de prédire le mot suivant, la séquence cible (`y`) correspond exactement à la séquence d'entrée (`x`), mais décalée d'une position vers la droite.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 > ![Figure 2.12](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.12.png)
 >
@@ -595,7 +600,7 @@ print(f"y: {y}") # [4920, 2241, 287, 257]
 
 Pour l'entraînement, les données doivent être converties en tenseurs et organisées en lots. On utilise pour cela deux classes standard de PyTorch : `Dataset` et `DataLoader`.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 > ![Figure 2.13](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.13.png)
 >
@@ -661,7 +666,7 @@ def create_dataloader_v1(txt, batch_size=4, max_length=256, stride=128, shuffle=
   - Un `stride` de 1 fait avancer la fenêtre d'un seul token, créant beaucoup de chevauchements entre les séquences consécutives (pratique pour visualiser le mécanisme).
   - En pratique lors de l'entraînement, on définit souvent le `stride` à la même valeur que `max_length`. Cela empêche les séquences de se chevaucher, limitant ainsi le surapprentissage (overfitting).
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 > ![Figure 2.14](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.14.png)
 >
@@ -680,7 +685,7 @@ La dernière étape de la préparation des données consiste à convertir les id
 
 Les poids de la matrice d'embeddings sont initialisés avec de petites valeurs aléatoires qui seront optimisées pendant l'entraînement du modèle.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 > ![Figure 2.15](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.15.png)
 >
@@ -708,7 +713,7 @@ tensor([[ 1.2753, -0.2010, -0.1606],   # Ligne d'index 2
        grad_fn=<EmbeddingBackward0>)
 ```
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 > ![Figure 2.16](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.16.png)
 >
@@ -723,7 +728,7 @@ tensor([[ 1.2753, -0.2010, -0.1606],   # Ligne d'index 2
 
 Les embeddings de tokens présentent un défaut structurel majeur : peu importe qu'un mot apparaisse en début, au milieu ou en fin de phrase, son vecteur d'embedding reste rigoureusement identique. Pire, le mécanisme de *self-attention* des LLMs (abordé au chapitre 3) est, par construction, **invariant à l'ordre** : il traite la séquence d'entrée comme un simple ensemble non ordonné de tokens, sans aucune notion de précédence ou de proximité.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 ![Figure 2.17](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.17.png)
 
@@ -749,7 +754,7 @@ Il existe deux grandes familles d'encodages positionnels :
 
 L'avantage principal est une **meilleure généralisation hors-distribution** : le modèle n'a jamais mémorisé de vecteur fixe par position absolue — il a appris à raisonner en termes d'*écarts entre tokens*, qui restent valables quelle que soit la longueur totale de la séquence.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+<div class="flex justify-center w-full my-6">
 
 ![Figure 2.18](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.18.png)
 
@@ -857,13 +862,14 @@ torch.Size([8, 4, 256])
 
 Grâce au mécanisme de *broadcasting* de PyTorch, le tenseur `pos_embeddings` de dimensions `(4, 256)` — identique pour chaque exemple du batch — s'additionne automatiquement à chacun des 8 exemples dans `token_embeddings` de dimensions `(8, 4, 256)`. C'est ce tenseur final `input_embeddings` qui est transmis aux couches profondes du modèle.
 
-<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.19](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.19.png)
 
-*Figure 2.19 : Résumé du pipeline de traitement de l'entrée. Le texte est tokenisé, converti en `token_ids`, transformé en embeddings de tokens, auxquels on additionne les embeddings positionnels pour former les `input_embeddings` transmis aux couches principales du LLM.*
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.19 : Résumé du pipeline de traitement de l'entrée. Le texte est tokenisé, converti en `token_ids`, transformé en embeddings de tokens, auxquels on additionne les embeddings positionnels pour former les `input_embeddings` transmis aux couches principales du LLM.*</figcaption>
+</figure>
 
-</div>
 
 ---
 

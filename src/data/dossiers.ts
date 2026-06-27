@@ -21,9 +21,14 @@ export const dossiers: DossierMeta[] = [
         description:
             "Notes de lecture chapitre par chapitre du livre de Sebastian Raschka. Un parcours complet pour comprendre et construire un LLM depuis zéro.",
         cover: "/images/dossiers/build-llm-from-scratch/cover.jpg",
-        totalChapters: 6,
+        totalChapters: 7,
         tags: ["LLM", "Deep Learning", "NLP", "Transformers"],
         chapters: [
+            {
+                number: 0,
+                title: "Introduction à PyTorch",
+                slug: "chapitre-0",
+            },
             {
                 number: 1,
                 title: "Comprendre les grands modèles de langage",
@@ -32,7 +37,7 @@ export const dossiers: DossierMeta[] = [
             {
                 number: 2,
                 title: "Travailler avec des données textuelles",
-                slug: "chapitre-2-donnees-textuelles",
+                slug: "chapitre-2-working-with-text-data",
             },
             {
                 number: 3,

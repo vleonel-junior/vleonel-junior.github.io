@@ -217,7 +217,7 @@ A computational graph is a directed graph that allows us to express and visualiz
 mathematical expressions. In the context of deep learning, a computation graph lays out the sequence of calculations needed to compute the output of a neural network—we will need this to compute the required gradients for backpropagation, the main
 training algorithm for neural networks.
 
-### A logistic regression forward pass
+#### A logistic regression forward pass
 
 
 
@@ -1224,7 +1224,7 @@ method will use the gradients to update the model parameters to minimize the los
 In the case of the `SGD optimizer`, this means multiplying the gradients with the learning rate and adding the scaled negative gradient to the parameters.
 
 ---
-### Pourquoi passer les Logits directement à la fonction Cross-Entropy ?
+#### Pourquoi passer les Logits directement à la fonction Cross-Entropy ?
 
 En PyTorch, on passe généralement les **logits** (sorties brutes) directement à la fonction de perte `cross_entropy`, sans appliquer le `Softmax` nous-mêmes, pour des raisons de **stabilité numérique**.
 

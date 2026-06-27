@@ -101,7 +101,7 @@ enough--so it was no
 
 Bien que l'entraînement de vrais LLMs implique souvent des millions d'articles (des gigaoctets de texte), nous utiliserons cet échantillon de 20 479 caractères à des fins éducatives pour pouvoir exécuter le code en temps raisonnable sur du matériel grand public.
 
-### Création d'un tokenizer de base avec Python
+## Création d'un tokenizer de base avec Python
 
 Afin de diviser le texte et d'obtenir une liste de tokens, nous faisons une courte incursion dans la bibliothèque d'expressions régulières de Python (`re`).
 
@@ -248,7 +248,7 @@ for i, item in enumerate(vocab.items()):
 </figure>
 
 
-### Implémentation d'une classe Tokenizer
+## Implémentation d'une classe Tokenizer
 
 Pour automatiser ce processus, nous allons implémenter une classe Python `SimpleTokenizerV1`. Elle comprendra :
 - Une méthode `encode()` pour diviser un texte en tokens et le transformer en IDs.
@@ -693,7 +693,7 @@ Les poids de la matrice d'embeddings sont initialisés avec de petites valeurs a
 
 </div>
 
-### Fonctionnement d'une couche d'embedding avec PyTorch
+## Fonctionnement d'une couche d'embedding avec PyTorch
 
 On instancie une telle couche avec `torch.nn.Embedding`. Ses dimensions dépendent de deux paramètres :
 - `vocab_size` : La taille du vocabulaire (le nombre de lignes).

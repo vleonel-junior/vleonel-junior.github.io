@@ -10,7 +10,7 @@ tags: ["LLM", "Transformers", "Deep Learning", "Generative AI"]
 draft: false
 ---
 
-## 1.1 Qu'est-ce qu'un LLM ?
+## Qu'est-ce qu'un LLM ?
 
 Un LLM (Large Language Model, ou grand modèle de langage) est un réseau de neurones profond conçu pour comprendre, générer et répondre à du texte de manière humaine. Le terme « large » fait référence à la fois à la taille du modèle (qui possède des dizaines, voire des centaines de milliards de paramètres ou poids ajustables optimisés pendant l'entraînement) et à l'immense ensemble de données textuelles sur lequel il est entraîné, couvrant parfois une grande partie de tout le texte disponible publiquement sur Internet.
 
@@ -32,7 +32,7 @@ La distinction fondamentale entre le *machine learning* traditionnel et le *deep
 
 À l'inverse, le *deep learning* utilise des réseaux de neurones comportant trois couches ou plus (réseaux de neurones profonds) pour modéliser directement des motifs et des abstractions complexes dans les données, sans nécessiter d'extraction manuelle des caractéristiques par des experts humains. (À noter que, dans un cadre d'apprentissage supervisé comme un filtre anti-spam, les deux méthodes nécessitent tout de même la collecte de labels initiaux).
 
-## 1.2 Applications des LLM
+## Applications des LLM
 Grâce à leur capacité à analyser des données textuelles non structurées, les LLM trouvent leur utilité dans une multitude de domaines, allant de la traduction automatique à la synthèse de texte en passant par l'analyse de sentiment. Ils sont aujourd'hui activement utilisés pour créer du contenu original tel que de la fiction, des articles de blog ou du code informatique.
 
 Au-delà de la simple génération, les LLM constituent le moteur d'assistants virtuels et de chatbots sophistiqués (comme ChatGPT ou Gemini). Ces outils transforment notre manière d'interagir avec la technologie, en rendant les systèmes plus conversationnels et en améliorant significativement l'interaction avec les moteurs de recherche classiques.
@@ -48,7 +48,7 @@ L'objectif final de l'ouvrage est d'ailleurs de démystifier le fonctionnement i
 </div>
 *Figure 1.2 : Les interfaces LLM permettent une communication en langage naturel entre les utilisateurs et les systèmes d’IA. Cette capture d’écran montre ChatGPT écrivant un poème selon les instructions d’un utilisateur.*
 
-## 1.3 Étapes de construction et d’utilisation des LLM
+## Étapes de construction et d’utilisation des LLM
 Construire son propre LLM depuis zéro permet de comprendre en profondeur son fonctionnement et ses limites, et d'acquérir les compétences nécessaires pour adapter des modèles open source à des besoins spécifiques (en utilisant généralement la bibliothèque PyTorch). Bien que des LLM généralistes comme ChatGPT soient très polyvalents, des modèles personnalisés et ciblés sur un domaine précis (comme la finance ou la médecine) peuvent souvent les surpasser.
 
 Le développement de modèles sur mesure offre des avantages majeurs pour les entreprises : une protection totale de la confidentialité des données (évitant le partage avec des tiers), une réduction des coûts et de la latence (notamment grâce au déploiement local de petits modèles), ainsi qu'une autonomie complète sur le contrôle et les mises à jour.
@@ -69,7 +69,7 @@ La seconde étape, l'**affinage (fine-tuning)**, sert à spécialiser ce modèle
 - Le *fine-tuning par instruction* : le modèle est entraîné sur des paires instruction-réponse (par exemple, une consigne de traduction et le texte traduit correspondant).
 - Le *fine-tuning pour la classification* : le modèle s'entraîne à associer des textes à des étiquettes spécifiques (par exemple, trier des e-mails en "spam" ou "non-spam").
 
-## 1.4 Introduction à l’architecture transformer
+## Introduction à l’architecture transformer
 La majorité des LLM actuels reposent sur l'architecture **transformer**, apparue en 2017. Le transformer d'origine, créé pour la traduction automatique, se compose de deux modules principaux :
 - Un **encodeur** qui analyse le texte d'entrée et le transforme en représentations numériques (vecteurs) intégrant le contexte.
 - Un **décodeur** qui utilise ces vecteurs pour générer consécutivement le texte de sortie.
@@ -104,7 +104,7 @@ De l'architecture d'origine ont dérivé deux grandes familles de modèles, adap
 \
 *(Note : Dans cet ouvrage, le terme "LLM" désigne par convention les modèles basés sur les transformers, bien qu'historiquement d'autres architectures existent).*
 
-## 1.5 Utilisation de grands jeux de données
+## Utilisation de grands jeux de données
 Les capacités remarquables des LLM proviennent de l'utilisation de corpus textuels colossaux, comprenant des milliards de "tokens". Un token désigne une unité de texte analysée par le modèle (souvent un mot ou un signe de ponctuation). 
 
 À titre d'exemple, le modèle de base GPT-3 a été entraîné sur environ 300 milliards de tokens, eux-mêmes extraits d'un jeu de données gigantesque filtré (CommonCrawl, livres, Wikipédia). C'est la taille et la diversité de ces données d'entraînement qui permettent au modèle d'acquérir une culture générale et une compréhension très fine de la sémantique et de la syntaxe.
@@ -113,7 +113,7 @@ Ces réseaux gigantesques sont appelés "modèles de base" (ou *foundation model
 
 Heureusement, de nombreux modèles de base sont proposés en open source. Il est donc possible de récupérer leurs paramètres (les "poids") préentraînés. L'essentiel à retenir ici est qu'un développeur peut ignorer l'étape onéreuse du préentraînement en réutilisant ces modèles open source, et se concentrer directement sur l'affinage (*fine-tuning*) pour ses propres tâches, des calculs qui restent à la portée d'un matériel informatique grand public.
 
-## 1.6 Un regard plus précis sur l’architecture GPT
+## Un regard plus précis sur l’architecture GPT
 Les modèles GPT (Generative Pre-trained Transformer) ont été conçus par OpenAI. ChatGPT, par exemple, est issu d'un affinage d'une version de base très volumineuse (GPT-3) sur un jeu de données d'instructions. Malgré leur polyvalence (correction, classification, traduction), l'apprentissage fondamental de ces modèles repose sur une tâche étonnamment simple : la prédiction du mot suivant.
 
 <div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
@@ -138,7 +138,7 @@ Contrairement au transformer d'origine (qui combinait encodeur et décodeur), l'
 \
 L'un des aspects les plus fascinants de ces modèles est l'apparition de **comportements émergents**. Bien qu'entraînés uniquement à prédire le mot suivant, l'exposition à des données si vastes et diverses permet aux modèles GPT de "comprendre" et de résoudre des tâches complexes (comme la traduction) pour lesquelles ils n'ont jamais été explicitement programmés.
 
-## 1.7 Construire un grand modèle de langage
+## Construire un grand modèle de langage
 La construction d'un LLM depuis la base, qui est l'objectif global de ce livre, s'articulera autour de trois grandes étapes :
 
 1. **Préparation et architecture (Étape 1)** : Apprendre les bases du prétraitement des données et coder le mécanisme d'attention, cœur du LLM.

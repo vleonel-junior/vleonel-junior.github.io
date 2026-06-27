@@ -30,7 +30,7 @@ Pour pouvoir traiter du texte, un LLM ne lit pas des phrases brutes, mais conver
 
 
 
-## 2.1 Comprendre les embeddings de mots
+## Comprendre les embeddings de mots
 
 Les réseaux de neurones ne peuvent pas traiter directement le texte brut, car les algorithmes nécessitent des valeurs numériques continues pour fonctionner. La méthode pour accomplir cela s'appelle l'**embedding** (ou plongement vectoriel).
 
@@ -60,7 +60,7 @@ Cependant, les LLM modernes ne s'appuient pas sur Word2Vec. Ils utilisent leur p
 
 Enfin, la **dimensionnalité** de ces vecteurs est clé : un espace à deux dimensions est utile pour enseigner et visualiser (comme la figure 2.3), mais dans un modèle réel, le nombre de dimensions chiffre très vite pour capturer toute l'expressivité et la nuance de la langue. Plus il y a de dimensions, plus la précision augmente, au détriment de l'efficacité calculatoire. Un petit GPT-2 utilise 768 dimensions pour un seul mot, alors que l'immense GPT-3 en requiert 12 288 !
 
-## 2.2 La tokenization du texte (Tokenizing text)
+## La tokenization du texte (Tokenizing text)
 
 La tokenization (ou segmentation en lexèmes) est une étape de prétraitement indispensable avant la création d'embeddings pour un LLM. Elle consiste à diviser le texte d'entrée en *tokens* individuels, qui peuvent être des mots isolés ou des caractères spéciaux, y compris la ponctuation.
 
@@ -191,7 +191,7 @@ print(preprocessed[:30])
 ```
 
 
-## 2.3 Convertir les tokens en identifiants (Token IDs)
+## Convertir les tokens en identifiants (Token IDs)
 
 Une fois le texte divisé en tokens (chaînes de caractères), l'étape suivante consiste à les convertir en nombres entiers (*Token IDs*). C'est une étape intermédiaire obligatoire avant de générer les vecteurs d'embeddings.
 
@@ -322,7 +322,7 @@ KeyError: 'Hello'
 
 **Problème :** Le mot "Hello" n'apparaît pas dans la nouvelle *"The Verdict"*, il est donc absent de notre vocabulaire. Cela démontre pourquoi les LLMs doivent être entraînés sur de gigantesques ensembles de données diversifiés pour étendre leur vocabulaire (et pourquoi nous aurons besoin de tokens spéciaux pour gérer les mots inconnus).
 
-## 2.4 Ajouter des tokens de contexte spéciaux (Adding special context tokens)
+## Ajouter des tokens de contexte spéciaux (Adding special context tokens)
 
 Il est indispensable de modifier le tokenizer pour gérer les mots inconnus. De plus, l'ajout de tokens de contexte spéciaux permet d'améliorer la compréhension du modèle, par exemple pour marquer la fin ou le début d'un document. Nous allons ajouter deux nouveaux tokens : `<|unk|>` pour les mots inconnus, et `<|endoftext|>` pour séparer des documents textuels indépendants.
 
@@ -457,7 +457,7 @@ Selon le LLM, certains chercheurs considèrent également d'autres tokens spéci
 >
 > Enfin, ce tokenizer n'utilise pas de token `<|unk|>` pour les mots hors-vocabulaire (*out-of-vocabulary*). Il utilise plutôt un algorithme appelé encodage par paire d'octets (*Byte Pair Encoding* ou `BPE`), qui décompose les mots inconnus en sous-mots (*subword units*), comme nous le verrons dans la section suivante.
 
-## 2.5 L'Encodage par paire d'octets (Byte Pair Encoding - BPE)
+## L'Encodage par paire d'octets (Byte Pair Encoding - BPE)
 
 Examinons un schéma de tokenisation plus sophistiqué basé sur un concept appelé encodage par paire d'octets (Byte Pair Encoding - BPE). Le tokenizer BPE a été utilisé pour entraîner des LLMs tels que GPT-2, GPT-3 et le modèle original utilisé dans ChatGPT.
 
@@ -573,7 +573,7 @@ Akwirw ier
 
 En bref, le BPE construit son vocabulaire de manière progressive, en partant de la plus petite unité. Il initialise d'abord son vocabulaire avec tous les caractères individuels (par exemple "a", "b", etc.). Ensuite, il repère les caractères qui apparaissent le plus souvent côte à côte pour les fusionner en sous-mots. Par exemple, si "d" et "e" sont très souvent adjacents, ils sont fusionnés pour créer le sous-mot "de" (très courant dans des mots comme "define" ou "made"). Ce mécanisme se répète itérativement, fusionnant les sous-mots les plus fréquents en mots entiers, uniquement sur la base de leur fréquence d'apparition.
 
-## 2.6 Échantillonnage des données avec une fenêtre glissante (Sliding window)
+## Échantillonnage des données avec une fenêtre glissante (Sliding window)
 
 Pour entraîner un LLM, on génère des paires entrée-cible (input-target pairs). La tâche du modèle étant de prédire le mot suivant, la séquence cible (`y`) correspond exactement à la séquence d'entrée (`x`), mais décalée d'une position vers la droite.
 
@@ -679,7 +679,7 @@ def create_dataloader_v1(txt, batch_size=4, max_length=256, stride=128, shuffle=
 > Essayez le data loader avec d'autres paramètres comme `max_length=2` et `stride=2`, ou encore `max_length=8` et `stride=2` pour développer votre intuition de la mécanique de la fenêtre glissante.
 
 
-## 2.7 Création des embeddings de tokens (Token embeddings)
+## Création des embeddings de tokens (Token embeddings)
 
 La dernière étape de la préparation des données consiste à convertir les identifiants de tokens (token IDs) en vecteurs d'intégration continus (embedding vectors). Cette représentation vectorielle est requise car les LLMs sont des réseaux de neurones profonds entraînés par l'algorithme de rétropropagation (backpropagation).
 
@@ -724,7 +724,7 @@ tensor([[ 1.2753, -0.2010, -0.1606],   # Ligne d'index 2
 > **Note sur le One-hot encoding :**
 > Utiliser une couche d'embedding est mathématiquement et fondamentalement équivalent à appliquer un encodage "one-hot" suivi d'une multiplication matricielle (couche fully connected). La couche d'embedding est cependant une implémentation beaucoup plus efficace en termes de calculs, tout en restant un composant différentiable pour la rétropropagation.
 
-## 2.8 Encodage de la position des mots
+## Encodage de la position des mots
 
 Les embeddings de tokens présentent un défaut structurel majeur : peu importe qu'un mot apparaisse en début, au milieu ou en fin de phrase, son vecteur d'embedding reste rigoureusement identique. Pire, le mécanisme de *self-attention* des LLMs (abordé au chapitre 3) est, par construction, **invariant à l'ordre** : il traite la séquence d'entrée comme un simple ensemble non ordonné de tokens, sans aucune notion de précédence ou de proximité.
 

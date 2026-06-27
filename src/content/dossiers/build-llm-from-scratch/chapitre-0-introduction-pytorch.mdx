@@ -28,7 +28,7 @@ torch.cuda.is_available()
 True
 ```
 
-## 1. Understanding tensor
+## Understanding tensor
 
 ```python
 tensor0d = torch.tensor(1)
@@ -131,7 +131,7 @@ to ensure the desired shape.
 
 Oubliez les mathématiques un instant et imaginons comment fonctionne la **mémoire physique** de votre ordinateur (la RAM ou la VRAM).
 
-### a. Qu'est-ce que les "données physiques" ?
+### Qu'est-ce que les "données physiques" ?
 La mémoire de votre ordinateur n'a pas de concept de "tableau en 2D" ou de "cube en 3D". La mémoire est simplement une très longue **ligne droite de petites boîtes**.
 
 Imaginons que vous créez un tenseur PyTorch simple, un tableau de 2 lignes et 2 colonnes :
@@ -147,7 +147,7 @@ Quand PyTorch veut lire la première ligne `[1, 2]`, il lit les deux premières 
 
 ---
 
-### b. Comment un tenseur devient "non-contigu" (modifié de façon complexe) ?
+### Comment un tenseur devient "non-contigu" (modifié de façon complexe) ?
 Maintenant, appliquons une opération mathématique, par exemple la **transposition** (qui échange les lignes et les colonnes).
 
 ```python
@@ -166,14 +166,14 @@ Le tenseur est devenu **non-contigu**. C'est cela une "modification complexe" : 
 
 ---
 
-### c. Le drame avec `.view()`
+### Le drame avec `.view()`
 La fonction `.view()` sert à donner une nouvelle forme à un tenseur (par exemple, transformer notre 2x2 en une ligne de 4). Mais `.view()` a une limitation technique : **elle refuse de travailler si elle doit sauter des boîtes.** Elle veut lire les boîtes sagement de gauche à droite.
 
 Si vous faites `t_transpose.view(4)`, PyTorch panique : *"Hé, ce tenseur me demande de faire des sauts dans la mémoire physique, je ne peux pas faire un `.view()` là-dessus !"* -> **Erreur (Crash).**
 
 ---
 
-### d. Le côté magique de `.reshape()`
+### Le côté magique de `.reshape()`
 La fonction `.reshape(4)` est beaucoup plus intelligente. 
 Quand vous la lancez sur `t_transpose` :
 
@@ -209,7 +209,7 @@ tensor([[14, 32],
 
 ```
 
-## 2. Seeing models as computation graphs
+## Seeing models as computation graphs
 
 PyTorch’s autograd system provides functions to compute gradients in dynamic computational
 graphs automatically.
@@ -1436,7 +1436,7 @@ The line `model = NeuralNetwork(2, 2)` was included it here to illustrate that *
 
 ## Optimizing training performance with GPUs
 
-### 1- Pytorch computations on GPU devices
+### Pytorch computations on GPU devices
 
 In PyTorch, a `device` is **where computations occur and data resides.**
 The CPU and the GPU are examples of devices. A PyTorch tensor resides in a device, and its operations are executed on the same device.
@@ -1495,7 +1495,7 @@ tensor([5., 7., 9.], device='cuda:0')
 
 ```
 
-### 2- Single_GPU training
+### Single_GPU training
 
 A training loop on a GPU
 

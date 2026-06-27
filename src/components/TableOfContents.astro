@@ -22,14 +22,6 @@ let h2Counter = 0;
 let h3Counter = 0;
 
 const numberedHeadings = filteredHeadings.map((heading) => {
-    // Check if heading already starts with a number (e.g., "1.2 ", "1 ", "1. ", "3.1.2 ")
-    const manualNumberMatch = heading.text.match(/^(\d+(?:\.\d+)*)\.?\s+(.+)$/);
-    
-    if (manualNumberMatch) {
-        const isTopLevel = !hasH2 || heading.depth === 2;
-        return { ...heading, number: manualNumberMatch[1], text: manualNumberMatch[2], isTop: isTopLevel };
-    }
-
     if (!hasH2) {
         // All headings are h3 — treat as top-level
         h2Counter++;

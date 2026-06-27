@@ -28,6 +28,7 @@ const dossiers = defineCollection({
         tags: z.array(z.string()).default([]),
         readTime: z.number().optional(),
         draft: z.boolean().default(false),
+        showToc: z.boolean().default(true),
     }),
 });
 

@@ -25,6 +25,7 @@ export async function getStaticPaths() {
 
 const { chapter, dossierMeta, slug } = Astro.props;
 const { Content, headings } = await chapter.render();
+const showToc = chapter.data.showToc !== false;
 
 const formattedDate = chapter.data.pubDate.toLocaleDateString("en-US", {
 	year: "numeric",
@@ -126,11 +127,13 @@ if (dossierMeta) {
 		<div class="max-w-5xl mx-auto px-4 md:px-6">
 			<div class="blog-layout">
 				<!-- Left Sidebar TOC — Desktop only -->
+				{showToc && (
 				<aside class="blog-sidebar">
 					<div class="sticky top-32">
 						<TableOfContents headings={headings} mode="sidebar" />
 					</div>
 				</aside>
+				)}
 
 				<!-- Article content -->
 				<div class="blog-content">
@@ -195,9 +198,11 @@ if (dossierMeta) {
 		</div>
 
 		<!-- Mobile TOC -->
+		{showToc && (
 		<div class="blog-mobile-toc">
 			<TableOfContents headings={headings} mode="mobile" />
 		</div>
+		)}
 	</main>
 </Layout>
 

@@ -728,16 +728,15 @@ tensor([[ 1.2753, -0.2010, -0.1606],   # Ligne d'index 2
 
 Les embeddings de tokens présentent un défaut structurel majeur : peu importe qu'un mot apparaisse en début, au milieu ou en fin de phrase, son vecteur d'embedding reste rigoureusement identique. Pire, le mécanisme de *self-attention* des LLMs (abordé au chapitre 3) est, par construction, **invariant à l'ordre** : il traite la séquence d'entrée comme un simple ensemble non ordonné de tokens, sans aucune notion de précédence ou de proximité.
 
-<div class="flex justify-center w-full my-6">
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.17](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.17.png)
 
-*Figure 2.17 : La couche d'embedding assigne la même représentation vectorielle à un token,
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.17 : La couche d'embedding assigne la même représentation vectorielle à un token,
 quelle que soit sa position dans la séquence. Par exemple, le `token_id` 5, qu'il soit en
 première ou en quatrième position dans le vecteur d'entrée, produira toujours le même vecteur
-d'embedding.*
-
-</div>
+d'embedding.*</figcaption>
+</figure>
 
 Il est donc indispensable d'injecter une information de position dans ces embeddings pour que le réseau comprenne l'ordre des mots.
 
@@ -754,15 +753,14 @@ Il existe deux grandes familles d'encodages positionnels :
 
 L'avantage principal est une **meilleure généralisation hors-distribution** : le modèle n'a jamais mémorisé de vecteur fixe par position absolue — il a appris à raisonner en termes d'*écarts entre tokens*, qui restent valables quelle que soit la longueur totale de la séquence.
 
-<div class="flex justify-center w-full my-6">
+<figure class="my-8 flex flex-col items-center gap-3">
 
 ![Figure 2.18](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.18.png)
 
-*Figure 2.18 : Les embeddings positionnels sont additionnés aux embeddings de tokens pour
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.18 : Les embeddings positionnels sont additionnés aux embeddings de tokens pour
 former les embeddings d'entrée finaux du LLM. Les vecteurs positionnels ont la même dimension
-que les embeddings de tokens.*
-
-</div>
+que les embeddings de tokens.*</figcaption>
+</figure>
 
 ---
 

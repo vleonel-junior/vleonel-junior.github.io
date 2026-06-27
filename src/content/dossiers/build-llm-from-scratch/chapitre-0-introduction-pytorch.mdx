@@ -28,7 +28,7 @@ torch.cuda.is_available()
 True
 ```
 
-### 1-Understanding tensor
+## 1. Understanding tensor
 
 ```python
 tensor0d = torch.tensor(1)
@@ -131,7 +131,7 @@ to ensure the desired shape.
 
 Oubliez les mathématiques un instant et imaginons comment fonctionne la **mémoire physique** de votre ordinateur (la RAM ou la VRAM).
 
-#### a. Qu'est-ce que les "données physiques" ?
+### a. Qu'est-ce que les "données physiques" ?
 La mémoire de votre ordinateur n'a pas de concept de "tableau en 2D" ou de "cube en 3D". La mémoire est simplement une très longue **ligne droite de petites boîtes**.
 
 Imaginons que vous créez un tenseur PyTorch simple, un tableau de 2 lignes et 2 colonnes :
@@ -147,7 +147,7 @@ Quand PyTorch veut lire la première ligne `[1, 2]`, il lit les deux premières 
 
 ---
 
-#### b. Comment un tenseur devient "non-contigu" (modifié de façon complexe) ?
+### b. Comment un tenseur devient "non-contigu" (modifié de façon complexe) ?
 Maintenant, appliquons une opération mathématique, par exemple la **transposition** (qui échange les lignes et les colonnes).
 
 ```python
@@ -166,14 +166,14 @@ Le tenseur est devenu **non-contigu**. C'est cela une "modification complexe" : 
 
 ---
 
-#### c. Le drame avec `.view()`
+### c. Le drame avec `.view()`
 La fonction `.view()` sert à donner une nouvelle forme à un tenseur (par exemple, transformer notre 2x2 en une ligne de 4). Mais `.view()` a une limitation technique : **elle refuse de travailler si elle doit sauter des boîtes.** Elle veut lire les boîtes sagement de gauche à droite.
 
 Si vous faites `t_transpose.view(4)`, PyTorch panique : *"Hé, ce tenseur me demande de faire des sauts dans la mémoire physique, je ne peux pas faire un `.view()` là-dessus !"* -> **Erreur (Crash).**
 
 ---
 
-#### d. Le côté magique de `.reshape()`
+### d. Le côté magique de `.reshape()`
 La fonction `.reshape(4)` est beaucoup plus intelligente. 
 Quand vous la lancez sur `t_transpose` :
 
@@ -209,7 +209,7 @@ tensor([[14, 32],
 
 ```
 
-### 2. Seeing models as computation graphs
+## 2. Seeing models as computation graphs
 
 PyTorch’s autograd system provides functions to compute gradients in dynamic computational
 graphs automatically.
@@ -217,7 +217,7 @@ A computational graph is a directed graph that allows us to express and visualiz
 mathematical expressions. In the context of deep learning, a computation graph lays out the sequence of calculations needed to compute the output of a neural network—we will need this to compute the required gradients for backpropagation, the main
 training algorithm for neural networks.
 
-#### A logistic regression forward pass
+### A logistic regression forward pass
 
 
 
@@ -257,7 +257,7 @@ loss = F.binary_cross_entropy(a, y)
 
 ```
 
-### Automatic differentiation made easy
+## Automatic differentiation made easy
 
 Si nous effectuons des calculs dans PyTorch, il construira par défaut un graphe de calcul en interne si l'un de ses nœuds terminaux possède l'attribut `requires_grad` défini sur `True`. Cela s'avère utile si nous souhaitons calculer des gradients. Les gradients sont indispensables lors de l'entraînement des réseaux de neurones via le célèbre algorithme de rétropropagation (ou *backpropagation*), que l'on peut considérer comme une application de la règle de dérivation en chaîne (*chain rule*) du calcul différentiel pour les réseaux de neurones, comme l'illustre la figure ci-dessous :
 
@@ -330,7 +330,7 @@ tensor([-0.0817])
 
 ```
 
-### Implementing a multilayer neural networks
+## Implementing a multilayer neural networks
 
 Let’s look at a multilayer perceptron, a fully connected neural network, as illustrated in the figure below :
 
@@ -421,7 +421,8 @@ NeuralNetwork(
 
 ```
 
-##### 1. `model.parameters()`
+**1. `model.parameters()`**
+
 Méthode obtenu en héritant de `torch.nn.Module`, quand nous appelons `model.parameters()`, PyTorch parcourt de lui-même **toutes les couches** de notre réseau (nos `nn.Linear`, qu'elles soient dans un `Sequential` ou non). 
 
 Pour chaque couche `Linear`, il "récupère" deux choses essentielles :
@@ -431,17 +432,20 @@ Pour chaque couche `Linear`, il "récupère" deux choses essentielles :
 
 Il nous renvoie une liste (un générateur, plus exactement) contenant chacun de ces gros tableaux mathématiques (les tenseurs).
 
-##### 2. `for p in ...`
+**2. `for p in ...`**
+
 La boucle parcourt cette liste. À chaque tour, `p` est un tenseur (une matrice de poids ou un vecteur de biais).
 
-##### 3. `p.numel()`
+**3. `p.numel()`**
+
 Comme nous l'avons vu, il compte le nombre total de valeurs à l'intérieur du tenseur `p`.
 Par exemple :
 *   Si `p` est la matrice de poids de la 1re couche (`Linear(50, 30)`), il compte $50 \times 30 = 1500$ éléments.
 *   Si `p` est le biais de cette 1re couche, il compte $30$ éléments.
 *   Total pour cette couche : 1530 paramètres.
 
-##### 4. `if p.requires_grad` (Le détail crucial)
+**4. `if p.requires_grad` (Le détail crucial)**
+
 C'est un filtre très astucieux.
 Il dit à la boucle : "Ne compte que les paramètres que l'optimiseur a le droit de modifier pendant l'entraînement (`requires_grad=True`)".
 
@@ -501,7 +505,7 @@ tensor([ 0.1108,  0.0739, -0.0027, -0.0209,  0.0596, -0.0188, -0.1029, -0.0371,
 
 ```
 
-#### We can make the random number initialization reproducible by seeding Pytorch's random generator via `manual_seed`
+### We can make the random number initialization reproducible by seeding Pytorch's random generator via `manual_seed`
 
 ```python
 torch.manual_seed(123)
@@ -522,7 +526,7 @@ tensor([[-0.0577,  0.0047, -0.0702,  ...,  0.0222,  0.1260,  0.0865],
 
 ```
 
-#### Let's briefly see how NeuralNetwork is used via the forward pass 
+### Let's briefly see how NeuralNetwork is used via the forward pass 
 
 ```python
 torch.manual_seed(123)
@@ -536,13 +540,17 @@ tensor([[-0.1262,  0.1080, -0.1792]], grad_fn=<AddmmBackward0>)
 
 ```
 
-##### The forward pass refers to calculating output tensors from input tensors. This involves passing the input data through all the neural network layers, starting from the input layer, through hidden layers, and finally to the output layer.
+**The forward pass refers to calculating output tensors from input tensors. This involves passing the input data through all the neural network layers, starting from the input layer, through hidden layers, and finally to the output layer.**
 
-##### These three numbers returned here correspond to a score assigned to each of the three output nodes. Notice that the output tensor also includes a `grad_fn value`
 
-##### Here, `grad_fn =<AddmmBackward0>` represents the last-used function to compute a variable in the computational graph. PyTorch will use this information when it computes gradients during backpropagation. In this case, it is an Addmm operation. **Addmm** stands for **matrix multiplication (mm)** followed by an **addition (Add)**.
+**These three numbers returned here correspond to a score assigned to each of the three output nodes. Notice that the output tensor also includes a `grad_fn value`**
 
-##### When we use a model **for inference (for instance, making predictions) rather than training**, the best practice is to use the `torch.no_grad()` context manager. This tells PyTorch that it doesn’t need to keep track of the gradients, which can result in significant savings in memory and computation.
+
+**Here, `grad_fn =<AddmmBackward0>` represents the last-used function to compute a variable in the computational graph. PyTorch will use this information when it computes gradients during backpropagation. In this case, it is an Addmm operation. **Addmm** stands for **matrix multiplication (mm)** followed by an **addition (Add)**.**
+
+
+**When we use a model **for inference (for instance, making predictions) rather than training**, the best practice is to use the `torch.no_grad()` context manager. This tells PyTorch that it doesn’t need to keep track of the gradients, which can result in significant savings in memory and computation.**
+
 
 ```python
 with torch.no_grad():
@@ -569,7 +577,7 @@ tensor([[0.3113, 0.3934, 0.2952]])
 
 ```
 
-### Setting up efficient data loaders 
+## Setting up efficient data loaders
 
 The overall idea behind data loading in PyTorch is illustrated in the figure below :
 
@@ -740,9 +748,10 @@ C'est ce à quoi nous tenterons de répondre dans les lignes à suivre.
 
 ---
 
-#### Partie I — Le DataLoader et les Workers : anatomie d'un pipeline de données
+### Partie I — Le DataLoader et les Workers : anatomie d'un pipeline de données
 
-##### 1.1 La boucle d'entraînement et son goulot d'étranglement fondamental
+**1.1 La boucle d'entraînement et son goulot d'étranglement fondamental**
+
 
 Un réseau de neurones s'entraîne par itérations successives. À chaque itération, le modèle reçoit un *batch* de données, calcule une prédiction (*forward pass*), mesure son erreur via une fonction de perte (*loss*), puis rétropropage cette erreur à travers ses couches pour ajuster ses paramètres (*backward pass*). Cette séquence se répète des milliers, voire des millions de fois.
 
@@ -752,7 +761,8 @@ Si ces deux phases sont exécutées séquentiellement — c'est-à-dire si le GP
 
 La solution conceptuelle est celle du **pipeline** : préparer les prochains batchs *pendant* que le GPU travaille sur le batch courant. C'est exactement ce que réalise le mécanisme des *workers*.
 
-##### 1.2 Architecture interne du DataLoader
+**1.2 Architecture interne du DataLoader**
+
 
 Le `DataLoader` de PyTorch n'est pas un simple itérateur. C'est un **orchestrateur** qui coordonne plusieurs composants distincts, chacun ayant une responsabilité précise.
 
@@ -766,7 +776,8 @@ Le `DataLoader` de PyTorch n'est pas un simple itérateur. C'est un **orchestrat
 
 **Les workers** sont les processus fils chargés d'exécuter `dataset[i]` et d'appliquer les transformations, en parallèle du processus principal.
 
-##### 1.3 Le mode `num_workers=0` : tout dans le processus principal
+**1.3 Le mode `num_workers=0` : tout dans le processus principal**
+
 
 Lorsque `num_workers=0` (valeur par défaut), il n'y a aucun processus fils. Le processus principal est seul, et il effectue **toutes les opérations séquentiellement** :
 
@@ -787,7 +798,8 @@ Dans ce mode, le GPU est **inactif** aux étapes 1 à 5. Il attend que le CPU ai
 
 Ce mode est cependant parfaitement adapté aux datasets de petite taille entièrement chargés en RAM (comme dans notre exemple jouet avec 5 tenseurs), car le coût de chargement est négligeable, et les workers introduiraient un surcoût de démarrage inutile.
 
-##### 1.4 Le mode `num_workers > 0` : parallélisme par processus
+**1.4 Le mode `num_workers > 0` : parallélisme par processus**
+
 
 Dès que `num_workers=N` avec N > 0, PyTorch crée N processus fils au démarrage de l'itération. Ces processus sont créés via le mécanisme de **fork** (ou *spawn* sur Windows et macOS selon la configuration), qui est un appel système dupliquant l'espace mémoire du processus parent.
 
@@ -885,7 +897,8 @@ L’idée est que le GPU ne doive presque jamais attendre les données : pendant
   <p><em>Loading data without multiple workers (setting num_workers=0) will create a data loading bottleneck where the model sits idle until the next batch is loaded (left). If multiple workers are enabled, the data loader can queue up the next batch in the background (right).</em></p>
 </div>
 
-##### 1.5 Le mécanisme de *pin_memory*
+**1.5 Le mécanisme de *pin_memory***
+
 
 Jusqu’ici, l’optimisation concernait principalement la communication entre les différents processus CPU. Grâce à la **shared memory**, les workers peuvent transmettre efficacement les batchs préparés au processus principal sans recopier inutilement les tenseurs en mémoire.
 
@@ -971,11 +984,12 @@ Ces deux mécanismes interviennent donc à des étapes différentes mais complé
 
 ---
 
-#### Partie II — Entraînement Multi-GPU : stratégies et mécanismes
+### Partie II — Entraînement Multi-GPU : stratégies et mécanismes
 
 ---
 
-##### 2.1 Pourquoi plusieurs GPUs ?
+**2.1 Pourquoi plusieurs GPUs ?**
+
 
 Pour comprendre l'utilité de plusieurs GPUs, il faut d'abord saisir deux limites fondamentales et bien distinctes que l'on rencontre lors de l'entraînement de modèles modernes.
 
@@ -987,7 +1001,8 @@ Ces deux motivations — l'une contraignante, l'autre optimisante — donnent na
 
 ---
 
-##### 2.2 DataParallel (DP) : la première approche, naïve
+**2.2 DataParallel (DP) : la première approche, naïve**
+
 
 `torch.nn.DataParallel` est l'API historique de PyTorch pour l'entraînement multi-GPU. Pour bien comprendre ses limites, il faut d'abord comprendre comment elle fonctionne de l'intérieur — et cela commence par deux notions fondamentales : ce qu'est un **processus** et ce qu'est un **thread**.
 
@@ -1029,7 +1044,8 @@ Ces deux défauts — la centralisation sur le GPU 0 et le GIL — ne sont pas d
 
 ---
 
-##### 2.3 DistributedDataParallel (DDP) : le standard actuel
+**2.3 DistributedDataParallel (DDP) : le standard actuel**
+
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-12.png" width="800" />
@@ -1093,7 +1109,8 @@ Pour plus de détails, vous pouvez consulter [Bringing HPC Techniques to Deep Le
 
 ---
 
-##### 2.4 Parallélisme de modèle (*Model Parallelism*)
+**2.4 Parallélisme de modèle (*Model Parallelism*)**
+
 
 Aussi efficace que soit DDP, il suppose implicitement une chose : que le modèle tient dans la VRAM d'un seul GPU. Lorsque ce n'est plus le cas — ce qui est la norme pour les très grands modèles — une toute autre famille de stratégies s'impose, dans laquelle ce n'est plus le dataset qui est distribué, mais **le modèle lui-même**.
 
@@ -1133,9 +1150,10 @@ Chaque dimension de ce cube résout un problème différent : le tensor parallel
 
 - <a href="https://huggingface.co/spaces/nanotron/ultrascale-playbook?section=high-level_overview">The Ultra-Scale Playbook: Training LLMs on GPU Clusters</a>
 
-### A typical training loop
+## A typical training loop
 
-##### Let's now train neural network on the toy dataset
+**Let's now train neural network on the toy dataset**
+
 
 ```python
 import torch.nn.functional as F
@@ -1206,11 +1224,12 @@ method will use the gradients to update the model parameters to minimize the los
 In the case of the `SGD optimizer`, this means multiplying the gradients with the learning rate and adding the scaled negative gradient to the parameters.
 
 ---
-#### Pourquoi passer les Logits directement à la fonction Cross-Entropy ?
+### Pourquoi passer les Logits directement à la fonction Cross-Entropy ?
 
 En PyTorch, on passe généralement les **logits** (sorties brutes) directement à la fonction de perte `cross_entropy`, sans appliquer le `Softmax` nous-mêmes, pour des raisons de **stabilité numérique**.
 
-##### 1. Le problème (L'instabilité numérique)
+**1. Le problème (L'instabilité numérique)**
+
 Si un modèle génère un logit très grand, le calcul manuel du Softmax ($e^x$) provoque un dépassement de capacité en mémoire (*overflow*).
 
 **Exemple naïf :**
@@ -1225,7 +1244,8 @@ probabilites = exponentielles / torch.sum(exponentielles)
 # Résultat : tensor([nan,  0.,  0.])  <-- inf/inf crash le calcul (Not a Number)
 ```
 
-##### 2. La solution (Ce que fait PyTorch en coulisses)
+**2. La solution (Ce que fait PyTorch en coulisses)**
+
 PyTorch utilise l'astuce mathématique *LogSumExp*. Avant de calculer l'exponentielle, il soustrait la valeur maximale à tous les logits. 
 
 **L'astuce en action :**
@@ -1238,7 +1258,8 @@ exponentielles_stables = torch.exp(logits_stables)
 # Résultat : tensor([1.0, 0.0, 0.0])  <-- Fini les "inf" ! L'exponentielle de 0 est 1.
 ```
 
-##### 3. Pourquoi la soustraction donne-t-elle les mêmes probabilités ? (La Preuve)
+**3. Pourquoi la soustraction donne-t-elle les mêmes probabilités ? (La Preuve)**
+
 On pourrait penser que modifier les logits fausse le résultat final. Or, la fonction Softmax est **insensible à l'addition ou la soustraction d'une constante** ! Voici la preuve mathématique :
 
 La formule de la probabilité pour un logit $x_i$ est :  
@@ -1386,7 +1407,7 @@ print(compute_accuracy(model, test_loader))
 
 ```
 
-### Saving and loading models
+## Saving and loading models
 
 ```python
 # To save models in Pytorch
@@ -1413,9 +1434,9 @@ The `torch.load()` function **reads the file `model.pth` and reconstructs the Py
 
 The line `model = NeuralNetwork(2, 2)` was included it here to illustrate that **we need an instance of the model in memory to apply the saved parameters**.
 
-### Optimizing training performance with GPUs
+## Optimizing training performance with GPUs
 
-#### 1- Pytorch computations on GPU devices
+### 1- Pytorch computations on GPU devices
 
 In PyTorch, a `device` is **where computations occur and data resides.**
 The CPU and the GPU are examples of devices. A PyTorch tensor resides in a device, and its operations are executed on the same device.
@@ -1474,7 +1495,7 @@ tensor([5., 7., 9.], device='cuda:0')
 
 ```
 
-#### 2- Single_GPU training
+### 2- Single_GPU training
 
 A training loop on a GPU
 
@@ -1523,7 +1544,8 @@ Epoch: 003/003 | Batch 001/002 | Train/ Val Loss:  0.00
 
 ```
 
-##### 1.6 Le rôle de `.to(device)` : déclencher le transfert vers le GPU
+**1.6 Le rôle de `.to(device)` : déclencher le transfert vers le GPU**
+
 
 À ce stade, le pipeline CPU est entièrement optimisé :
 
@@ -1572,7 +1594,8 @@ Ainsi, `.to(device)` n'est pas un détail technique annexe. C'est le **dernier m
 ---
 
 
-##### 1.7 Ordonnancement des batchs et traitement par le GPU
+**1.7 Ordonnancement des batchs et traitement par le GPU**
+
 
 Les sections précédentes ont montré comment les workers préparent les batchs en parallèle. Une question se pose alors naturellement : dans quel ordre le GPU traite-t-il ces batchs, sachant que plusieurs workers progressent simultanément et ne terminent pas nécessairement au même moment ?
 
@@ -1691,7 +1714,7 @@ to
 
 `device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")`
 
-#### Exercise A.4
+### Exercise A.4
 
 Compare the run time of matrix multiplication on a CPU to a GPU. 
 
@@ -1699,7 +1722,8 @@ At what matrix size do you begin to see the matrix multiplication on the GPU bei
 Hint: use the `%timeit` command in Jupyter to compare the run time. For example,
 given matrices a and b, run the command `%timeit a @ b` in a new notebook cell.
 
-##### size = 32
+**size = 32**
+
 
 ```python
 import torch
@@ -1731,7 +1755,8 @@ b_gpu = b_cpu.to("cuda")
 
 ```
 
-##### size = 64
+**size = 64**
+
 
 ```python
 import torch
@@ -1763,7 +1788,8 @@ b_gpu = b_cpu.to("cuda")
 
 ```
 
-##### size = 128
+**size = 128**
+
 
 ```python
 import torch
@@ -1795,7 +1821,8 @@ b_gpu = b_cpu.to("cuda")
 
 ```
 
-##### size = 256
+**size = 256**
+
 
 ```python
 import torch
@@ -1827,7 +1854,8 @@ b_gpu = b_cpu.to("cuda")
 
 ```
 
-##### size = 512
+**size = 512**
+
 
 ```python
 import torch
@@ -1859,7 +1887,8 @@ b_gpu = b_cpu.to("cuda")
 
 ```
 
-##### size = 1024
+**size = 1024**
+
 
 ```python
 import torch
@@ -1891,7 +1920,7 @@ b_gpu = b_cpu.to("cuda")
 
 ```
 
-#### Training with multiple GPUs
+### Training with multiple GPUs
 
 `DDP` **(Distributed DataParallel)** enables parallelism by splitting the input data across the available devices and processing these data subsets simultaneously.
 
@@ -1935,7 +1964,8 @@ Ou, si votre machine possède quatre GPU et que vous souhaitez uniquement utilis
 
 Définir `CUDA_VISIBLE_DEVICES` de cette manière est un moyen simple et efficace de gérer l'allocation des GPU sans avoir à modifier vos scripts PyTorch.
 
-##### 1.8 Sorties dupliquées et contrôle par le rang
+**1.8 Sorties dupliquées et contrôle par le rang**
+
 
 Comme le montre la sortie ci-dessous, les lignes de précision apparaissent en double à la fin de l'exécution sur une machine avec deux GPUs:
 
@@ -1991,7 +2021,8 @@ C'est une règle générale sous DDP : **toute opération qui ne doit être effe
 
 ---
 
-##### 1.9 Alternatives à DDP pour l'entraînement multi-GPU
+**1.9 Alternatives à DDP pour l'entraînement multi-GPU**
+
 
 DDP n'est pas la seule façon d'entraîner un modèle sur plusieurs GPUs avec PyTorch. Si vous préférez une approche plus simple et moins verbeuse, des bibliothèques complémentaires comme **Fabric** (open-source) permettent d'obtenir le même résultat avec beaucoup moins de code boilerplate.
 

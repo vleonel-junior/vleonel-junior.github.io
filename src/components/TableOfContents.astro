@@ -26,7 +26,8 @@ const numberedHeadings = filteredHeadings.map((heading) => {
     const manualNumberMatch = heading.text.match(/^(\d+(?:\.\d+)*)\.?\s+(.+)$/);
     
     if (manualNumberMatch) {
-        return { ...heading, number: manualNumberMatch[1], text: manualNumberMatch[2], isTop: true };
+        const isTopLevel = !hasH2 || heading.depth === 2;
+        return { ...heading, number: manualNumberMatch[1], text: manualNumberMatch[2], isTop: isTopLevel };
     }
 
     if (!hasH2) {

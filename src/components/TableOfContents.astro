@@ -8,10 +8,14 @@ interface Props {
 
 const { headings, mode = "sidebar" } = Astro.props;
 
-// Filter headings to only show h2 and h3
-const filteredHeadings = headings.filter(
-    (heading) => heading.depth >= 2 && heading.depth <= 3,
-);
+// Check if there are any h2 headings
+const hasH2 = headings.some((h) => h.depth === 2);
+
+// If no h2: treat h3 as top-level (depth 2 equivalent), skip h4+
+// If h2 present: show h2 and h3 only
+const filteredHeadings = hasH2
+    ? headings.filter((h) => h.depth === 2 || h.depth === 3)
+    : headings.filter((h) => h.depth === 3);
 
 // Build numbered structure
 let h2Counter = 0;
@@ -22,19 +26,23 @@ const numberedHeadings = filteredHeadings.map((heading) => {
     const manualNumberMatch = heading.text.match(/^(\d+(?:\.\d+)*)\.?\s+(.+)$/);
     
     if (manualNumberMatch) {
-        // Heading already has manual numbering, so we extract it
-        // We don't increment auto-counters here as manual numbers take precedence
-        return { ...heading, number: manualNumberMatch[1], text: manualNumberMatch[2] };
+        return { ...heading, number: manualNumberMatch[1], text: manualNumberMatch[2], isTop: true };
     }
 
-    // Auto-numbering logic for headings without manual numbers
+    if (!hasH2) {
+        // All headings are h3 — treat as top-level
+        h2Counter++;
+        return { ...heading, number: `${h2Counter}`, isTop: true };
+    }
+
+    // Normal h2/h3 logic
     if (heading.depth === 2) {
         h2Counter++;
         h3Counter = 0;
-        return { ...heading, number: `${h2Counter}` };
+        return { ...heading, number: `${h2Counter}`, isTop: true };
     } else {
         h3Counter++;
-        return { ...heading, number: `${h2Counter}.${h3Counter}` };
+        return { ...heading, number: `${h2Counter}.${h3Counter}`, isTop: false };
     }
 });
 ---
@@ -46,7 +54,7 @@ const numberedHeadings = filteredHeadings.map((heading) => {
         <ul class="toc-list">
             {numberedHeadings.map((heading) => (
                 <li
-                    class={`toc-item ${heading.depth > 2 ? "toc-item--sub" : "toc-item--main"}`}
+                    class={`toc-item ${!heading.isTop ? "toc-item--sub" : "toc-item--main"}`}
                 >
                     <a
                         href={`#${heading.slug}`}
@@ -88,7 +96,7 @@ const numberedHeadings = filteredHeadings.map((heading) => {
                 </div>
                 <ul class="toc-mobile-list">
                     {numberedHeadings.map((heading) => (
-                        <li class={`toc-mobile-item ${heading.depth === 3 ? 'toc-mobile-item--sub' : ''}`}>
+                        <li class={`toc-mobile-item ${!heading.isTop ? 'toc-mobile-item--sub' : ''}`}>
                             <a
                                 href={`#${heading.slug}`}
                                 class="toc-mobile-link"

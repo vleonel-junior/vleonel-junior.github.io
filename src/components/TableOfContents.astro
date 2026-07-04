@@ -21,21 +21,33 @@ const filteredHeadings = hasH2
 let h2Counter = 0;
 let h3Counter = 0;
 
+const unnumberedKeywords = ["introduction", "liens utiles", "conclusion", "résumé", "resume"];
+
+const isUnnumbered = (text: string) => {
+    const lowerText = text.toLowerCase().trim();
+    return unnumberedKeywords.some(keyword => lowerText.includes(keyword));
+};
+
 const numberedHeadings = filteredHeadings.map((heading) => {
+    const unnumbered = isUnnumbered(heading.text);
+
     if (!hasH2) {
         // All headings are h3 — treat as top-level
-        h2Counter++;
-        return { ...heading, number: `${h2Counter}`, isTop: true };
+        if (!unnumbered) h2Counter++;
+        return { ...heading, number: unnumbered ? "" : `${h2Counter}`, isTop: true };
     }
 
     // Normal h2/h3 logic
     if (heading.depth === 2) {
-        h2Counter++;
-        h3Counter = 0;
-        return { ...heading, number: `${h2Counter}`, isTop: true };
+        if (!unnumbered) {
+            h2Counter++;
+            h3Counter = 0;
+        }
+        return { ...heading, number: unnumbered ? "" : `${h2Counter}`, isTop: true };
     } else {
-        h3Counter++;
-        return { ...heading, number: `${h2Counter}.${h3Counter}`, isTop: false };
+        if (!unnumbered) h3Counter++;
+        const num = unnumbered ? "" : (h2Counter === 0 ? `${h3Counter}` : `${h2Counter}.${h3Counter}`);
+        return { ...heading, number: num, isTop: false };
     }
 });
 ---

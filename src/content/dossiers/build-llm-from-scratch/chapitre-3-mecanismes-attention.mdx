@@ -100,7 +100,7 @@ C'est ce mécanisme qui est au cœur des LLMs modernes comme GPT, et c'est ce qu
 </figure>
 
 ---
-## La self-attention
+## La self-attention : porter attention à différentes parties de l'entrée
 
 #### Le « self » de self-attention
 
@@ -376,7 +376,7 @@ tensor([[0.4421, 0.5931, 0.5790],
 
 Cette version reste sans paramètres apprenables. La section suivante introduit les matrices $W_Q$, $W_K$, $W_V$ pour rendre ce mécanisme véritablement entraînable.
 
-### Self-attention avec poids apprenables
+## Implémentation de la self-attention avec des poids apprenables
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.13.png" alt="Figure 3.13" class="rounded-xl shadow-2xl" />
@@ -388,7 +388,7 @@ La différence structurelle avec la version simplifiée est l'introduction de **
 
 ---
 
-#### Calcul pas à pas
+### Calcul des poids d'attention étape par étape
 
 #### Les trois matrices de projection et leur rôle
 
@@ -576,7 +576,7 @@ $$Z = \text{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V$$
 où $Q = X W_Q$, $K = X W_K$, $V = X W_V$ sont les projections de toute la séquence, et chaque ligne $i$ de $Z$ est le vecteur de contexte $z^{(i)}$.
 
 ---
-## Implémentation : La classe SelfAttention
+### Implémentation d'une classe Python compacte de self-attention
 
 Le code précédent est réorganisé en une classe `nn.Module` — la brique de base de tout modèle PyTorch, qui gère automatiquement l'enregistrement des paramètres, leur mise à jour lors de l'entraînement, et le déplacement sur GPU.
 
@@ -739,7 +739,7 @@ Les sorties diffèrent entre `v1` et `v2` uniquement parce que les poids initiau
 La prochaine étape enrichit ce mécanisme de deux extensions : le **masque causal**, qui empêche chaque token d'accéder aux tokens futurs lors de la génération, et l'**attention multi-têtes**, qui fait tourner plusieurs mécanismes d'attention en parallèle pour capter différents types de relations entre tokens.
 
 ---
-## L'attention causale
+## Masquer les mots futurs avec l'attention causale
 
 L'attention causale (ou *masked attention*) est une variante de l'auto-attention qui contraint chaque token à n'accéder qu'aux tokens qui le précèdent (et à lui-même) dans la séquence. C'est l'opposé de l'auto-attention standard qui dispose de toute la séquence en entrée.
 
@@ -747,7 +747,7 @@ Cette contrainte est fondamentale pour les LLMs de type GPT : lors de la prédic
 
 ---
 
-### Appliquer un masque causal
+### Application d'un masque d'attention causale
 
 Il existe deux approches équivalentes pour obtenir la matrice de poids d'attention masquée.
 
@@ -849,7 +849,7 @@ $$z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_
 
 ---
 
-### Méthode 1 — Softmax global, puis masquage et renormalisation
+#### Méthode 1 — Softmax global, puis masquage et renormalisation
 
 **Étape 1 — Softmax sur l'ensemble des tokens.**
 
@@ -899,7 +899,7 @@ $$\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 ---
 
-### Méthode 2 — Masquage des scores bruts avant le softmax
+#### Méthode 2 — Masquage des scores bruts avant le softmax
 
 **Étape 1 — Masquage des scores bruts.**
 
@@ -984,7 +984,7 @@ tensor([[1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
 Le résultat est identique à l'approche naïve, en deux étapes au lieu de quatre. C'est cette approche qui est retenue en pratique.
 
 ---
-### Ajouter du Dropout
+### Masquage de poids d'attention supplémentaires avec le dropout
 
 Le dropout est une technique de régularisation proposée par Geoffrey Hinton en 2012. À chaque étape d'entraînement, chaque neurone a une probabilité $p$ (le *taux d'abandon*) d'être temporairement désactivé — ignoré pour cette passe, mais potentiellement actif à la suivante. Après l'entraînement, aucun neurone n'est jamais désactivé.
 
@@ -1052,7 +1052,7 @@ Tu as raison sur les deux points. Le troisième "problème" que j'avais listé n
 
 ---
 
-### Classe finale d'attention causale
+### Implémentation d'une classe d'attention causale compacte
 
 On intègre maintenant le masque causal et le dropout dans une classe `CausalAttention` qui remplace `SelfAttention`. Cette classe doit également gérer des entrées en batch — plusieurs séquences traitées en parallèle.
 
@@ -1113,7 +1113,7 @@ print("context_vecs.shape:", context_vecs.shape)
 
 ---
 
-### Point 1 — `register_buffer` : qu'est-ce que c'est et pourquoi ?
+#### Point 1 — `register_buffer` : qu'est-ce que c'est et pourquoi ?
 
 Dans un `nn.Module` PyTorch, il existe deux types de tenseurs :
 
@@ -1131,7 +1131,7 @@ Le masque **n'apparaîtrait pas dans `model.state_dict()`**, le dictionnaire qui
 
 ---
 
-### Point 2 — Anatomie du code de masquage
+#### Point 2 — Anatomie du code de masquage
 
 #### `register_buffer('mask', torch.triu(...))`
 
@@ -1173,7 +1173,7 @@ En résumé : pour chaque position $(i, j)$ où `self.mask[i,j]` vaut `True` (c'
 
 ---
 
-### Point 3 — `keys.transpose(1, 2)` au lieu de `keys.T`
+#### Point 3 — `keys.transpose(1, 2)` au lieu de `keys.T`
 
 Dans la section 3.5.1, on avait `keys.T` car les entrées étaient 2D `(num_tokens, d_out)`. Ici `keys` est 3D : `(b, num_tokens, d_out)`. `.T` inverserait tous les axes — on obtiendrait `(d_out, num_tokens, b)`, ce qui est faux. `.transpose(1, 2)` n'échange que les deux dernières dimensions, donnant `(b, d_out, num_tokens)` : la dimension batch reste en position 0, et le produit matriciel opère correctement sur chaque séquence du batch indépendamment.
 
@@ -1185,13 +1185,13 @@ Dans la section 3.5.1, on avait `keys.T` car les entrées étaient 2D `(num_toke
 </figure>
 
 ---
-## L'attention multi-têtes
+## Extension de l'attention mono-tête à l'attention multi-têtes
 
 L'attention multi-têtes consiste à faire tourner le mécanisme d'attention plusieurs fois en parallèle, chacune avec ses propres matrices de poids $W_Q$, $W_K$, $W_V$. Chaque tête apprend à se spécialiser sur un type de relation différent dans la séquence. Un module `CausalAttention` seul correspond à l'attention mono-tête — un seul ensemble de poids traitant l'entrée.
 
 ---
 
-### Empiler plusieurs modules mono-tête
+### Empilement de plusieurs couches d'attention mono-tête
 
 #### L'idée
 
@@ -1268,7 +1268,7 @@ La forme `(2, 6, 4)` se lit : 2 séquences dans le batch, 6 tokens chacune, vect
 Les têtes sont traitées **séquentiellement** dans `forward` via `[head(x) for head in self.heads]`. C'est fonctionnellement correct mais inefficace : on effectue `num_heads` passes distinctes là où une seule opération matricielle pourrait tout calculer en parallèle. La section suivante présente une implémentation qui exploite cette parallélisation.
 
 ---
-### Implémentation efficace (MultiheadAttention)
+### Implémentation de l'attention multi-têtes avec fractionnement des poids
 
 La classe `MultiHeadAttention` fusionne `MultiHeadAttentionWrapper` et
 `CausalAttention` en une seule entité. L'idée directrice : effectuer **une seule**
@@ -1288,7 +1288,7 @@ clés $K$ (les mêmes s'appliquent identiquement à $Q$ et $V$).
 
 ---
 
-### Étape 1 — Projection unique : `(b, num_tokens, d_in)` → `(b, num_tokens, d_out)`
+#### Étape 1 — Projection unique : `(b, num_tokens, d_in)` → `(b, num_tokens, d_out)`
 
 ```python
 keys = self.W_key(x)   # (b, num_tokens, d_out)
@@ -1299,7 +1299,7 @@ $\mathbf{k}_i = W_K^\top x_i \in \mathbb{R}^{d_{out}}$ du token $i$.
 
 ---
 
-### Étape 2 — Découpe par tête via `.view()` : `(b, num_tokens, d_out)` → `(b, num_tokens, H, d_h)`
+#### Étape 2 — Découpe par tête via `.view()` : `(b, num_tokens, d_out)` → `(b, num_tokens, H, d_h)`
 
 ```python
 keys = keys.view(b, num_tokens, self.num_heads, self.head_dim)
@@ -1366,7 +1366,7 @@ est $\mathbf{k}_{i,j}$. Aucune donnée n'est déplacée en mémoire.*</figcaptio
 
 ---
 
-### Étape 3 — Réorganisation par tête via `.transpose(1, 2)` : `(b, num_tokens, H, d_h)` → `(b, H, num_tokens, d_h)`
+#### Étape 3 — Réorganisation par tête via `.transpose(1, 2)` : `(b, num_tokens, H, d_h)` → `(b, H, num_tokens, d_h)`
 
 ```python
 keys = keys.transpose(1, 2)
@@ -1448,7 +1448,7 @@ La mémoire physique ne bouge pas — seul l'ordre de lecture change.*</figcapti
 
 ---
 
-### Étape 4 — Scores d'attention par multiplication par lots
+#### Étape 4 — Scores d'attention par multiplication par lots
 
 $Q$, $K$, $V$ ayant tous la forme $(b, H, T, d_h)$, le produit
 
@@ -1469,7 +1469,7 @@ $$\texttt{attn\_scores}[\,b,\,j,\,:,\,:] = Q_j K_j^\top \in \mathbb{R}^{T \times
 
 ---
 
-### Étape 5 — Recombinaison des têtes
+#### Étape 5 — Recombinaison des têtes
 
 Après masquage causal, softmax et dropout, les vecteurs contexte sont recombinés :
 

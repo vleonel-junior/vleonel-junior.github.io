@@ -221,8 +221,10 @@ normalisations.
 
 *Normalisation simple* $w_i = x_i / S$, $S = \sum_j x_j$ :
 
-$$\frac{\partial w_i}{\partial x_i} = \frac{1 - w_i}{S} \qquad
-\frac{\partial w_i}{\partial x_j} = \frac{-w_i}{S} \quad (j \neq i)$$
+$$
+\frac{\partial w_i}{\partial x_i} = \frac{1 - w_i}{S} \qquad
+\frac{\partial w_i}{\partial x_j} = \frac{-w_i}{S} \quad (j \neq i)
+$$
 
 Le gradient dépend de $S$, la somme brute des scores : si $S$ est grand, le gradient
 s'effondre et le signal de mise à jour se propage mal. De plus, cette formule exige des
@@ -233,18 +235,22 @@ scores positifs — ce que le produit scalaire ne garantit pas.
 > **Démonstration du Jacobien.** On applique la règle du quotient sur $w_i = e^{x_i}/Z$.
 >
 > *Cas $i = j$ :*
-> $$\frac{\partial w_i}{\partial x_i}
+> $$
+> \frac{\partial w_i}{\partial x_i}
 >   = \frac{e^{x_i} Z - e^{x_i} e^{x_i}}{Z^2}
 >   = \frac{e^{x_i}}{Z} - \left(\frac{e^{x_i}}{Z}\right)^2
 >   = w_i - w_i^2
->   \;\Rightarrow\; \boxed{w_i(1 - w_i)}$$
+>   \;\Rightarrow\; \boxed{w_i(1 - w_i)}
+> $$
 >
 > *Cas $i \neq j$ :* $\frac{\partial e^{x_i}}{\partial x_j} = 0$, mais
 > $\frac{\partial Z}{\partial x_j} = e^{x_j}$, donc :
-> $$\frac{\partial w_i}{\partial x_j}
+> $$
+> \frac{\partial w_i}{\partial x_j}
 >   = \frac{0 \cdot Z - e^{x_i} e^{x_j}}{Z^2}
 >   = -\frac{e^{x_i}}{Z}\cdot\frac{e^{x_j}}{Z}
->   \;\Rightarrow\; \boxed{-w_i w_j}$$
+>   \;\Rightarrow\; \boxed{-w_i w_j}
+> $$
 >
 > Les deux cas s'unifient avec le delta de Kronecker $\delta_{ij}$ :
 > $$\boxed{\frac{\partial w_i}{\partial x_j} = w_i(\delta_{ij} - w_j)}$$
@@ -1331,13 +1337,15 @@ Après l'étape 1, pour un token $i$ fixé, le vecteur
 $\mathbf{k}_i \in \mathbb{R}^{d_{out}}$ contient les projections de toutes les têtes
 mises bout à bout :
 
-$$K[\,b,\,i,\,:] = \mathbf{k}_i =
+$$
+K[\,b,\,i,\,:] = \mathbf{k}_i =
 \bigl[
   \underbrace{k_{i,1,1},\ldots,k_{i,1,d_h}}_{\displaystyle\mathbf{k}_{i,1}},\;
   \underbrace{k_{i,2,1},\ldots,k_{i,2,d_h}}_{\displaystyle\mathbf{k}_{i,2}},\;
   \ldots,\;
   \underbrace{k_{i,H,1},\ldots,k_{i,H,d_h}}_{\displaystyle\mathbf{k}_{i,H}}
-\bigr]$$
+\bigr]
+$$
 
 `.view(b, num_tokens, H, d_h)` dit à PyTorch : "réinterprète la dimension
 $d_{out} = H \cdot d_h$ comme deux dimensions imbriquées". Sans rien déplacer
@@ -1367,8 +1375,10 @@ keys = keys.transpose(1, 2)
 
 **Notation.** Notons
 
-$$K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix}
-\in \mathbb{R}^{T \times d_h} \qquad (T = \texttt{num\_tokens})$$
+$$
+K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix}
+\in \mathbb{R}^{T \times d_h} \qquad (T = \texttt{num\_tokens})
+$$
 
 la matrice des clés de la tête $j$ sur l'ensemble de la séquence — toutes les
 projections du même sous-espace, une ligne par token.
@@ -1501,8 +1511,10 @@ $$\text{Nouvelle mémoire} : \boxed{1}\;\boxed{4}\;\boxed{2}\;\boxed{5}\;\boxed{
 Le `.view(b, num_tokens, self.d_out)` qui suit concatène les sorties des $H$ têtes
 pour chaque token :
 
-$$\mathbf{c}_i = \mathbf{c}_{i,1} \| \mathbf{c}_{i,2} \| \cdots \| \mathbf{c}_{i,H}
-\in \mathbb{R}^{d_{out}}$$
+$$
+\mathbf{c}_i = \mathbf{c}_{i,1} \| \mathbf{c}_{i,2} \| \cdots \| \mathbf{c}_{i,H}
+\in \mathbb{R}^{d_{out}}
+$$
 
 Enfin, une projection linéaire mélange les informations des différentes têtes :
 

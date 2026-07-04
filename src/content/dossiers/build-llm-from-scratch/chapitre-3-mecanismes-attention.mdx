@@ -110,11 +110,11 @@ Le terme *self* désigne le fait que le mécanisme opère **au sein d'une seule 
 
 ### Self-attention simplifiée — sans poids apprenables
 
-Avant d'introduire les poids apprenables, on implémente une version épurée pour saisir la logique fondamentale. L'objectif est de calculer, pour chaque token d'entrée $x^{(i)}$, un **vecteur de contexte** $z^{(i)}$ — une version enrichie de son embedding, qui intègre l'information de tous les autres tokens de la séquence.
+Avant d'introduire les poids apprenables, on implémente une version épurée pour saisir la logique fondamentale. L'objectif est de calculer, pour chaque token d'entrée $x^&lbrace;(i)&rbrace;$, un **vecteur de contexte** $z^&lbrace;(i)&rbrace;$ — une version enrichie de son embedding, qui intègre l'information de tous les autres tokens de la séquence.
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.7.png" alt="Figure 3.7" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.7 : Pour chaque token d'entrée $x^{(i)}$, la self-attention calcule un vecteur de contexte $z^{(i)}$ en combinant tous les vecteurs d'entrée, pondérés par les poids d'attention $\alpha_{21}$ à $\alpha_{2T}$. Ici, on illustre le calcul de $z^{(2)}$ à partir du token « journey ».*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.7 : Pour chaque token d'entrée $x^&lbrace;(i)&rbrace;$, la self-attention calcule un vecteur de contexte $z^&lbrace;(i)&rbrace;$ en combinant tous les vecteurs d'entrée, pondérés par les poids d'attention $\alpha_&lbrace;21&rbrace;$ à $\alpha_&lbrace;2T&rbrace;$. Ici, on illustre le calcul de $z^&lbrace;(2)&rbrace;$ à partir du token « journey ».*</figcaption>
 </figure>
 
 On travaille sur la phrase *"Your journey starts with one step."*, déjà encodée en vecteurs de dimension 3 :
@@ -132,13 +132,13 @@ inputs = torch.tensor(
 )
 ```
 
-Le calcul du vecteur de contexte $z^{(2)}$ se déroule en trois étapes.
+Le calcul du vecteur de contexte $z^&lbrace;(2)&rbrace;$ se déroule en trois étapes.
 
 ---
 
 #### Étape 1 — Calculer les scores d'attention (produit scalaire)
 
-Pour le token *query* $x^{(2)}$ (« journey »), on calcule son **produit scalaire** (*dot product*) avec chacun des tokens de la séquence. Ce score mesure la similarité : plus il est élevé, plus les deux tokens sont alignés dans l'espace vectoriel et plus l'un doit « prêter attention » à l'autre.
+Pour le token *query* $x^&lbrace;(2)&rbrace;$ (« journey »), on calcule son **produit scalaire** (*dot product*) avec chacun des tokens de la séquence. Ce score mesure la similarité : plus il est élevé, plus les deux tokens sont alignés dans l'espace vectoriel et plus l'un doit « prêter attention » à l'autre.
 
 ```python
 query = inputs[1]  # x^(2) : "journey"
@@ -156,8 +156,8 @@ tensor([0.9544, 1.4950, 1.4754, 0.8434, 0.7070, 1.0865])
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.8.png" alt="Figure 3.8" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.8 : Les scores d'attention $\omega_{21}$ à $\omega_{2T}$ sont calculés comme le
-produit scalaire entre le vecteur requête $x^{(2)}$ et chaque vecteur d'entrée.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.8 : Les scores d'attention $\omega_&lbrace;21&rbrace;$ à $\omega_&lbrace;2T&rbrace;$ sont calculés comme le
+produit scalaire entre le vecteur requête $x^&lbrace;(2)&rbrace;$ et chaque vecteur d'entrée.*</figcaption>
 </figure>
 
 > **Produit scalaire.** C'est une multiplication terme à terme de deux vecteurs, dont on somme les résultats. Il est équivalent d'écrire la boucle explicite ou d'utiliser
@@ -195,7 +195,7 @@ En pratique, on lui préfère systématiquement la **softmax** — pour deux rai
 
 **Raison 1 — Stabilité numérique.** La softmax naïve calcule :
 
-$$\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}$$
+$$\text&lbrace;softmax&rbrace;(x_i) = \frac&lbrace;e^&lbrace;x_i&rbrace;&rbrace;&lbrace;\sum_j e^&lbrace;x_j&rbrace;&rbrace;$$
 
 En float32, $e^x$ produit `inf` dès $x \approx 89$ (*overflow*) et s'annule à zéro dès
 $x \approx -104$ (*underflow*). Sur de grandes séquences, les scores d'attention peuvent
@@ -210,9 +210,9 @@ On obtient alors `inf/inf = NaN` ou `0/0 = NaN`, et le gradient devient inexploi
 PyTorch contourne cela avec l'astuce **log-sum-exp** : on soustrait le maximum des scores
 avant d'exponentier,
 
-$$\text{softmax}(x_i) = \frac{e^{x_i - \max(x)}}{\sum_j e^{x_j - \max(x)}}$$
+$$\text&lbrace;softmax&rbrace;(x_i) = \frac&lbrace;e^&lbrace;x_i - \max(x)&rbrace;&rbrace;&lbrace;\sum_j e^&lbrace;x_j - \max(x)&rbrace;&rbrace;$$
 
-ce qui est mathématiquement identique (le $e^{-\max(x)}$ se simplifie en numérateur et
+ce qui est mathématiquement identique (le $e^&lbrace;-\max(x)&rbrace;$ se simplifie en numérateur et
 dénominateur) mais numériquement stable : la valeur la plus grande devient $e^0 = 1$,
 toutes les autres tombent dans $(0, 1]$.
 
@@ -222,38 +222,38 @@ normalisations.
 *Normalisation simple* $w_i = x_i / S$, $S = \sum_j x_j$ :
 
 $$
-\frac{\partial w_i}{\partial x_i} = \frac{1 - w_i}{S} \qquad
-\frac{\partial w_i}{\partial x_j} = \frac{-w_i}{S} \quad (j \neq i)
+\frac&lbrace;\partial w_i&rbrace;&lbrace;\partial x_i&rbrace; = \frac&lbrace;1 - w_i&rbrace;&lbrace;S&rbrace; \qquad
+\frac&lbrace;\partial w_i&rbrace;&lbrace;\partial x_j&rbrace; = \frac&lbrace;-w_i&rbrace;&lbrace;S&rbrace; \quad (j \neq i)
 $$
 
 Le gradient dépend de $S$, la somme brute des scores : si $S$ est grand, le gradient
 s'effondre et le signal de mise à jour se propage mal. De plus, cette formule exige des
 scores positifs — ce que le produit scalaire ne garantit pas.
 
-*Softmax* $w_i = e^{x_i} / Z$, $Z = \sum_k e^{x_k}$ :
+*Softmax* $w_i = e^&lbrace;x_i&rbrace; / Z$, $Z = \sum_k e^&lbrace;x_k&rbrace;$ :
 
-> **Démonstration du Jacobien.** On applique la règle du quotient sur $w_i = e^{x_i}/Z$.
+> **Démonstration du Jacobien.** On applique la règle du quotient sur $w_i = e^&lbrace;x_i&rbrace;/Z$.
 >
 > *Cas $i = j$ :*
 > $$
-> \frac{\partial w_i}{\partial x_i}
->   = \frac{e^{x_i} Z - e^{x_i} e^{x_i}}{Z^2}
->   = \frac{e^{x_i}}{Z} - \left(\frac{e^{x_i}}{Z}\right)^2
+> \frac&lbrace;\partial w_i&rbrace;&lbrace;\partial x_i&rbrace;
+>   = \frac&lbrace;e^&lbrace;x_i&rbrace; Z - e^&lbrace;x_i&rbrace; e^&lbrace;x_i&rbrace;&rbrace;&lbrace;Z^2&rbrace;
+>   = \frac&lbrace;e^&lbrace;x_i&rbrace;&rbrace;&lbrace;Z&rbrace; - \left(\frac&lbrace;e^&lbrace;x_i&rbrace;&rbrace;&lbrace;Z&rbrace;\right)^2
 >   = w_i - w_i^2
->   \;\Rightarrow\; \boxed{w_i(1 - w_i)}
+>   \;\Rightarrow\; \boxed&lbrace;w_i(1 - w_i)&rbrace;
 > $$
 >
-> *Cas $i \neq j$ :* $\frac{\partial e^{x_i}}{\partial x_j} = 0$, mais
-> $\frac{\partial Z}{\partial x_j} = e^{x_j}$, donc :
+> *Cas $i \neq j$ :* $\frac&lbrace;\partial e^&lbrace;x_i&rbrace;&rbrace;&lbrace;\partial x_j&rbrace; = 0$, mais
+> $\frac&lbrace;\partial Z&rbrace;&lbrace;\partial x_j&rbrace; = e^&lbrace;x_j&rbrace;$, donc :
 > $$
-> \frac{\partial w_i}{\partial x_j}
->   = \frac{0 \cdot Z - e^{x_i} e^{x_j}}{Z^2}
->   = -\frac{e^{x_i}}{Z}\cdot\frac{e^{x_j}}{Z}
->   \;\Rightarrow\; \boxed{-w_i w_j}
+> \frac&lbrace;\partial w_i&rbrace;&lbrace;\partial x_j&rbrace;
+>   = \frac&lbrace;0 \cdot Z - e^&lbrace;x_i&rbrace; e^&lbrace;x_j&rbrace;&rbrace;&lbrace;Z^2&rbrace;
+>   = -\frac&lbrace;e^&lbrace;x_i&rbrace;&rbrace;&lbrace;Z&rbrace;\cdot\frac&lbrace;e^&lbrace;x_j&rbrace;&rbrace;&lbrace;Z&rbrace;
+>   \;\Rightarrow\; \boxed&lbrace;-w_i w_j&rbrace;
 > $$
 >
-> Les deux cas s'unifient avec le delta de Kronecker $\delta_{ij}$ :
-> $$\boxed{\frac{\partial w_i}{\partial x_j} = w_i(\delta_{ij} - w_j)}$$
+> Les deux cas s'unifient avec le delta de Kronecker $\delta_&lbrace;ij&rbrace;$ :
+> $$\boxed&lbrace;\frac&lbrace;\partial w_i&rbrace;&lbrace;\partial x_j&rbrace; = w_i(\delta_&lbrace;ij&rbrace; - w_j)&rbrace;$$
 
 Ce Jacobien présente trois avantages concrets :
 
@@ -282,18 +282,18 @@ Sum: tensor(1.)
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.9.png" alt="Figure 3.9" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.9 : Les scores d'attention $\omega_{21}$ à $\omega_{2T}$ sont normalisés via softmax
-pour produire les poids d'attention $\alpha_{21}$ à $\alpha_{2T}$, qui somment à 1.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.9 : Les scores d'attention $\omega_&lbrace;21&rbrace;$ à $\omega_&lbrace;2T&rbrace;$ sont normalisés via softmax
+pour produire les poids d'attention $\alpha_&lbrace;21&rbrace;$ à $\alpha_&lbrace;2T&rbrace;$, qui somment à 1.*</figcaption>
 </figure>
 
 ---
 
 #### Étape 3 — Calculer le vecteur de contexte (somme pondérée)
 
-Le vecteur de contexte $z^{(2)}$ est la **somme pondérée** de tous les vecteurs d'entrée,
+Le vecteur de contexte $z^&lbrace;(2)&rbrace;$ est la **somme pondérée** de tous les vecteurs d'entrée,
 chacun multiplié par son poids d'attention :
 
-$$z^{(2)} = \sum_{i} \alpha_{2i} \cdot x^{(i)}$$
+$$z^&lbrace;(2)&rbrace; = \sum_&lbrace;i&rbrace; \alpha_&lbrace;2i&rbrace; \cdot x^&lbrace;(i)&rbrace;$$
 
 ```python
 context_vec_2 = torch.zeros(query.shape)
@@ -309,16 +309,16 @@ tensor([0.4419, 0.6515, 0.5683])
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.10.png" alt="Figure 3.10" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.10 : $z^{(2)}$ est la somme pondérée de tous les vecteurs d'entrée $x^{(1)}$ à
-$x^{(T)}$, pondérés par les poids d'attention correspondants.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.10 : $z^&lbrace;(2)&rbrace;$ est la somme pondérée de tous les vecteurs d'entrée $x^&lbrace;(1)&rbrace;$ à
+$x^&lbrace;(T)&rbrace;$, pondérés par les poids d'attention correspondants.*</figcaption>
 </figure>
 
 Contrairement à l'embedding brut de « journey » `[0.55, 0.87, 0.66]`, le vecteur de
-contexte $z^{(2)}$ `[0.4419, 0.6515, 0.5683]` encode non seulement le sens de « journey »,
+contexte $z^&lbrace;(2)&rbrace;$ `[0.4419, 0.6515, 0.5683]` encode non seulement le sens de « journey »,
 mais aussi **sa relation pondérée avec tous les autres tokens de la phrase**.
 
 La prochaine étape consiste à généraliser ce calcul pour produire simultanément tous les
-vecteurs de contexte $z^{(1)}$ à $z^{(T)}$.
+vecteurs de contexte $z^&lbrace;(1)&rbrace;$ à $z^&lbrace;(T)&rbrace;$.
 
 ---
 
@@ -328,7 +328,7 @@ On applique le même pipeline à **tous les tokens simultanément**, en remplaç
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.11.png" alt="Figure 3.11" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.11 : On étend le calcul de la section précédente à toutes les lignes — un vecteur de contexte $z^{(i)}$ par token.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.11 : On étend le calcul de la section précédente à toutes les lignes — un vecteur de contexte $z^&lbrace;(i)&rbrace;$ par token.*</figcaption>
 </figure>
 
 ---
@@ -346,7 +346,7 @@ tensor([[0.9995, 0.9544, 0.9422, 0.4753, 0.4576, 0.6310],
         ...])
 ```
 
-> **Pourquoi `inputs @ inputs.T` est équivalent à la double boucle.** `inputs` est une matrice de forme `(6, 3)` — 6 tokens, chacun représenté par un vecteur de dimension 3. `inputs.T` est sa transposée, de forme `(3, 6)`. Leur produit matriciel produit un tenseur `(6, 6)` dont l'élément $(i, j)$ vaut $\sum_k \text{inputs}[i,k] \times \text{inputs}[j,k]$ — exactement le produit scalaire entre les tokens $i$ et $j$, ce que la double boucle calculait explicitement.
+> **Pourquoi `inputs @ inputs.T` est équivalent à la double boucle.** `inputs` est une matrice de forme `(6, 3)` — 6 tokens, chacun représenté par un vecteur de dimension 3. `inputs.T` est sa transposée, de forme `(3, 6)`. Leur produit matriciel produit un tenseur `(6, 6)` dont l'élément $(i, j)$ vaut $\sum_k \text&lbrace;inputs&rbrace;[i,k] \times \text&lbrace;inputs&rbrace;[j,k]$ — exactement le produit scalaire entre les tokens $i$ et $j$, ce que la double boucle calculait explicitement.
 
 #### Étape 2 — Normalisation par softmax
 
@@ -392,25 +392,25 @@ La différence structurelle avec la version simplifiée est l'introduction de **
 
 #### Les trois matrices de projection et leur rôle
 
-Chaque token d'entrée $x^{(i)}$ est projeté dans **trois sous-espaces distincts** via ces matrices :
+Chaque token d'entrée $x^&lbrace;(i)&rbrace;$ est projeté dans **trois sous-espaces distincts** via ces matrices :
 
-$$q^{(i)} = x^{(i)} W_Q \qquad k^{(i)} = x^{(i)} W_K \qquad v^{(i)} = x^{(i)} W_V$$
+$$q^&lbrace;(i)&rbrace; = x^&lbrace;(i)&rbrace; W_Q \qquad k^&lbrace;(i)&rbrace; = x^&lbrace;(i)&rbrace; W_K \qquad v^&lbrace;(i)&rbrace; = x^&lbrace;(i)&rbrace; W_V$$
 
 Les termes *query*, *key* et *value* viennent du domaine des bases de données et de la recherche d'information :
 
-- **Query $q^{(i)}$** — la requête émise par le token $i$ pour interroger tous les autres tokens : elle lui permet de trouver, parmi eux, ceux qui sont pertinents pour construire sa représentation contextuelle.
+- **Query $q^&lbrace;(i)&rbrace;$** — la requête émise par le token $i$ pour interroger tous les autres tokens : elle lui permet de trouver, parmi eux, ceux qui sont pertinents pour construire sa représentation contextuelle.
 
-- **Key $k^{(j)}$** — la clé d'indexation du token $j$ : chaque token expose une clé qui sera comparée aux requêtes des autres tokens pour déterminer sa pertinence.
+- **Key $k^&lbrace;(j)&rbrace;$** — la clé d'indexation du token $j$ : chaque token expose une clé qui sera comparée aux requêtes des autres tokens pour déterminer sa pertinence.
 
-- **Value $v^{(j)}$** — le contenu informationnel réel du token $j$, analogue à la valeur dans une paire clé-valeur d'un dictionnaire : c'est ce qui est effectivement transmis si le token est jugé pertinent.
+- **Value $v^&lbrace;(j)&rbrace;$** — le contenu informationnel réel du token $j$, analogue à la valeur dans une paire clé-valeur d'un dictionnaire : c'est ce qui est effectivement transmis si le token est jugé pertinent.
 
-Le mécanisme procède alors en trois temps : comparer la query $q^{(i)}$ à toutes les keys via le produit scalaire $\omega_{ij} = q^{(i)} \cdot k^{(j)}$, identifier les tokens les plus pertinents via la softmax, puis récupérer les values correspondantes pondérées par ces scores pour former le vecteur de contexte $z^{(i)}$.
+Le mécanisme procède alors en trois temps : comparer la query $q^&lbrace;(i)&rbrace;$ à toutes les keys via le produit scalaire $\omega_&lbrace;ij&rbrace; = q^&lbrace;(i)&rbrace; \cdot k^&lbrace;(j)&rbrace;$, identifier les tokens les plus pertinents via la softmax, puis récupérer les values correspondantes pondérées par ces scores pour former le vecteur de contexte $z^&lbrace;(i)&rbrace;$.
 
 C'est un peu comme le fonctionnement d'un moteur de recherche : tu tapes "meilleures pizzerias à Paris" (*query*), Google la compare aux titres et métadonnées de chaque page indexée (*keys*), puis retourne le contenu réel des pages les plus pertinentes (*values*).
 
 Dans la version simplifiée de la section 3.3, $q = k = v = x$ : il n'y avait aucune projection apprise, et la similarité mesurée était la proximité brute entre embeddings. L'introduction de $W_Q$, $W_K$, $W_V$ permet au modèle d'apprendre des représentations spécialisées pour chacun de ces trois rôles.
 
-> **Poids de la matrice vs poids d'attention.** Les éléments de $W_Q$, $W_K$, $W_V$ sont des **paramètres appris** — des scalaires optimisés par descente de gradient, fixes une fois l'entraînement terminé. Les poids d'attention $\alpha_{ij}$ sont eux **dynamiques** : recalculés à chaque forward pass en fonction de l'entrée courante. Ce sont deux usages distincts du mot « poids ».
+> **Poids de la matrice vs poids d'attention.** Les éléments de $W_Q$, $W_K$, $W_V$ sont des **paramètres appris** — des scalaires optimisés par descente de gradient, fixes une fois l'entraînement terminé. Les poids d'attention $\alpha_&lbrace;ij&rbrace;$ sont eux **dynamiques** : recalculés à chaque forward pass en fonction de l'entrée courante. Ce sont deux usages distincts du mot « poids ».
 
 ---
 
@@ -429,7 +429,7 @@ W_value = torch.nn.Parameter(torch.rand(d_in, d_out), requires_grad=False)
 
 `requires_grad=False` désactive ici le calcul du gradient sur ces matrices — uniquement pour alléger les affichages. En entraînement réel, on poserait `requires_grad=True` pour qu'elles soient mises à jour par rétropropagation.
 
-On projette $x^{(2)}$ et l'ensemble des tokens :
+On projette $x^&lbrace;(2)&rbrace;$ et l'ensemble des tokens :
 
 ```python
 query_2 = x_2 @ W_query   # shape : (2,)
@@ -443,7 +443,7 @@ print(query_2)
 tensor([0.4306, 1.4551])
 ```
 
-On a projeté les 6 tokens de dimension 3 vers un espace de dimension 2. On calcule uniquement `query_2` pour le token courant, mais on a besoin des **keys et values de tous les tokens** pour pondérer leur contribution au vecteur de contexte de $x^{(2)}$.
+On a projeté les 6 tokens de dimension 3 vers un espace de dimension 2. On calcule uniquement `query_2` pour le token courant, mais on a besoin des **keys et values de tous les tokens** pour pondérer leur contribution au vecteur de contexte de $x^&lbrace;(2)&rbrace;$.
 
 ---
 
@@ -466,7 +466,7 @@ tensor([1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440])
 
 ---
 
-#### Étape 2 — Passage aux poids d'attention : le facteur $1/\sqrt{d_k}$
+#### Étape 2 — Passage aux poids d'attention : le facteur $1/\sqrt&lbrace;d_k&rbrace;$
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.16.png" alt="Figure 3.16" class="rounded-xl shadow-2xl" />
@@ -487,61 +487,62 @@ Tu as raison. Voici la version avec ces termes remplacés par des formulations d
 
 ---
 
-**Pourquoi diviser par $\sqrt{d_k}$ ?** 
+**Pourquoi diviser par $\sqrt&lbrace;d_k&rbrace;$ ?** 
 
 C'est la justification qui donne son nom à l'architecture : *scaled dot-product attention*.
 
-Supposons que les composantes de $q$ et $k$ soient approximativement i.i.d. de loi $\mathcal{N}(0, 1)$. Le produit scalaire $q \cdot k = \sum_{l=1}^{d_k} q_l k_l$ est alors une somme de $d_k$ variables aléatoires indépendantes de moyenne 0 et de variance 1, donc :
+Supposons que les composantes de $q$ et $k$ soient approximativement i.i.d. de loi $\mathcal&lbrace;N&rbrace;(0, 1)$. Le produit scalaire $q \cdot k = \sum_&lbrace;l=1&rbrace;^&lbrace;d_k&rbrace; q_l k_l$ est alors une somme de $d_k$ variables aléatoires indépendantes de moyenne 0 et de variance 1, donc :
 
-$$\text{Var}(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqrt{d_k}$$
+$$\text&lbrace;Var&rbrace;(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqrt&lbrace;d_k&rbrace;$$
 
-<details> <summary>Démonstration</summary> 
+<details>
+<summary>Démonstration</summary>
 
-**Posons** $q_l \sim \mathcal{N}(0,1)$ et $k_l \sim \mathcal{N}(0,1)$, indépendantes.
+**Posons** $q_l \sim \mathcal&lbrace;N&rbrace;(0,1)$ et $k_l \sim \mathcal&lbrace;N&rbrace;(0,1)$, indépendantes.
 
 **Étape 1 — Variance du produit $q_l k_l$**
 
-$$\text{Var}(q_l k_l) = \mathbb{E}[q_l^2 k_l^2] - \mathbb{E}[q_l k_l]^2$$
+$$\text&lbrace;Var&rbrace;(q_l k_l) = \mathbb&lbrace;E&rbrace;[q_l^2 k_l^2] - \mathbb&lbrace;E&rbrace;[q_l k_l]^2$$
 
-Puisque $q_l, k_l \sim \mathcal{N}(0,1)$ indépendantes, leurs carrés suivent des lois du khi-deux à 1 degré de liberté indépendantes :
+Puisque $q_l, k_l \sim \mathcal&lbrace;N&rbrace;(0,1)$ indépendantes, leurs carrés suivent des lois du khi-deux à 1 degré de liberté indépendantes :
 
-$$q_l^2 \sim \chi^2(1) \qquad k_l^2 \sim \chi^2(1) \quad \text{indépendantes}$$
+$$q_l^2 \sim \chi^2(1) \qquad k_l^2 \sim \chi^2(1) \quad \text&lbrace;indépendantes&rbrace;$$
 
-Pour une loi $\chi^2(1)$ : $\mathbb{E}[X] = 1$. Par indépendance de $q_l^2$ et $k_l^2$ :
+Pour une loi $\chi^2(1)$ : $\mathbb&lbrace;E&rbrace;[X] = 1$. Par indépendance de $q_l^2$ et $k_l^2$ :
 
-$$\mathbb{E}[q_l^2 k_l^2] = \mathbb{E}[q_l^2]\,\mathbb{E}[k_l^2] = 1 \times 1 = 1$$
+$$\mathbb&lbrace;E&rbrace;[q_l^2 k_l^2] = \mathbb&lbrace;E&rbrace;[q_l^2]\,\mathbb&lbrace;E&rbrace;[k_l^2] = 1 \times 1 = 1$$
 
-Et $\mathbb{E}[q_l k_l] = \mathbb{E}[q_l]\,\mathbb{E}[k_l] = 0$, donc :
+Et $\mathbb&lbrace;E&rbrace;[q_l k_l] = \mathbb&lbrace;E&rbrace;[q_l]\,\mathbb&lbrace;E&rbrace;[k_l] = 0$, donc :
 
-$$\text{Var}(q_l k_l) = 1 - 0 = 1$$
+$$\text&lbrace;Var&rbrace;(q_l k_l) = 1 - 0 = 1$$
 
-**Étape 2 — Variance de la somme $q \cdot k = \sum_{l=1}^{d_k} q_l k_l$**
+**Étape 2 — Variance de la somme $q \cdot k = \sum_&lbrace;l=1&rbrace;^&lbrace;d_k&rbrace; q_l k_l$**
 
 Les termes $q_l k_l$ sont indépendants entre eux (les indices $l$ sont distincts), donc la variance de leur somme est la somme de leurs variances :
 
-$$\text{Var}(q \cdot k) = \sum_{l=1}^{d_k} \text{Var}(q_l k_l) = \sum_{l=1}^{d_k} 1 = d_k$$
+$$\text&lbrace;Var&rbrace;(q \cdot k) = \sum_&lbrace;l=1&rbrace;^&lbrace;d_k&rbrace; \text&lbrace;Var&rbrace;(q_l k_l) = \sum_&lbrace;l=1&rbrace;^&lbrace;d_k&rbrace; 1 = d_k$$
 
 **Étape 3 — Écart-type**
 
-$$\sigma(q \cdot k) = \sqrt{\text{Var}(q \cdot k)} = \sqrt{d_k}$$
+$$\sigma(q \cdot k) = \sqrt&lbrace;\text&lbrace;Var&rbrace;(q \cdot k)&rbrace; = \sqrt&lbrace;d_k&rbrace;$$
 
-**Étape 4 — Après mise à l'échelle par $\sqrt{d_k}$**
+**Étape 4 — Après mise à l'échelle par $\sqrt&lbrace;d_k&rbrace;$**
 
-$$\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{1}{(\sqrt{d_k})^2}\,\text{Var}(q \cdot k) = \frac{d_k}{d_k} = 1$$
+$$\text&lbrace;Var&rbrace;\!\left(\frac&lbrace;q \cdot k&rbrace;&lbrace;\sqrt&lbrace;d_k&rbrace;&rbrace;\right) = \frac&lbrace;1&rbrace;&lbrace;(\sqrt&lbrace;d_k&rbrace;)^2&rbrace;\,\text&lbrace;Var&rbrace;(q \cdot k) = \frac&lbrace;d_k&rbrace;&lbrace;d_k&rbrace; = 1$$
 
 La variance est ramenée à 1 quelle que soit la valeur de $d_k$. $\blacksquare$    
 
 </details>
 
-<br>
+<br/>
 
 Pour $d_k = 1024$ (typique dans GPT), les produits scalaires ont un écart-type de l'ordre de 32. La softmax reçoit donc des entrées très étalées : les grandes valeurs poussent vers 1, les petites vers 0, et la distribution ressemble à un vecteur one-hot.
 
 Or le gradient de la softmax est $w_i(1 - w_i)$ : quand $w_i \to 1$ ou $w_i \to 0$, ce gradient tend vers 0. On retombe dans le problème du gradient évanescent — l'entraînement stagne.
 
-En divisant par $\sqrt{d_k}$, on ramène la variance du score à 1 :
+En divisant par $\sqrt&lbrace;d_k&rbrace;$, on ramène la variance du score à 1 :
 
-$$\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{d_k}{d_k} = 1$$
+$$\text&lbrace;Var&rbrace;\!\left(\frac&lbrace;q \cdot k&rbrace;&lbrace;\sqrt&lbrace;d_k&rbrace;&rbrace;\right) = \frac&lbrace;d_k&rbrace;&lbrace;d_k&rbrace; = 1$$
 
 Les entrées de la softmax restent dans des plages raisonnables quel que soit $d_k$ — les poids d'attention ne s'écrasent plus vers 0 ou 1, et les gradients restent exploitables.
 
@@ -564,17 +565,17 @@ print(context_vec_2)
 tensor([0.3061, 0.8210])
 ```
 
-La différence fondamentale avec la section 3.3 : on somme les **vecteurs value** $v^{(j)}$, pas les embeddings bruts $x^{(j)}$. $W_V$ permet au modèle d'apprendre quelle information extraire de chaque token pour la transmettre — indépendamment de la façon dont ce token est indexé (key) ou de la façon dont il interroge les autres (query).
+La différence fondamentale avec la section 3.3 : on somme les **vecteurs value** $v^&lbrace;(j)&rbrace;$, pas les embeddings bruts $x^&lbrace;(j)&rbrace;$. $W_V$ permet au modèle d'apprendre quelle information extraire de chaque token pour la transmettre — indépendamment de la façon dont ce token est indexé (key) ou de la façon dont il interroge les autres (query).
 
-Explicitement, le vecteur de contexte de $x^{(2)}$ s'écrit :
+Explicitement, le vecteur de contexte de $x^&lbrace;(2)&rbrace;$ s'écrit :
 
-$$z^{(2)} = \sum_{j=1}^{T} \alpha_{2j} \cdot v^{(j)} = \sum_{j=1}^{T} \alpha_{2j} \cdot x^{(j)} W_V$$
+$$z^&lbrace;(2)&rbrace; = \sum_&lbrace;j=1&rbrace;^&lbrace;T&rbrace; \alpha_&lbrace;2j&rbrace; \cdot v^&lbrace;(j)&rbrace; = \sum_&lbrace;j=1&rbrace;^&lbrace;T&rbrace; \alpha_&lbrace;2j&rbrace; \cdot x^&lbrace;(j)&rbrace; W_V$$
 
 En forme matricielle compacte, pour l'ensemble des tokens simultanément :
 
-$$Z = \text{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V$$
+$$Z = \text&lbrace;softmax&rbrace;\!\left(\frac&lbrace;Q K^\top&rbrace;&lbrace;\sqrt&lbrace;d_k&rbrace;&rbrace;\right) V$$
 
-où $Q = X W_Q$, $K = X W_K$, $V = X W_V$ sont les projections de toute la séquence, et chaque ligne $i$ de $Z$ est le vecteur de contexte $z^{(i)}$.
+où $Q = X W_Q$, $K = X W_K$, $V = X W_V$ sont les projections de toute la séquence, et chaque ligne $i$ de $Z$ est le vecteur de contexte $z^&lbrace;(i)&rbrace;$.
 
 ---
 ## Encapsulation en classe Python
@@ -618,83 +619,83 @@ tensor([[0.2996, 0.8053],
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.18.png" alt="Figure 3.18" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.18 : Résumé matriciel de la self-attention. $X$ est projeté en $Q$, $K$, $V$ via les trois matrices de poids. Les scores $QK^\top / \sqrt{d_k}$ sont normalisés par softmax, puis multipliés par $V$ pour produire $Z$.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.18 : Résumé matriciel de la self-attention. $X$ est projeté en $Q$, $K$, $V$ via les trois matrices de poids. Les scores $QK^\top / \sqrt&lbrace;d_k&rbrace;$ sont normalisés par softmax, puis multipliés par $V$ pour produire $Z$.*</figcaption>
 </figure>
 
 ---
 
 ### Version améliorée : `SelfAttention_v2` avec `nn.Linear`
 
-**Initialisation des poids.** Dans `SelfAttention_v1`, `nn.Parameter(torch.rand(...))` tire chaque poids indépendamment selon $W_{ij} \sim \mathcal{U}[0, 1)$. Cette initialisation est naïve pour deux raisons :
+**Initialisation des poids.** Dans `SelfAttention_v1`, `nn.Parameter(torch.rand(...))` tire chaque poids indépendamment selon $W_&lbrace;ij&rbrace; \sim \mathcal&lbrace;U&rbrace;[0, 1)$. Cette initialisation est naïve pour deux raisons :
 
 - Les poids initiaux sont tous **positifs**, ce qui restreint la dynamique d'apprentissage. Une bonne initialisation doit au contraire différencier efficacement les neurones dès le départ en assignant des poids aléatoires de signes variés (on parle de **Symmetry breaking** dans la littérature);
   
-<br>
+<br/>
   
-- la variance $\operatorname{Var}(W_{ij}) = \frac{1}{12}$ est indépendante de $d_{in}$, ce qui fait exploser la variance de la sortie $XW$ quand $d_{in}$ est grand.
+- la variance $\operatorname&lbrace;Var&rbrace;(W_&lbrace;ij&rbrace;) = \frac&lbrace;1&rbrace;&lbrace;12&rbrace;$ est indépendante de $d_&lbrace;in&rbrace;$, ce qui fait exploser la variance de la sortie $XW$ quand $d_&lbrace;in&rbrace;$ est grand.
 
 <details>
 <summary>Démonstration</summary>
 
-$K = XW$ est la projection des embeddings d'entrée dans l'espace key, avec $K \in \mathbb{R}^{n \times d_{out}}$ : chaque ligne est le vecteur key d'un token, chaque colonne est une dimension de l'espace key. On s'intéresse au scalaire :
+$K = XW$ est la projection des embeddings d'entrée dans l'espace key, avec $K \in \mathbb&lbrace;R&rbrace;^&lbrace;n \times d_&lbrace;out&rbrace;&rbrace;$ : chaque ligne est le vecteur key d'un token, chaque colonne est une dimension de l'espace key. On s'intéresse au scalaire :
 
-$$y = K_{i,j} = \sum_{k=1}^{d_{in}} x_{i,k}\, W_{k,j}$$
+$$y = K_&lbrace;i,j&rbrace; = \sum_&lbrace;k=1&rbrace;^&lbrace;d_&lbrace;in&rbrace;&rbrace; x_&lbrace;i,k&rbrace;\, W_&lbrace;k,j&rbrace;$$
 
 la $j$-ième composante du vecteur key du token $i$. C'est cette somme dont on analyse la variance pour quantifier l'effet de l'initialisation.
 
-**Hypothèses de travail.** On suppose $x_k$ et $W_k$ indépendants, $\mathbb{E}[x_k] = 0$ et $\operatorname{Var}(x_k) = \sigma^2$ — hypothèse standard vérifiée après normalisation des entrées.
+**Hypothèses de travail.** On suppose $x_k$ et $W_k$ indépendants, $\mathbb&lbrace;E&rbrace;[x_k] = 0$ et $\operatorname&lbrace;Var&rbrace;(x_k) = \sigma^2$ — hypothèse standard vérifiée après normalisation des entrées.
 
-**Variance d'un terme $x_k W_k$.** Avec $\mathbb{E}[x_k] = 0$ :
+**Variance d'un terme $x_k W_k$.** Avec $\mathbb&lbrace;E&rbrace;[x_k] = 0$ :
 
-$$\operatorname{Var}(x_k W_k) = \mathbb{E}[x_k^2 W_k^2] - \mathbb{E}[x_k W_k]^2 = \mathbb{E}[x_k^2]\,\mathbb{E}[W_k^2] - \underbrace{\mathbb{E}[x_k]^2}_{=\,0}\mathbb{E}[W_k]^2 = \sigma^2\,\mathbb{E}[W_k^2]$$
+$$\operatorname&lbrace;Var&rbrace;(x_k W_k) = \mathbb&lbrace;E&rbrace;[x_k^2 W_k^2] - \mathbb&lbrace;E&rbrace;[x_k W_k]^2 = \mathbb&lbrace;E&rbrace;[x_k^2]\,\mathbb&lbrace;E&rbrace;[W_k^2] - \underbrace&lbrace;\mathbb&lbrace;E&rbrace;[x_k]^2&rbrace;_&lbrace;=\,0&rbrace;\mathbb&lbrace;E&rbrace;[W_k]^2 = \sigma^2\,\mathbb&lbrace;E&rbrace;[W_k^2]$$
 
-La quantité clé est $\mathbb{E}[W_k^2]$, qui se décompose comme :
+La quantité clé est $\mathbb&lbrace;E&rbrace;[W_k^2]$, qui se décompose comme :
 
-$$\mathbb{E}[W_k^2] = \operatorname{Var}(W_k) + \mathbb{E}[W_k]^2$$
+$$\mathbb&lbrace;E&rbrace;[W_k^2] = \operatorname&lbrace;Var&rbrace;(W_k) + \mathbb&lbrace;E&rbrace;[W_k]^2$$
 
-**Rappel : loi uniforme $\mathcal{U}[a,b]$.**
+**Rappel : loi uniforme $\mathcal&lbrace;U&rbrace;[a,b]$.**
 
-$$\operatorname{Var}(W) = \frac{(b-a)^2}{12}, \qquad \mathbb{E}[W] = \frac{a+b}{2}$$
+$$\operatorname&lbrace;Var&rbrace;(W) = \frac&lbrace;(b-a)^2&rbrace;&lbrace;12&rbrace;, \qquad \mathbb&lbrace;E&rbrace;[W] = \frac&lbrace;a+b&rbrace;&lbrace;2&rbrace;$$
 
-**Cas `torch.rand` : $W_k \sim \mathcal{U}[0, 1)$.**
+**Cas `torch.rand` : $W_k \sim \mathcal&lbrace;U&rbrace;[0, 1)$.**
 
-$$\mathbb{E}[W_k] = \frac{1}{2}, \qquad \operatorname{Var}(W_k) = \frac{1}{12}$$
+$$\mathbb&lbrace;E&rbrace;[W_k] = \frac&lbrace;1&rbrace;&lbrace;2&rbrace;, \qquad \operatorname&lbrace;Var&rbrace;(W_k) = \frac&lbrace;1&rbrace;&lbrace;12&rbrace;$$
 
-$$\mathbb{E}[W_k^2] = \frac{1}{12} + \frac{1}{4} = \frac{1}{3}$$
+$$\mathbb&lbrace;E&rbrace;[W_k^2] = \frac&lbrace;1&rbrace;&lbrace;12&rbrace; + \frac&lbrace;1&rbrace;&lbrace;4&rbrace; = \frac&lbrace;1&rbrace;&lbrace;3&rbrace;$$
 
-$$\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3} = \frac{d_{in}\,\sigma^2}{3}$$
+$$\operatorname&lbrace;Var&rbrace;(y) = \sum_&lbrace;k=1&rbrace;^&lbrace;d_&lbrace;in&rbrace;&rbrace; \sigma^2 \cdot \frac&lbrace;1&rbrace;&lbrace;3&rbrace; = \frac&lbrace;d_&lbrace;in&rbrace;\,\sigma^2&rbrace;&lbrace;3&rbrace;$$
 
-La variance croît **linéairement** avec $d_{in}$ — pour $d_{in} = 512$, elle est 512 fois plus grande que la variance d'entrée.
+La variance croît **linéairement** avec $d_&lbrace;in&rbrace;$ — pour $d_&lbrace;in&rbrace; = 512$, elle est 512 fois plus grande que la variance d'entrée.
 
-**Cas Kaiming : $W_k \sim \mathcal{U}\!\left(-\dfrac{1}{\sqrt{d_{in}}}, \dfrac{1}{\sqrt{d_{in}}}\right)$.**
+**Cas Kaiming : $W_k \sim \mathcal&lbrace;U&rbrace;\!\left(-\dfrac&lbrace;1&rbrace;&lbrace;\sqrt&lbrace;d_&lbrace;in&rbrace;&rbrace;&rbrace;, \dfrac&lbrace;1&rbrace;&lbrace;\sqrt&lbrace;d_&lbrace;in&rbrace;&rbrace;&rbrace;\right)$.**
 
-$$\mathbb{E}[W_k] = 0, \qquad \operatorname{Var}(W_k) = \frac{\left(\frac{2}{\sqrt{d_{in}}}\right)^2}{12} = \frac{1}{3\,d_{in}}$$
+$$\mathbb&lbrace;E&rbrace;[W_k] = 0, \qquad \operatorname&lbrace;Var&rbrace;(W_k) = \frac&lbrace;\left(\frac&lbrace;2&rbrace;&lbrace;\sqrt&lbrace;d_&lbrace;in&rbrace;&rbrace;&rbrace;\right)^2&rbrace;&lbrace;12&rbrace; = \frac&lbrace;1&rbrace;&lbrace;3\,d_&lbrace;in&rbrace;&rbrace;$$
 
-$$\mathbb{E}[W_k^2] = \frac{1}{3\,d_{in}} + 0 = \frac{1}{3\,d_{in}}$$
+$$\mathbb&lbrace;E&rbrace;[W_k^2] = \frac&lbrace;1&rbrace;&lbrace;3\,d_&lbrace;in&rbrace;&rbrace; + 0 = \frac&lbrace;1&rbrace;&lbrace;3\,d_&lbrace;in&rbrace;&rbrace;$$
 
-$$\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3\,d_{in}} = \frac{\sigma^2}{3}$$
+$$\operatorname&lbrace;Var&rbrace;(y) = \sum_&lbrace;k=1&rbrace;^&lbrace;d_&lbrace;in&rbrace;&rbrace; \sigma^2 \cdot \frac&lbrace;1&rbrace;&lbrace;3\,d_&lbrace;in&rbrace;&rbrace; = \frac&lbrace;\sigma^2&rbrace;&lbrace;3&rbrace;$$
 
-Le $d_{in}$ se simplifie — la variance reste constante quelle que soit la dimension d'entrée.
+Le $d_&lbrace;in&rbrace;$ se simplifie — la variance reste constante quelle que soit la dimension d'entrée.
 
 </details>
 
 `nn.Linear` utilise par défaut l'**initialisation de Kaiming** (He, 2015), qui fixe :
 
-$$W_{ij} \sim \mathcal{U}\!\left(-\frac{1}{\sqrt{d_{in}}},\ \frac{1}{\sqrt{d_{in}}}\right) \qquad \Longrightarrow \qquad \operatorname{Var}(W_{ij}) = \frac{1}{3\,d_{in}}$$
+$$W_&lbrace;ij&rbrace; \sim \mathcal&lbrace;U&rbrace;\!\left(-\frac&lbrace;1&rbrace;&lbrace;\sqrt&lbrace;d_&lbrace;in&rbrace;&rbrace;&rbrace;,\ \frac&lbrace;1&rbrace;&lbrace;\sqrt&lbrace;d_&lbrace;in&rbrace;&rbrace;&rbrace;\right) \qquad \Longrightarrow \qquad \operatorname&lbrace;Var&rbrace;(W_&lbrace;ij&rbrace;) = \frac&lbrace;1&rbrace;&lbrace;3\,d_&lbrace;in&rbrace;&rbrace;$$
 
 ce qui maintient la variance du signal constante à travers les couches, quelle que soit la dimension.
 
 ---
 
-**`nn.Linear` comme opérateur linéaire.** Dans `SelfAttention_v1`, on définit $W \in \mathbb{R}^{d_{in} \times d_{out}}$ comme un `nn.Parameter`, et le forward calcule :
+**`nn.Linear` comme opérateur linéaire.** Dans `SelfAttention_v1`, on définit $W \in \mathbb&lbrace;R&rbrace;^&lbrace;d_&lbrace;in&rbrace; \times d_&lbrace;out&rbrace;&rbrace;$ comme un `nn.Parameter`, et le forward calcule :
 
-$$K = XW, \qquad X \in \mathbb{R}^{n \times d_{in}},\quad K \in \mathbb{R}^{n \times d_{out}}$$
+$$K = XW, \qquad X \in \mathbb&lbrace;R&rbrace;^&lbrace;n \times d_&lbrace;in&rbrace;&rbrace;,\quad K \in \mathbb&lbrace;R&rbrace;^&lbrace;n \times d_&lbrace;out&rbrace;&rbrace;$$
 
-`nn.Linear(d_in, d_out, bias=False)` stocke en interne une matrice $\widetilde{W} \in \mathbb{R}^{d_{out} \times d_{in}}$, et son appel sur $X$ calcule :
+`nn.Linear(d_in, d_out, bias=False)` stocke en interne une matrice $\widetilde&lbrace;W&rbrace; \in \mathbb&lbrace;R&rbrace;^&lbrace;d_&lbrace;out&rbrace; \times d_&lbrace;in&rbrace;&rbrace;$, et son appel sur $X$ calcule :
 
-$$K = X\,\widetilde{W}^\top$$
+$$K = X\,\widetilde&lbrace;W&rbrace;^\top$$
 
-Les deux expressions sont identiques si et seulement si $\widetilde{W} = W^\top$ — ce qui est exactement la convention de stockage de `nn.Linear`. Les deux implémentations sont donc **strictement équivalentes**.
+Les deux expressions sont identiques si et seulement si $\widetilde&lbrace;W&rbrace; = W^\top$ — ce qui est exactement la convention de stockage de `nn.Linear`. Les deux implémentations sont donc **strictement équivalentes**.
 
 ```python
 class SelfAttention_v2(nn.Module):
@@ -836,17 +837,17 @@ Chaque ligne somme à 1. Les poids masqués sont nuls, et les poids restants son
 
 Soit une séquence de $T$ tokens. À chaque token en position $j$ sont associés trois vecteurs obtenus par projections linéaires de son embedding :
 
-- $q_j \in \mathbb{R}^{d_k}$ : vecteur **requête** (*query*)
-- $k_j \in \mathbb{R}^{d_k}$ : vecteur **clé** (*key*)
-- $v_j \in \mathbb{R}^{d_v}$ : vecteur **valeur** (*value*)
+- $q_j \in \mathbb&lbrace;R&rbrace;^&lbrace;d_k&rbrace;$ : vecteur **requête** (*query*)
+- $k_j \in \mathbb&lbrace;R&rbrace;^&lbrace;d_k&rbrace;$ : vecteur **clé** (*key*)
+- $v_j \in \mathbb&lbrace;R&rbrace;^&lbrace;d_v&rbrace;$ : vecteur **valeur** (*value*)
 
 Pour un token courant en position $i$, le **score d'attention brut** avec chaque token en position $j$ est :
 
-$$e_{ij} = \frac{q_i^\top k_j}{\sqrt{d_k}} \in \mathbb{R}, \qquad j \in \{1, \dots, T\}$$
+$$e_&lbrace;ij&rbrace; = \frac&lbrace;q_i^\top k_j&rbrace;&lbrace;\sqrt&lbrace;d_k&rbrace;&rbrace; \in \mathbb&lbrace;R&rbrace;, \qquad j \in \&lbrace;1, \dots, T\&rbrace;$$
 
 La **sortie** du mécanisme d'attention pour le token $i$ est :
 
-$$z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_{j=1}^{T} \alpha_{ij} = 1$$
+$$z_i = \sum_&lbrace;j=1&rbrace;^&lbrace;T&rbrace; \alpha_&lbrace;ij&rbrace;\, v_j, \qquad \alpha_&lbrace;ij&rbrace; \geq 0, \quad \sum_&lbrace;j=1&rbrace;^&lbrace;T&rbrace; \alpha_&lbrace;ij&rbrace; = 1$$
 
 ---
 
@@ -856,7 +857,7 @@ $$z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_
 
 On calcule les poids d'attention sans aucune restriction :
 
-$$\alpha_{ij} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$\alpha_&lbrace;ij&rbrace; = \frac&lbrace;e^&lbrace;e_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace;$$
 
 Tous les tokens contribuent au dénominateur, y compris les tokens futurs.
 
@@ -864,7 +865,7 @@ Tous les tokens contribuent au dénominateur, y compris les tokens futurs.
 
 On annule les poids correspondant aux tokens futurs :
 
-$$\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} & \text{si } j \leq i \\ 0 & \text{si } j > i \end{cases}$$
+$$\tilde&lbrace;\alpha&rbrace;_&lbrace;ij&rbrace; = \begin&lbrace;cases&rbrace; \alpha_&lbrace;ij&rbrace; & \text&lbrace;si &rbrace; j \leq i \\ 0 & \text&lbrace;si &rbrace; j > i \end&lbrace;cases&rbrace;$$
 
 Après cette étape, les poids ne somment plus à 1 : on a retiré de la masse de probabilité.
 
@@ -872,31 +873,31 @@ Après cette étape, les poids ne somment plus à 1 : on a retiré de la masse d
 
 On divise chaque poids par la somme de la ligne :
 
-$$\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}}$$
+$$\alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = \frac&lbrace;\tilde&lbrace;\alpha&rbrace;_&lbrace;ij&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;k=1&rbrace;^&lbrace;T&rbrace; \tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace;&rbrace;$$
 
 **Développement explicite.** On simplifie séparément le numérateur et le dénominateur.
 
-Au numérateur, on distingue deux cas selon la position de $j$ par rapport à $i$, en appliquant successivement la définition de $\tilde{\alpha}_{ij}$ (Étape 2) puis celle de $\alpha_{ij}$ (Étape 1) :
+Au numérateur, on distingue deux cas selon la position de $j$ par rapport à $i$, en appliquant successivement la définition de $\tilde&lbrace;\alpha&rbrace;_&lbrace;ij&rbrace;$ (Étape 2) puis celle de $\alpha_&lbrace;ij&rbrace;$ (Étape 1) :
 
-$$\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} = \dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} & \text{si } j \leq i \\[10pt] 0 & \text{si } j > i \end{cases}$$
+$$\tilde&lbrace;\alpha&rbrace;_&lbrace;ij&rbrace; = \begin&lbrace;cases&rbrace; \alpha_&lbrace;ij&rbrace; = \dfrac&lbrace;e^&lbrace;e_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace; & \text&lbrace;si &rbrace; j \leq i \\[10pt] 0 & \text&lbrace;si &rbrace; j > i \end&lbrace;cases&rbrace;$$
 
-Au dénominateur, on développe $\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}$ en séparant les positions visibles ($k \leq i$) et futures ($k > i$), puis on applique successivement la définition de $\tilde{\alpha}_{ik}$ (Étape 2) puis celle de $\alpha_{ik}$ (Étape 1) :
+Au dénominateur, on développe $\displaystyle\sum_&lbrace;k=1&rbrace;^&lbrace;T&rbrace; \tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace;$ en séparant les positions visibles ($k \leq i$) et futures ($k > i$), puis on applique successivement la définition de $\tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace;$ (Étape 2) puis celle de $\alpha_&lbrace;ik&rbrace;$ (Étape 1) :
 
-$$\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \sum_{k \leq i} \underbrace{\tilde{\alpha}_{ik}}_{=\,\alpha_{ik}} + \sum_{k > i} \underbrace{\tilde{\alpha}_{ik}}_{=\,0} = \sum_{k \leq i} \alpha_{ik} = \sum_{k \leq i} \frac{e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$\sum_&lbrace;k=1&rbrace;^&lbrace;T&rbrace; \tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace; = \sum_&lbrace;k \leq i&rbrace; \underbrace&lbrace;\tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace;&rbrace;_&lbrace;=\,\alpha_&lbrace;ik&rbrace;&rbrace; + \sum_&lbrace;k > i&rbrace; \underbrace&lbrace;\tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace;&rbrace;_&lbrace;=\,0&rbrace; = \sum_&lbrace;k \leq i&rbrace; \alpha_&lbrace;ik&rbrace; = \sum_&lbrace;k \leq i&rbrace; \frac&lbrace;e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace;$$
 
-Le terme $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ est une constante par rapport à $k$, on peut le factoriser :
+Le terme $\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;$ est une constante par rapport à $k$, on peut le factoriser :
 
-$$\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \frac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$\sum_&lbrace;k=1&rbrace;^&lbrace;T&rbrace; \tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace; = \frac&lbrace;\displaystyle\sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace;$$
 
-On substitue numérateur et dénominateur dans l'expression de $\alpha_{ij}^{(1)}$ pour $j \leq i$ :
+On substitue numérateur et dénominateur dans l'expression de $\alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace;$ pour $j \leq i$ :
 
-$$\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}} = \frac{\quad\dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}\quad}{\dfrac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}}$$
+$$\alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = \frac&lbrace;\tilde&lbrace;\alpha&rbrace;_&lbrace;ij&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;k=1&rbrace;^&lbrace;T&rbrace; \tilde&lbrace;\alpha&rbrace;_&lbrace;ik&rbrace;&rbrace; = \frac&lbrace;\quad\dfrac&lbrace;e^&lbrace;e_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace;\quad&rbrace;&lbrace;\dfrac&lbrace;\displaystyle\sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace;&rbrace;$$
 
-Le facteur $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ est présent au numérateur **et** au dénominateur : il se simplifie exactement :
+Le facteur $\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;$ est présent au numérateur **et** au dénominateur : il se simplifie exactement :
 
-$$\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} \times \frac{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}}$$
+$$\alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = \frac&lbrace;e^&lbrace;e_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace; \times \frac&lbrace;\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace;$$
 
-$$\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{pour } j \leq i, \qquad \alpha_{ij}^{(1)} = 0 \quad \text{pour } j > i}$$
+$$\boxed&lbrace;\alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = \frac&lbrace;e^&lbrace;e_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace; \quad \text&lbrace;pour &rbrace; j \leq i, \qquad \alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = 0 \quad \text&lbrace;pour &rbrace; j > i&rbrace;$$
 
 ---
 
@@ -906,23 +907,23 @@ $$\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 On remplace les scores des tokens futurs par $-\infty$ avant tout calcul :
 
-$$\tilde{e}_{ij} = \begin{cases} e_{ij} & \text{si } j \leq i \\ -\infty & \text{si } j > i \end{cases}$$
+$$\tilde&lbrace;e&rbrace;_&lbrace;ij&rbrace; = \begin&lbrace;cases&rbrace; e_&lbrace;ij&rbrace; & \text&lbrace;si &rbrace; j \leq i \\ -\infty & \text&lbrace;si &rbrace; j > i \end&lbrace;cases&rbrace;$$
 
 **Étape 2 — Softmax unique sur les scores masqués.**
 
-$$\alpha_{ij}^{(2)} = \frac{e^{\,\tilde{e}_{ij}}}{\displaystyle\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}}}$$
+$$\alpha_&lbrace;ij&rbrace;^&lbrace;(2)&rbrace; = \frac&lbrace;e^&lbrace;\,\tilde&lbrace;e&rbrace;_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;k=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;\,\tilde&lbrace;e&rbrace;_&lbrace;ik&rbrace;&rbrace;&rbrace;$$
 
-**Développement explicite.** On décompose le dénominateur en séparant les positions visibles et futures, puis on applique la définition de $\tilde{e}_{ik}$ :
+**Développement explicite.** On décompose le dénominateur en séparant les positions visibles et futures, puis on applique la définition de $\tilde&lbrace;e&rbrace;_&lbrace;ik&rbrace;$ :
 
-$$\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}} = \sum_{k \leq i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{e_{ik}}} + \sum_{k > i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{-\infty}\,=\,0} = \sum_{k \leq i} e^{e_{ik}}$$
+$$\sum_&lbrace;k=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;\,\tilde&lbrace;e&rbrace;_&lbrace;ik&rbrace;&rbrace; = \sum_&lbrace;k \leq i&rbrace; \underbrace&lbrace;e^&lbrace;\,\tilde&lbrace;e&rbrace;_&lbrace;ik&rbrace;&rbrace;&rbrace;_&lbrace;=\,e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace; + \sum_&lbrace;k > i&rbrace; \underbrace&lbrace;e^&lbrace;\,\tilde&lbrace;e&rbrace;_&lbrace;ik&rbrace;&rbrace;&rbrace;_&lbrace;=\,e^&lbrace;-\infty&rbrace;\,=\,0&rbrace; = \sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;$$
 
-De même au numérateur, en appliquant la définition de $\tilde{e}_{ij}$ :
+De même au numérateur, en appliquant la définition de $\tilde&lbrace;e&rbrace;_&lbrace;ij&rbrace;$ :
 
-$$e^{\,\tilde{e}_{ij}} = \begin{cases} e^{e_{ij}} & \text{si } j \leq i \\ e^{-\infty} = 0 & \text{si } j > i \end{cases}$$
+$$e^&lbrace;\,\tilde&lbrace;e&rbrace;_&lbrace;ij&rbrace;&rbrace; = \begin&lbrace;cases&rbrace; e^&lbrace;e_&lbrace;ij&rbrace;&rbrace; & \text&lbrace;si &rbrace; j \leq i \\ e^&lbrace;-\infty&rbrace; = 0 & \text&lbrace;si &rbrace; j > i \end&lbrace;cases&rbrace;$$
 
 On obtient donc :
 
-$$\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{pour } j \leq i, \qquad \alpha_{ij}^{(2)} = 0 \quad \text{pour } j > i}$$
+$$\boxed&lbrace;\alpha_&lbrace;ij&rbrace;^&lbrace;(2)&rbrace; = \frac&lbrace;e^&lbrace;e_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace; \quad \text&lbrace;pour &rbrace; j \leq i, \qquad \alpha_&lbrace;ij&rbrace;^&lbrace;(2)&rbrace; = 0 \quad \text&lbrace;pour &rbrace; j > i&rbrace;$$
 
 ---
 
@@ -930,15 +931,15 @@ $$\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 La comparaison terme à terme des deux résultats encadrés est immédiate :
 
-$$\text{Pour } j \leq i : \quad \alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} = \alpha_{ij}^{(2)}$$
+$$\text&lbrace;Pour &rbrace; j \leq i : \quad \alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = \frac&lbrace;e^&lbrace;e_&lbrace;ij&rbrace;&rbrace;&rbrace;&lbrace;\displaystyle\sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;&rbrace; = \alpha_&lbrace;ij&rbrace;^&lbrace;(2)&rbrace;$$
 
-$$\text{Pour } j > i : \quad \alpha_{ij}^{(1)} = 0 = \alpha_{ij}^{(2)}$$
+$$\text&lbrace;Pour &rbrace; j > i : \quad \alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = 0 = \alpha_&lbrace;ij&rbrace;^&lbrace;(2)&rbrace;$$
 
 On conclut :
 
-$$\boxed{\alpha_{ij}^{(1)} = \alpha_{ij}^{(2)} \qquad \forall\, j \in \{1, \dots, T\}}$$
+$$\boxed&lbrace;\alpha_&lbrace;ij&rbrace;^&lbrace;(1)&rbrace; = \alpha_&lbrace;ij&rbrace;^&lbrace;(2)&rbrace; \qquad \forall\, j \in \&lbrace;1, \dots, T\&rbrace;&rbrace;$$
 
-Il s'agit d'une **égalité algébrique exacte**. Dans la Méthode 1, le facteur $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ introduit par le premier softmax s'annule exactement lors de la renormalisation. La présence initiale des tokens futurs dans le calcul n'a laissé **aucune trace** dans le résultat final : le dénominateur ne contient plus que $\displaystyle\sum_{k \leq i} e^{e_{ik}}$, exactement comme dans la Méthode 2 où les tokens futurs n'ont jamais été inclus. Il n'y a donc **aucune fuite d'information**.
+Il s'agit d'une **égalité algébrique exacte**. Dans la Méthode 1, le facteur $\displaystyle\sum_&lbrace;m=1&rbrace;^&lbrace;T&rbrace; e^&lbrace;e_&lbrace;im&rbrace;&rbrace;$ introduit par le premier softmax s'annule exactement lors de la renormalisation. La présence initiale des tokens futurs dans le calcul n'a laissé **aucune trace** dans le résultat final : le dénominateur ne contient plus que $\displaystyle\sum_&lbrace;k \leq i&rbrace; e^&lbrace;e_&lbrace;ik&rbrace;&rbrace;$, exactement comme dans la Méthode 2 où les tokens futurs n'ont jamais été inclus. Il n'y a donc **aucune fuite d'information**.
 
 </details>
 
@@ -948,7 +949,7 @@ Il s'agit d'une **égalité algébrique exacte**. Dans la Méthode 1, le facteur
 
 L'approche naïve applique softmax puis corrige. On peut faire mieux : masquer les scores d'attention **avant** le softmax en remplaçant les positions futures par $-\infty$.
 
-La justification est immédiate : $e^{-\infty} = 0$, donc softmax attribue automatiquement un poids nul à ces positions, et la somme des poids restants vaut 1 — sans aucune renormalisation manuelle.
+La justification est immédiate : $e^&lbrace;-\infty&rbrace; = 0$, donc softmax attribue automatiquement un poids nul à ces positions, et la somme des poids restants vaut 1 — sans aucune renormalisation manuelle.
 
 ```python
 mask   = torch.triu(torch.ones(context_length, context_length), diagonal=1)
@@ -1004,7 +1005,7 @@ Dans le mécanisme d'attention, le dropout s'applique directement sur les poids 
 
 ### Mise à l'échelle automatique
 
-Avec un taux de dropout $p$, les poids survivants sont multipliés par $\frac{1}{1-p}$. C'est une correction nécessaire : pendant l'entraînement, un neurone n'est connecté en moyenne qu'à une fraction $(1-p)$ de ses entrées habituelles. Sans cette compensation, le neurone recevrait à l'inférence (où tous les neurones sont actifs) un signal d'une amplitude très différente de ce qu'il a appris.
+Avec un taux de dropout $p$, les poids survivants sont multipliés par $\frac&lbrace;1&rbrace;&lbrace;1-p&rbrace;$. C'est une correction nécessaire : pendant l'entraînement, un neurone n'est connecté en moyenne qu'à une fraction $(1-p)$ de ses entrées habituelles. Sans cette compensation, le neurone recevrait à l'inférence (où tous les neurones sont actifs) un signal d'une amplitude très différente de ce qu'il a appris.
 
 On vérifie ce comportement sur une matrice de 1s avec $p = 0.5$ :
 
@@ -1024,7 +1025,7 @@ tensor([[2., 2., 0., 2., 2., 0.],
 ```
 
 
-Les éléments restés non nuls après le dropout valent $\frac{1}{1 - 0.5} = 2$, confirmant la mise à l'échelle.
+Les éléments restés non nuls après le dropout valent $\frac&lbrace;1&rbrace;&lbrace;1 - 0.5&rbrace; = 2$, confirmant la mise à l'échelle.
 
 ---
 
@@ -1166,7 +1167,7 @@ Décomposons paramètre par paramètre.
 
 `[:num_tokens, :num_tokens]` — le masque a été créé à l'initialisation avec la taille maximale `context_length × context_length`. La séquence courante peut être plus courte. Ce slicing extrait le sous-masque de la taille exacte de la séquence traitée, sans recréer le tenseur à chaque appel.
 
-`-torch.inf` — la valeur de remplacement pour les positions futures. Comme $e^{-\infty} = 0$, le softmax leur attribuera un poids nul.
+`-torch.inf` — la valeur de remplacement pour les positions futures. Comme $e^&lbrace;-\infty&rbrace; = 0$, le softmax leur attribuera un poids nul.
 
 `masked_fill_` (avec underscore) — opération in-place : `attn_scores` est modifié directement en mémoire sans copie intermédiaire, ce qui économise de la mémoire pour des matrices d'attention potentiellement grandes.
 
@@ -1273,10 +1274,10 @@ Les têtes sont traitées **séquentiellement** dans `forward` via `[head(x) for
 
 La classe `MultiHeadAttention` fusionne `MultiHeadAttentionWrapper` et
 `CausalAttention` en une seule entité. L'idée directrice : effectuer **une seule**
-projection linéaire de dimension $d_{out}$, puis découper implicitement ce résultat
-en $H = \texttt{num\_heads}$ sous-espaces de dimension $d_h = d_{out}/H$.
+projection linéaire de dimension $d_&lbrace;out&rbrace;$, puis découper implicitement ce résultat
+en $H = \texttt&lbrace;num\_heads&rbrace;$ sous-espaces de dimension $d_h = d_&lbrace;out&rbrace;/H$.
 Contrairement à `MultiHeadAttentionWrapper`, qui maintenait $H$ matrices de poids
-$W_{K,j} \in \mathbb{R}^{d_h \times d_{in}}$ et répétait la multiplication matricielle
+$W_&lbrace;K,j&rbrace; \in \mathbb&lbrace;R&rbrace;^&lbrace;d_h \times d_&lbrace;in&rbrace;&rbrace;$ et répétait la multiplication matricielle
 pour chaque tête, une seule multiplication suffit ici.
 
 <figure class="my-8 flex flex-col items-center gap-3">
@@ -1296,7 +1297,7 @@ keys = self.W_key(x)   # (b, num_tokens, d_out)
 ```
 
 Chaque ligne du tenseur de sortie est le vecteur clé
-$\mathbf{k}_i = W_K^\top x_i \in \mathbb{R}^{d_{out}}$ du token $i$.
+$\mathbf&lbrace;k&rbrace;_i = W_K^\top x_i \in \mathbb&lbrace;R&rbrace;^&lbrace;d_&lbrace;out&rbrace;&rbrace;$ du token $i$.
 
 ---
 
@@ -1312,17 +1313,17 @@ Pour comprendre `.view()`, il faut d'abord comprendre comment PyTorch stocke les
 
 **La mémoire est un couloir de cases numérotées.** Quand PyTorch crée un tenseur, il réserve un bloc de cases consécutives en mémoire (RAM), une case par nombre. Par exemple, une matrice $2 \times 3$
 
-$$M = \begin{pmatrix} a & b & c \\ d & e & f \end{pmatrix}$$
+$$M = \begin&lbrace;pmatrix&rbrace; a & b & c \\ d & e & f \end&lbrace;pmatrix&rbrace;$$
 
 est stockée en mémoire comme une simple file de 6 cases :
 
-$$\boxed{a}\;\boxed{b}\;\boxed{c}\;\boxed{d}\;\boxed{e}\;\boxed{f}$$
+$$\boxed&lbrace;a&rbrace;\;\boxed&lbrace;b&rbrace;\;\boxed&lbrace;c&rbrace;\;\boxed&lbrace;d&rbrace;\;\boxed&lbrace;e&rbrace;\;\boxed&lbrace;f&rbrace;$$
 
 PyTorch mémorise juste deux informations séparément : (1) l'adresse de la première case, et (2) la forme `(2, 3)` qui lui permet de calculer où trouver chaque élément — l'élément en ligne $i$, colonne $j$ se trouve à la case $3i + j$.
 
 **`.view()` change la grille de lecture, pas la position physique des données.** Appeler `.view(3, 2)` sur cette même mémoire revient à décider de la lire comme
 
-$$M' = \begin{pmatrix} a & b \\ c & d \\ e & f \end{pmatrix}$$
+$$M' = \begin&lbrace;pmatrix&rbrace; a & b \\ c & d \\ e & f \end&lbrace;pmatrix&rbrace;$$
 
 Ainsi, PyTorch va simplement mettre à jour la forme de `(2, 3)` à `(3, 2)` et recalculer la formule d'accès : l'élément $(i, j)$ est maintenant à la case $2i + j$. C'est tout.
 
@@ -1331,38 +1332,38 @@ C'est pourquoi on dit que `.view()` est **sans copie** : il n'alloue pas de nouv
 #### Application à nos clés
 
 **Notation.** Pour un token $i$ et une tête $j$, notons
-$\mathbf{k}_{i,j} \in \mathbb{R}^{d_h}$ le sous-vecteur clé associé.
+$\mathbf&lbrace;k&rbrace;_&lbrace;i,j&rbrace; \in \mathbb&lbrace;R&rbrace;^&lbrace;d_h&rbrace;$ le sous-vecteur clé associé.
 
 Après l'étape 1, pour un token $i$ fixé, le vecteur
-$\mathbf{k}_i \in \mathbb{R}^{d_{out}}$ contient les projections de toutes les têtes
+$\mathbf&lbrace;k&rbrace;_i \in \mathbb&lbrace;R&rbrace;^&lbrace;d_&lbrace;out&rbrace;&rbrace;$ contient les projections de toutes les têtes
 mises bout à bout :
 
 $$
-K[\,b,\,i,\,:] = \mathbf{k}_i =
+K[\,b,\,i,\,:] = \mathbf&lbrace;k&rbrace;_i =
 \bigl[
-  \underbrace{k_{i,1,1},\ldots,k_{i,1,d_h}}_{\displaystyle\mathbf{k}_{i,1}},\;
-  \underbrace{k_{i,2,1},\ldots,k_{i,2,d_h}}_{\displaystyle\mathbf{k}_{i,2}},\;
+  \underbrace&lbrace;k_&lbrace;i,1,1&rbrace;,\ldots,k_&lbrace;i,1,d_h&rbrace;&rbrace;_&lbrace;\displaystyle\mathbf&lbrace;k&rbrace;_&lbrace;i,1&rbrace;&rbrace;,\;
+  \underbrace&lbrace;k_&lbrace;i,2,1&rbrace;,\ldots,k_&lbrace;i,2,d_h&rbrace;&rbrace;_&lbrace;\displaystyle\mathbf&lbrace;k&rbrace;_&lbrace;i,2&rbrace;&rbrace;,\;
   \ldots,\;
-  \underbrace{k_{i,H,1},\ldots,k_{i,H,d_h}}_{\displaystyle\mathbf{k}_{i,H}}
+  \underbrace&lbrace;k_&lbrace;i,H,1&rbrace;,\ldots,k_&lbrace;i,H,d_h&rbrace;&rbrace;_&lbrace;\displaystyle\mathbf&lbrace;k&rbrace;_&lbrace;i,H&rbrace;&rbrace;
 \bigr]
 $$
 
 `.view(b, num_tokens, H, d_h)` dit à PyTorch : "réinterprète la dimension
-$d_{out} = H \cdot d_h$ comme deux dimensions imbriquées". Sans rien déplacer
+$d_&lbrace;out&rbrace; = H \cdot d_h$ comme deux dimensions imbriquées". Sans rien déplacer
 en mémoire, le même token $i$ est maintenant accessible comme un bloc
 $(H, d_h)$ :
 
-$$K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \mathbf{k}_{i,2} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}$$
+$$K[\,b,\,i,\,:,\,:] = \begin&lbrace;pmatrix&rbrace; \mathbf&lbrace;k&rbrace;_&lbrace;i,1&rbrace; \\ \mathbf&lbrace;k&rbrace;_&lbrace;i,2&rbrace; \\ \vdots \\ \mathbf&lbrace;k&rbrace;_&lbrace;i,H&rbrace; \end&lbrace;pmatrix&rbrace; \in \mathbb&lbrace;R&rbrace;^&lbrace;H \times d_h&rbrace;$$
 
-La $j$-ième ligne de ce bloc est exactement $\mathbf{k}_{i,j}$, le vecteur clé
+La $j$-ième ligne de ce bloc est exactement $\mathbf&lbrace;k&rbrace;_&lbrace;i,j&rbrace;$, le vecteur clé
 du token $i$ pour la tête $j$.
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/view_operation_1.png" alt="view_operation_1" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure X : `.view()` réinterprète la dimension $d_{out}$ comme $(H, d_h)$.
-Pour chaque token $i$, le vecteur $\mathbf{k}_i \in \mathbb{R}^{d_{out}}$ devient
-un bloc $K[b, i, :, :] \in \mathbb{R}^{H \times d_h}$ dont la $j$-ième ligne
-est $\mathbf{k}_{i,j}$. Aucune donnée n'est déplacée en mémoire.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure X : `.view()` réinterprète la dimension $d_&lbrace;out&rbrace;$ comme $(H, d_h)$.
+Pour chaque token $i$, le vecteur $\mathbf&lbrace;k&rbrace;_i \in \mathbb&lbrace;R&rbrace;^&lbrace;d_&lbrace;out&rbrace;&rbrace;$ devient
+un bloc $K[b, i, :, :] \in \mathbb&lbrace;R&rbrace;^&lbrace;H \times d_h&rbrace;$ dont la $j$-ième ligne
+est $\mathbf&lbrace;k&rbrace;_&lbrace;i,j&rbrace;$. Aucune donnée n'est déplacée en mémoire.*</figcaption>
 </figure>
 
 ---
@@ -1376,8 +1377,8 @@ keys = keys.transpose(1, 2)
 **Notation.** Notons
 
 $$
-K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix}
-\in \mathbb{R}^{T \times d_h} \qquad (T = \texttt{num\_tokens})
+K_j = \begin&lbrace;pmatrix&rbrace; \mathbf&lbrace;k&rbrace;_&lbrace;1,j&rbrace; \\ \vdots \\ \mathbf&lbrace;k&rbrace;_&lbrace;T,j&rbrace; \end&lbrace;pmatrix&rbrace;
+\in \mathbb&lbrace;R&rbrace;^&lbrace;T \times d_h&rbrace; \qquad (T = \texttt&lbrace;num\_tokens&rbrace;)
 $$
 
 la matrice des clés de la tête $j$ sur l'ensemble de la séquence — toutes les
@@ -1389,9 +1390,9 @@ Comme `.view()`, `.transpose()` ne déplace rien en mémoire — il change juste
 
 Reprenons la matrice $2 \times 3$ :
 
-$$M = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}$$
+$$M = \begin&lbrace;pmatrix&rbrace; 1 & 2 & 3 \\ 4 & 5 & 6 \end&lbrace;pmatrix&rbrace;$$
 
-Mémoire physique : $\boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$
+Mémoire physique : $\boxed&lbrace;1&rbrace;\;\boxed&lbrace;2&rbrace;\;\boxed&lbrace;3&rbrace;\;\boxed&lbrace;4&rbrace;\;\boxed&lbrace;5&rbrace;\;\boxed&lbrace;6&rbrace;$
 
 Avec `.view(3, 2)`, PyTorch relisait ces mêmes cases en disant "3 lignes de 2 colonnes" — et chaque ligne consécutive était bien côte à côte en mémoire. Pas de problème.
 
@@ -1399,12 +1400,12 @@ Soit $$ M.view(3, 2) \Rightarrow \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pm
 
 Avec `.transpose()`, on obtient logiquement :
 
-$$M^\top = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
+$$M^\top = \begin&lbrace;pmatrix&rbrace; 1 & 4 \\ 2 & 5 \\ 3 & 6 \end&lbrace;pmatrix&rbrace;$$
 
 Pour lire la première ligne de $M^\top$ (les éléments $1$ et $4$), PyTorch doit sauter des cases : il prend la case 0 (1), puis la case 3 (4). Entre eux, il y a les cases 1 et 2 qui appartiennent logiquement à d'autres lignes. L'ordre logique et l'ordre mémoire divergent :
 
-$$\text{Ordre mémoire (intact)} : \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$$
-$$\text{Ordre logique (après transposition)} : 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
+$$\text&lbrace;Ordre mémoire (intact)&rbrace; : \boxed&lbrace;1&rbrace;\;\boxed&lbrace;2&rbrace;\;\boxed&lbrace;3&rbrace;\;\boxed&lbrace;4&rbrace;\;\boxed&lbrace;5&rbrace;\;\boxed&lbrace;6&rbrace;$$
+$$\text&lbrace;Ordre logique (après transposition)&rbrace; : 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
 
 Un tenseur est **non contigu** quand lire ses éléments dans l'ordre logique exige de **sauter des cases** en mémoire.
 
@@ -1415,13 +1416,13 @@ Dans la forme `(b, num_tokens, H, d_h)` issue de `.view()`, la dimension
 d'itération principale est le token. Pour un token $i$ fixé, le bloc
 $K[\,b,\,i,\,:,\,:]$ regroupe les projections de toutes les têtes pour ce token :
 
-$$K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}$$
+$$K[\,b,\,i,\,:,\,:] = \begin&lbrace;pmatrix&rbrace; \mathbf&lbrace;k&rbrace;_&lbrace;i,1&rbrace; \\ \vdots \\ \mathbf&lbrace;k&rbrace;_&lbrace;i,H&rbrace; \end&lbrace;pmatrix&rbrace; \in \mathbb&lbrace;R&rbrace;^&lbrace;H \times d_h&rbrace;$$
 
 On lit le tenseur *tête par tête pour un token donné*. En mémoire, les données
 sont rangées dans l'ordre : toutes les têtes du token 1, puis toutes les têtes
 du token 2, etc. Les matrices $K_1, \ldots, K_H$ existent conceptuellement, mais
-leurs lignes sont **entrelacées** — $\mathbf{k}_{1,1}$ suivi de $\mathbf{k}_{1,2}$,
-puis $\mathbf{k}_{2,1}$ suivi de $\mathbf{k}_{2,2}$, etc. Pour reconstituer $K_j$,
+leurs lignes sont **entrelacées** — $\mathbf&lbrace;k&rbrace;_&lbrace;1,1&rbrace;$ suivi de $\mathbf&lbrace;k&rbrace;_&lbrace;1,2&rbrace;$,
+puis $\mathbf&lbrace;k&rbrace;_&lbrace;2,1&rbrace;$ suivi de $\mathbf&lbrace;k&rbrace;_&lbrace;2,2&rbrace;$, etc. Pour reconstituer $K_j$,
 il faudrait sauter des cases à chaque ligne.
 
 **Représentation droite — organisée par tête.**
@@ -1429,7 +1430,7 @@ Après `.transpose(1, 2)`, la forme est `(b, H, num_tokens, d_h)`. Pour une têt
 fixée, le bloc $K[\,b,\,j,\,:,\,:] = K_j$ regroupe les projections de tous les
 tokens pour cette tête :
 
-$$K[\,b,\,j,\,:,\,:] = K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix} \in \mathbb{R}^{T \times d_h}$$
+$$K[\,b,\,j,\,:,\,:] = K_j = \begin&lbrace;pmatrix&rbrace; \mathbf&lbrace;k&rbrace;_&lbrace;1,j&rbrace; \\ \vdots \\ \mathbf&lbrace;k&rbrace;_&lbrace;T,j&rbrace; \end&lbrace;pmatrix&rbrace; \in \mathbb&lbrace;R&rbrace;^&lbrace;T \times d_h&rbrace;$$
 
 On lit le tenseur *token par token pour une tête donnée*. Chaque $K_j$ forme
 un bloc logique indépendant. Mais comme vu ci-dessus, `.transpose()` n'a pas
@@ -1460,7 +1461,7 @@ attn_scores = queries @ keys.transpose(2, 3)
 calcule $Q_j K_j^\top$ simultanément pour toutes les têtes et tous les éléments du
 batch :
 
-$$\texttt{attn\_scores}[\,b,\,j,\,:,\,:] = Q_j K_j^\top \in \mathbb{R}^{T \times T}$$
+$$\texttt&lbrace;attn\_scores&rbrace;[\,b,\,j,\,:,\,:] = Q_j K_j^\top \in \mathbb&lbrace;R&rbrace;^&lbrace;T \times T&rbrace;$$
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/mha_explained_2.png" alt="mha_explained_2" class="rounded-xl shadow-2xl" />
@@ -1494,12 +1495,12 @@ les données dans l'ordre qui correspond à la forme logique actuelle.
 Avec notre exemple numérique : après `.transpose()`, le tenseur est logiquement
 $M^\top$ mais la mémoire contient encore $1, 2, 3, 4, 5, 6$ :
 
-$$\text{Ordre mémoire} : \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$$
-$$\text{Ordre logique} : 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
+$$\text&lbrace;Ordre mémoire&rbrace; : \boxed&lbrace;1&rbrace;\;\boxed&lbrace;2&rbrace;\;\boxed&lbrace;3&rbrace;\;\boxed&lbrace;4&rbrace;\;\boxed&lbrace;5&rbrace;\;\boxed&lbrace;6&rbrace;$$
+$$\text&lbrace;Ordre logique&rbrace; : 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
 
 `.contiguous()` crée un nouveau bloc où les deux ordres coïncident :
 
-$$\text{Nouvelle mémoire} : \boxed{1}\;\boxed{4}\;\boxed{2}\;\boxed{5}\;\boxed{3}\;\boxed{6}$$
+$$\text&lbrace;Nouvelle mémoire&rbrace; : \boxed&lbrace;1&rbrace;\;\boxed&lbrace;4&rbrace;\;\boxed&lbrace;2&rbrace;\;\boxed&lbrace;5&rbrace;\;\boxed&lbrace;3&rbrace;\;\boxed&lbrace;6&rbrace;$$
 
 `.view()` peut alors s'appliquer sans risque.
 
@@ -1512,8 +1513,8 @@ Le `.view(b, num_tokens, self.d_out)` qui suit concatène les sorties des $H$ t�
 pour chaque token :
 
 $$
-\mathbf{c}_i = \mathbf{c}_{i,1} \| \mathbf{c}_{i,2} \| \cdots \| \mathbf{c}_{i,H}
-\in \mathbb{R}^{d_{out}}
+\mathbf&lbrace;c&rbrace;_i = \mathbf&lbrace;c&rbrace;_&lbrace;i,1&rbrace; \| \mathbf&lbrace;c&rbrace;_&lbrace;i,2&rbrace; \| \cdots \| \mathbf&lbrace;c&rbrace;_&lbrace;i,H&rbrace;
+\in \mathbb&lbrace;R&rbrace;^&lbrace;d_&lbrace;out&rbrace;&rbrace;
 $$
 
 Enfin, une projection linéaire mélange les informations des différentes têtes :
@@ -1587,9 +1588,9 @@ Les points clés du chapitre attention et multi-head attention :
 - On introduit trois projections linéaires entraînables : **queries** ($Q$), **keys** ($K$),
   et **values** ($V$), permettant au modèle d'apprendre quels types de relations
   chercher et comment les exploiter.
-- Le score brut $e_{ij} = \frac{q_i^\top k_j}{\sqrt{d_k}}$ est normalisé par la racine
+- Le score brut $e_&lbrace;ij&rbrace; = \frac&lbrace;q_i^\top k_j&rbrace;&lbrace;\sqrt&lbrace;d_k&rbrace;&rbrace;$ est normalisé par la racine
   carrée de la dimension (scaling) pour empêcher l'explosion des variances.
-- Le softmax transforme ces scores en poids probabilistes $\alpha_{ij} \in [0, 1]$
+- Le softmax transforme ces scores en poids probabilistes $\alpha_&lbrace;ij&rbrace; \in [0, 1]$
   sommant à 1 par ligne.
 
 **Attention causale**
@@ -1609,7 +1610,7 @@ Les points clés du chapitre attention et multi-head attention :
   mais inefficace : on répète la multiplication matricielle (l'opération la plus coûteuse)
   $H$ fois.
 - L'implémentation efficace (classe `MultiHeadAttention`) effectue une seule projection
-  de dimension $d_{out} = H \cdot d_h$, puis découpe et réorganise via `.view()` et
+  de dimension $d_&lbrace;out&rbrace; = H \cdot d_h$, puis découpe et réorganise via `.view()` et
   `.transpose()` sans copier les données. Les opérations matricielles résultantes
   (produit par lots sur tous les têtes) exploitent la vectorisation GPU.
 

@@ -10,7 +10,7 @@ tags: ["PyTorch", "Attention", "Transformer", "Deep Learning"]
 draft: false
 ---
 
-### Introduction
+## Introduction
 
 Ce chapitre porte sur les **mécanismes d'attention**, qui constituent le cœur de l'architecture des LLMs. L'objectif est d'en comprendre le fonctionnement de manière isolée et mécanique, avant de les intégrer dans le modèle complet au chapitre 4.
 
@@ -35,7 +35,7 @@ L'implémentation finale de l'attention multi-têtes sera directement réutilis�
 
 ---
 
-### Le problème de la modélisation des longues séquences
+## Le problème de la modélisation des longues séquences
 
 Avant d'introduire le mécanisme de *self-attention*, il est utile de comprendre le problème qu'il vient résoudre — et pourquoi les architectures qui le précèdent étaient insuffisantes.
 
@@ -73,7 +73,7 @@ Sur des phrases courtes, cela fonctionne. Sur des séquences longues avec des d�
 
 ---
 
-### Capturer les dépendances avec les mécanismes d'attention
+## Capturer les dépendances avec les mécanismes d'attention
 
 #### L'attention de Bahdanau (2014) — première rupture
 
@@ -100,7 +100,7 @@ C'est ce mécanisme qui est au cœur des LLMs modernes comme GPT, et c'est ce qu
 </figure>
 
 ---
-### La self-attention : porter attention à différentes parties de l'entrée
+## La self-attention
 
 #### Le « self » de self-attention
 
@@ -388,7 +388,7 @@ La différence structurelle avec la version simplifiée est l'introduction de **
 
 ---
 
-### Calcul pas à pas
+#### Calcul pas à pas
 
 #### Les trois matrices de projection et leur rôle
 
@@ -576,7 +576,7 @@ $$Z = \text{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V$$
 où $Q = X W_Q$, $K = X W_K$, $V = X W_V$ sont les projections de toute la séquence, et chaque ligne $i$ de $Z$ est le vecteur de contexte $z^{(i)}$.
 
 ---
-## Encapsulation en classe Python
+## Implémentation : La classe SelfAttention
 
 Le code précédent est réorganisé en une classe `nn.Module` — la brique de base de tout modèle PyTorch, qui gère automatiquement l'enregistrement des paramètres, leur mise à jour lors de l'entraînement, et le déplacement sur GPU.
 
@@ -622,7 +622,7 @@ tensor([[0.2996, 0.8053],
 
 ---
 
-### Version améliorée : `SelfAttention_v2` avec `nn.Linear`
+#### Version améliorée avec nn.Linear
 
 **Initialisation des poids.** Dans `SelfAttention_v1`, `nn.Parameter(torch.rand(...))` tire chaque poids indépendamment selon $W_{ij} \sim \mathcal{U}[0, 1)$. Cette initialisation est naïve pour deux raisons :
 
@@ -739,7 +739,7 @@ Les sorties diffèrent entre `v1` et `v2` uniquement parce que les poids initiau
 La prochaine étape enrichit ce mécanisme de deux extensions : le **masque causal**, qui empêche chaque token d'accéder aux tokens futurs lors de la génération, et l'**attention multi-têtes**, qui fait tourner plusieurs mécanismes d'attention en parallèle pour capter différents types de relations entre tokens.
 
 ---
-## Masquer les tokens futurs avec l'attention causale
+## L'attention causale
 
 L'attention causale (ou *masked attention*) est une variante de l'auto-attention qui contraint chaque token à n'accéder qu'aux tokens qui le précèdent (et à lui-même) dans la séquence. C'est l'opposé de l'auto-attention standard qui dispose de toute la séquence en entrée.
 
@@ -747,11 +747,11 @@ Cette contrainte est fondamentale pour les LLMs de type GPT : lors de la prédic
 
 ---
 
-## Appliquer un masque d'attention causale
+### Appliquer un masque causal
 
 Il existe deux approches équivalentes pour obtenir la matrice de poids d'attention masquée.
 
-### Approche naïve : masquer après softmax
+#### Approche naïve : masquer après softmax
 
 **Étape 1 — Calculer les poids d'attention standards (softmax)**
 
@@ -831,7 +831,7 @@ Chaque ligne somme à 1. Les poids masqués sont nuls, et les poids restants son
 <details>
 <summary>Démonstration</summary>
 
-### Cadre et notations
+#### Cadre et notations
 
 Soit une séquence de $T$ tokens. À chaque token en position $j$ sont associés trois vecteurs obtenus par projections linéaires de son embedding :
 
@@ -925,7 +925,7 @@ $$\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 ---
 
-### Équivalence des deux méthodes
+#### Équivalence des deux méthodes
 
 La comparaison terme à terme des deux résultats encadrés est immédiate :
 
@@ -943,7 +943,7 @@ Il s'agit d'une **égalité algébrique exacte**. Dans la Méthode 1, le facteur
 
 ---
 
-### Approche efficace : masquer avant softmax avec $-\infty$
+#### Approche efficace : masquer avant softmax avec $-\infty$
 
 L'approche naïve applique softmax puis corrige. On peut faire mieux : masquer les scores d'attention **avant** le softmax en remplaçant les positions futures par $-\infty$.
 
@@ -984,7 +984,7 @@ tensor([[1.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
 Le résultat est identique à l'approche naïve, en deux étapes au lieu de quatre. C'est cette approche qui est retenue en pratique.
 
 ---
-## Masquer des poids d'attention supplémentaires avec le dropout
+### Ajouter du Dropout
 
 Le dropout est une technique de régularisation proposée par Geoffrey Hinton en 2012. À chaque étape d'entraînement, chaque neurone a une probabilité $p$ (le *taux d'abandon*) d'être temporairement désactivé — ignoré pour cette passe, mais potentiellement actif à la suivante. Après l'entraînement, aucun neurone n'est jamais désactivé.
 
@@ -1001,7 +1001,7 @@ Dans le mécanisme d'attention, le dropout s'applique directement sur les poids 
 
 ---
 
-### Mise à l'échelle automatique
+#### Mise à l'échelle automatique
 
 Avec un taux de dropout $p$, les poids survivants sont multipliés par $\frac{1}{1-p}$. C'est une correction nécessaire : pendant l'entraînement, un neurone n'est connecté en moyenne qu'à une fraction $(1-p)$ de ses entrées habituelles. Sans cette compensation, le neurone recevrait à l'inférence (où tous les neurones sont actifs) un signal d'une amplitude très différente de ce qu'il a appris.
 
@@ -1027,7 +1027,7 @@ Les éléments restés non nuls après le dropout valent $\frac{1}{1 - 0.5} = 2$
 
 ---
 
-### Application aux poids d'attention causale
+#### Application aux poids d'attention causale
 
 ```python
 torch.manual_seed(123)
@@ -1052,7 +1052,7 @@ Tu as raison sur les deux points. Le troisième "problème" que j'avais listé n
 
 ---
 
-## Implémenter une classe d'attention causale compacte
+### Classe finale d'attention causale
 
 On intègre maintenant le masque causal et le dropout dans une classe `CausalAttention` qui remplace `SelfAttention`. Cette classe doit également gérer des entrées en batch — plusieurs séquences traitées en parallèle.
 
@@ -1068,7 +1068,7 @@ Un tenseur 3D de forme `(batch_size, num_tokens, d_in)` : 2 séquences, 6 tokens
 
 ---
 
-### Le code
+#### Le code
 
 ```python
 class CausalAttention(nn.Module):
@@ -1185,15 +1185,15 @@ Dans la section 3.5.1, on avait `keys.T` car les entrées étaient 2D `(num_toke
 </figure>
 
 ---
-## Étendre l'attention mono-tête à l'attention multi-têtes
+## L'attention multi-têtes
 
 L'attention multi-têtes consiste à faire tourner le mécanisme d'attention plusieurs fois en parallèle, chacune avec ses propres matrices de poids $W_Q$, $W_K$, $W_V$. Chaque tête apprend à se spécialiser sur un type de relation différent dans la séquence. Un module `CausalAttention` seul correspond à l'attention mono-tête — un seul ensemble de poids traitant l'entrée.
 
 ---
 
-## Empiler plusieurs modules d'attention mono-tête
+### Empiler plusieurs modules mono-tête
 
-### L'idée
+#### L'idée
 
 La façon la plus directe d'implémenter l'attention multi-têtes est d'instancier plusieurs `CausalAttention` indépendants, de les faire tourner sur la même entrée, et de concaténer leurs sorties.
 
@@ -1202,7 +1202,7 @@ La façon la plus directe d'implémenter l'attention multi-têtes est d'instanci
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.24 : Un module d'attention multi-têtes avec deux têtes. Chaque tête dispose de ses propres matrices de poids $W_Q$, $W_K$, $W_V$, et produit ses propres vecteurs de contexte $Z_1$ et $Z_2$, ensuite concaténés en $Z$.*</figcaption>
 </figure>
 
-### Implémentation
+#### Implémentation
 
 ```python
 class MultiHeadAttentionWrapper(nn.Module):
@@ -1225,7 +1225,7 @@ Deux points méritent attention.
 
 `torch.cat(..., dim=-1)` concatène les sorties de chaque tête le long de la dernière dimension — la dimension d'embedding. Si chaque tête produit des vecteurs de dimension `d_out`, la sortie finale a dimension `d_out × num_heads`.
 
-### Exemple
+#### Exemple
 
 ```python
 torch.manual_seed(123)
@@ -1263,12 +1263,12 @@ La forme `(2, 6, 4)` se lit : 2 séquences dans le batch, 6 tokens chacune, vect
 
 ---
 
-### Limite de cette approche
+#### Limite de cette approche
 
 Les têtes sont traitées **séquentiellement** dans `forward` via `[head(x) for head in self.heads]`. C'est fonctionnellement correct mais inefficace : on effectue `num_heads` passes distinctes là où une seule opération matricielle pourrait tout calculer en parallèle. La section suivante présente une implémentation qui exploite cette parallélisation.
 
 ---
-## Implémentation efficace par découpe de poids
+### Implémentation efficace (MultiheadAttention)
 
 La classe `MultiHeadAttention` fusionne `MultiHeadAttentionWrapper` et
 `CausalAttention` en une seule entité. L'idée directrice : effectuer **une seule**
@@ -1529,14 +1529,14 @@ context_vec = self.out_proj(context_vec)
 
 ## Exercice 3.3 — Initialisation d'un module d'attention de taille GPT-2
 
-### Énoncé
+#### Énoncé
 
 À l'aide de la classe `MultiHeadAttention`, initialiser un module d'attention multi-têtes
 possédant le même nombre de têtes que le plus petit modèle GPT-2 (12 têtes). Utiliser
 également les dimensions d'embedding d'entrée et de sortie du modèle GPT-2 (768).
 Le plus petit GPT-2 supporte une longueur de contexte de 1 024 tokens.
 
-### Solution
+#### Solution
 
 ```python
 import torch
@@ -1570,7 +1570,7 @@ print(f"\nModule: {mha}")
 
 ---
 
-## Résumé du chapitre 3
+## Résumé
 
 Les points clés du chapitre attention et multi-head attention :
 

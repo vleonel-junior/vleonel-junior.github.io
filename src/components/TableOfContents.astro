@@ -11,10 +11,9 @@ const { headings, mode = "sidebar" } = Astro.props;
 // Check if there are any h2 headings
 const hasH2 = headings.some((h) => h.depth === 2);
 
-// If no h2: treat h3 as top-level (depth 2 equivalent), skip h4+
-// If h2 present: show h2 and h3 only
+// If h2 present: show h2 only (cleaner TOC)
 const filteredHeadings = hasH2
-    ? headings.filter((h) => h.depth === 2 || h.depth === 3)
+    ? headings.filter((h) => h.depth === 2)
     : headings.filter((h) => h.depth === 3);
 
 // Build numbered structure

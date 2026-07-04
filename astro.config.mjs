@@ -18,8 +18,9 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()]
   },
-  integrations: [mdx({
+  markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [rehypeKatex]
-  }), sitemap(), preact()]
+  },
+  integrations: [mdx(), sitemap(), preact()]
 });

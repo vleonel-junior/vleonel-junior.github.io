@@ -1,0 +1,25 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Page non trouvée | Léonel VODOUNOU">
+    <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <h1 class="text-6xl font-bold text-gray-800 dark:text-gray-100 mb-4">404</h1>
+        <h2 class="text-2xl font-semibold text-gray-600 dark:text-gray-300 mb-6">Page non trouvée</h2>
+        <p class="text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-lg">
+            Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
+        </p>
+        <a href="/" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors">
+            Retour à l'accueil
+        </a>
+    </div>
+</Layout>
+
+<script is:inline>
+    // Script pour corriger automatiquement les anciennes URLs référencées par Google/Bing
+    // qui contenaient le sous-dossier "/Portfolio-main/"
+    if (window.location.pathname.startsWith("/Portfolio-main")) {
+        const newUrl = window.location.pathname.replace("/Portfolio-main", "");
+        window.location.replace(newUrl || "/");
+    }
+</script>

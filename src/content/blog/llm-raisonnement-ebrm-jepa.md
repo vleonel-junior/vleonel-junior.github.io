@@ -12,7 +12,7 @@ Depuis deux ans, chaque nouvelle génération de modèle de langage est présent
 
 Cet article déplie cette thèse, sans se contenter de la répéter. L'objectif est de comprendre, notion par notion, pourquoi un modèle autorégressif token-par-token bute structurellement sur certains types de problèmes — puis d'examiner ce que des architectures alternatives (JEPA, World Models, Energy-Based Reasoning Models) proposent concrètement pour contourner cette limite. Et, parce que la rigueur l'exige, d'examiner aussi où les preuves apportées à l'appui de ces alternatives sont solides, et où elles ne le sont pas encore.
 
-## 1. Trois raisons structurelles, pas une question de taille de modèle
+## Trois raisons structurelles, pas une question de taille de modèle
 
 Il y a trois causes distinctes à ce blocage, et il vaut la peine de les séparer parce qu'elles ne se résolvent pas de la même manière ni avec les mêmes outils. Cette décomposition en trois points est celle que propose explicitement Logical Intelligence dans son billet fondateur [2], et elle recoupe, avec un vocabulaire différent, le diagnostic que porte Yann LeCun depuis plusieurs années [1].
 
@@ -31,17 +31,17 @@ Ce que cette possibilité apporte, très concrètement, c'est une information qu
 
 LeCun rattache d'ailleurs ce recoupement à la théorie classique de la résolution de problèmes en intelligence artificielle [1] : un système de recherche efficace a toujours besoin de deux composants distincts, un qui propose des solutions candidates et un autre qui évalue si elles sont bonnes *avant* que la solution soit terminée — sans quoi il n'y a plus de recherche véritable, seulement des tentatives indépendantes jugées après coup, exactement la « recherche par tâtonnement » dont il vient d'être question. Sa critique des LLM porte précisément là-dessus : produire plusieurs suites de tokens et les noter une fois qu'elles sont complètes n'est, selon lui, qu'une forme très primitive de cette recherche — et elle devrait, idéalement, s'exécuter dans un espace de représentation continu plutôt que dans l'espace du langage lui-même [1].
 
-## 2. JEPA et les World Models : apprendre une représentation du monde
+## JEPA et les World Models : apprendre une représentation du monde
 
 Face à ce diagnostic, l'approche de LeCun est d'abord *perceptive* [1]. Plutôt que d'entraîner un modèle à reconstruire chaque détail de ce qu'il observe — l'approche générative classique — on entraîne un encodeur à produire une représentation abstraite qui élimine ce qui n'est de toute façon pas prévisible, et un prédicteur qui travaille dans cet espace abstrait, plus compact. L'exemple que LeCun utilise pour illustrer ce principe vient de la physique : la loi des gaz parfaits (PV = nRT) ne dit rien sur la position ou la vitesse individuelle de chaque molécule de gaz — elle élimine délibérément cette information et prédit à partir de quelques variables agrégées seulement (pression, volume, température). Cette élimination contrôlée du détail non prédictible est, selon lui, « à la racine de la science, et je dirais, à la racine de l'intelligence » [1].
 
 Un World Model va plus loin : il apprend une transition état → action → état suivant, ce qui permet de planifier par optimisation — spécifier un état cible et chercher, dans l'espace de représentation, la séquence d'interventions qui y mène. C'est un cadre général qui dépasse largement le texte : il s'applique à la robotique, à la simulation physique, à la conception de matériaux.
 
-## 3. Kona à l'épreuve des faits
+## Kona à l'épreuve des faits
 
 Logical Intelligence applique ce principe à travers son modèle Kona, sur des traces de raisonnement [2]. Le seul résultat public qui concerne directement Kona est une démonstration où il surclasse nettement plusieurs LLM standards sur un problème de logique à état fini et de petite taille, consultable en direct sur leur site [5]. Ce résultat n'a pas fait l'objet d'un audit tiers ou d'un leaderboard indépendant — c'est l'entreprise qui en fixe le protocole et rapporte le chiffre. Il illustre l'écart architectural attendu entre les deux approches, mais sur un cas trop restreint pour en tirer une conclusion générale sur des systèmes réels bien plus complexes et souvent mal spécifiés.
 
-## 4. Synthèse
+## Synthèse
 
 Le diagnostic sur les limites structurelles des LLM autorégressifs repose sur deux sources sans intérêt commercial commun — Yann LeCun depuis l'angle de la représentation du monde [1], Logical Intelligence depuis l'angle du raisonnement symbolique [2] — et l'une d'elles est une publication académique à comité de lecture [1]. Ce diagnostic semble donc solide.
 

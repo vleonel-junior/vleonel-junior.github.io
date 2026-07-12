@@ -25,11 +25,11 @@
 
 :root {
     /* Light Mode (Default) */
-    --bg-primary: #f3f3f1;
-    /* Quartz Light */
+    --bg-primary: #e8e8e5;
+    /* Quartz Light (Assombri) */
     --text-primary: #032d29;
     /* Quartz */
-    --bg-secondary: #ffffff;
+    --bg-secondary: #f4f4f2;
     --text-secondary: #011a18;
     /* Quartz Dark */
     --border-primary: rgba(3, 45, 41, 0.1);

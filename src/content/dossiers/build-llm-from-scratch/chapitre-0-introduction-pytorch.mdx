@@ -11,12 +11,26 @@ draft: false
 showToc: false
 ---
 
+## Introduction
+
+Bienvenue dans le **Chapitre 0** de notre série dédiée à la construction d'un LLM (Large Language Model) de zéro. 
+Avant de plonger dans les mécanismes d'attention et l'architecture des Transformers, nous devons maîtriser notre outil de travail principal : **PyTorch**.
+
+PyTorch est une bibliothèque de Deep Learning extrêmement populaire, prisée pour sa flexibilité et sa manipulation intuitive des tenseurs. Dans ce chapitre préliminaire, nous allons explorer les concepts fondamentaux qui nous serviront de fondation pour tout le reste du projet :
+- La création et la manipulation des **tenseurs** (les structures de données au cœur des réseaux de neurones).
+- Le fonctionnement des **graphes de calcul**.
+- La magie de l'**Autograd** (le moteur de différenciation automatique qui permet aux modèles d'apprendre via la descente de gradient).
+
+Si vous êtes déjà à l'aise avec PyTorch, vous pouvez survoler ce chapitre ou passer directement au Chapitre 1. Sinon, ouvrez votre environnement Python (ou Google Colab), et commençons !
+
+
+
 ```python
 import torch
 torch.__version__
 ```
 
-```text
+```output
 '2.10.0+cu128'
 ```
 
@@ -25,7 +39,7 @@ import torch
 torch.cuda.is_available()
 ```
 
-```text
+```output
 True
 ```
 
@@ -47,7 +61,7 @@ tensor3d = torch.tensor([[[1, 2], [3, 4]],
 print(tensor1d.dtype)
 ```
 
-```text
+```output
 torch.int64
 
 ```
@@ -57,7 +71,7 @@ float_tensor = torch.tensor([1.0, 2.0, 3.0])
 print(float_tensor.dtype)
 ```
 
-```text
+```output
 torch.float32
 
 ```
@@ -72,7 +86,7 @@ float_tensor = float_tensor.to(torch.float32)
 print(float_tensor.dtype)
 ```
 
-```text
+```output
 torch.float32
 
 ```
@@ -81,7 +95,7 @@ torch.float32
 print(tensor2d)
 ```
 
-```text
+```output
 tensor([[1, 2, 3],
         [4, 5, 6]])
 
@@ -93,7 +107,7 @@ The **.shape** attribute allows us to access the shape of a tensor:
 print(tensor2d.shape)
 ```
 
-```text
+```output
 torch.Size([2, 3])
 
 ```
@@ -104,7 +118,7 @@ To reshape the tensor into a 3 × 2 tensor, we can use the **.reshape** method
 print(tensor2d.reshape([3, 2]))
 ```
 
-```text
+```output
 tensor([[1, 2],
         [3, 4],
         [5, 6]])
@@ -118,7 +132,7 @@ However, note that the more common command for reshaping tensors in PyTorch is
 print(tensor2d.view([3, 2]))
 ```
 
-```text
+```output
 tensor([[1, 2],
         [3, 4],
         [5, 6]])
@@ -191,7 +205,7 @@ We can use **.T** to transpose a tensor, which means flipping it across its diag
 print(tensor2d.T)
 ```
 
-```text
+```output
 tensor([[1, 4],
         [2, 5],
         [3, 6]])
@@ -204,7 +218,7 @@ The common way to multiply two matrices in PyTorch is the **.matmul** method
 print(tensor2d.matmul(tensor2d.T))
 ```
 
-```text
+```output
 tensor([[14, 32],
         [32, 77]])
 
@@ -307,7 +321,7 @@ print(grad_L_w1)
 print(grad_L_b)
 ```
 
-```text
+```output
 (tensor([-0.0898]),)
 (tensor([-0.0817]),)
 
@@ -325,7 +339,7 @@ print(w1.grad)
 print(b.grad)
 ```
 
-```text
+```output
 tensor([-0.0898])
 tensor([-0.0817])
 
@@ -411,7 +425,7 @@ model = NeuralNetwork(50, 30)
 print(model)
 ```
 
-```text
+```output
 NeuralNetwork(
   (layer1): Linear(in_features=50, out_features=30, bias=True)
   (relu1): ReLU()
@@ -458,7 +472,7 @@ num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print("Total number of trainable model parameters:", num_params)
 ```
 
-```text
+```output
 Total number of trainable model parameters: 2780
 
 ```
@@ -468,7 +482,7 @@ Total number of trainable model parameters: 2780
 print(model.layer1.weight)
 ```
 
-```text
+```output
 Parameter containing:
 tensor([[ 0.0220,  0.0694,  0.0166,  ..., -0.0385,  0.0019, -0.1359],
         [-0.0732,  0.0306, -0.0902,  ..., -0.0025,  0.0096,  0.0459],
@@ -486,7 +500,7 @@ tensor([[ 0.0220,  0.0694,  0.0166,  ..., -0.0385,  0.0019, -0.1359],
 print(model.layer1.weight.shape)
 ```
 
-```text
+```output
 torch.Size([30, 50])
 
 ```
@@ -496,7 +510,7 @@ torch.Size([30, 50])
 print(model.layer1.bias)
 ```
 
-```text
+```output
 Parameter containing:
 tensor([ 0.1108,  0.0739, -0.0027, -0.0209,  0.0596, -0.0188, -0.1029, -0.0371,
          0.0450, -0.0449,  0.0426,  0.1201,  0.0831, -0.1402,  0.1035,  0.0408,
@@ -514,7 +528,7 @@ model = NeuralNetwork(50, 3)
 print(model.layer1.weight)
 ```
 
-```text
+```output
 Parameter containing:
 tensor([[-0.0577,  0.0047, -0.0702,  ...,  0.0222,  0.1260,  0.0865],
         [ 0.0502,  0.0307,  0.0333,  ...,  0.0951,  0.1134, -0.0297],
@@ -536,7 +550,7 @@ out = model(X)
 print(out)
 ```
 
-```text
+```output
 tensor([[-0.1262,  0.1080, -0.1792]], grad_fn=<AddmmBackward0>)
 
 ```
@@ -559,7 +573,7 @@ with torch.no_grad():
 print(out)
 ```
 
-```text
+```output
 tensor([[-0.1262,  0.1080, -0.1792]])
 
 ```
@@ -573,7 +587,7 @@ with torch.no_grad():
 print(out)
 ```
 
-```text
+```output
 tensor([[0.3113, 0.3934, 0.2952]])
 
 ```
@@ -650,7 +664,7 @@ test_ds = ToyDataset(X_test, y_test)
 print(len(train_ds))
 ```
 
-```text
+```output
 5
 
 ```
@@ -696,7 +710,7 @@ for idx, (x, y) in enumerate(train_loader):
     print(f"Batch {idx + 1}: ", x, y)
 ```
 
-```text
+```output
 Batch 1:  tensor([[ 2.3000, -1.1000],
         [-0.9000,  2.9000]]) tensor([1, 0])
 Batch 2:  tensor([[-1.2000,  3.1000],
@@ -731,7 +745,7 @@ for idx, (x, y) in enumerate(train_loader):
     print(f"Batch {idx}:", x, y)
 ```
 
-```text
+```output
 Batch 0: tensor([[-1.2000,  3.1000],
         [-0.5000,  2.6000]]) tensor([0, 0])
 Batch 1: tensor([[ 2.3000, -1.1000],
@@ -806,7 +820,7 @@ Dès que `num_workers=N` avec N > 0, PyTorch crée N processus fils au démarrag
 
 Le flux de contrôle devient alors le suivant :
 
-```text
+```output
 [Main Process]
   ├── Crée N workers au démarrage
   ├── Génère les groupes d’indices via le BatchSampler
@@ -845,7 +859,7 @@ l’opération est automatiquement protégée par un mécanisme interne de synch
 
 Par exemple, si la queue contient :
 
-```text
+```output
 [[0,1], [2,3], [4,5], [6,7]]
 ```
 
@@ -907,7 +921,7 @@ Cependant, une fois ce batch récupéré par le processus principal, une seconde
 
 Autrement dit, le pipeline complet ressemble désormais à ceci :
 
-```text
+```output
 Workers CPU ──(shared memory)──> Main Process CPU ──(?)──> GPU
 ```
 
@@ -940,7 +954,7 @@ Le GPU peut alors accéder directement à cette mémoire grâce à un mécanisme
 
 Le transfert devient donc :
 
-```text
+```output
 Pinned RAM ──(DMA rapide)──> VRAM GPU
 ```
 
@@ -951,7 +965,7 @@ L’avantage est double :
 
 Le pipeline devient alors beaucoup plus fluide :
 
-```text
+```output
 [Workers CPU]
       │
       ├── Préparent les batchs
@@ -1186,7 +1200,7 @@ for epoch in range(num_epochs):
     # Insert optional model evaluation code 
 ```
 
-```text
+```output
 Epoch: 001/003 | Batch 000/002 | Train Loss:  0.75
 Epoch: 001/003 | Batch 001/002 | Train Loss:  0.65
 Epoch: 002/003 | Batch 000/002 | Train Loss:  0.44
@@ -1202,7 +1216,7 @@ num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print("Total number of trainable model parameters:", num_params)
 ```
 
-```text
+```output
 Total number of trainable model parameters: 752
 
 ```
@@ -1287,7 +1301,7 @@ with torch.no_grad():
 print(outputs)
 ```
 
-```text
+```output
 tensor([[ 2.8569, -4.1618],
         [ 2.5382, -3.7548],
         [ 2.0944, -3.1820],
@@ -1304,7 +1318,7 @@ probas = torch.softmax(outputs, dim=1)
 print(probas)
 ```
 
-```text
+```output
 tensor([[0.9991, 0.0009],
         [0.9982, 0.0018],
         [0.9949, 0.0051],
@@ -1323,7 +1337,7 @@ predictions = torch.argmax(probas, dim=1)
 print(predictions)
 ```
 
-```text
+```output
 tensor([0, 0, 0, 1, 1])
 
 ```
@@ -1336,7 +1350,7 @@ predictions = torch.argmax(outputs, dim=1)
 print(predictions)
 ```
 
-```text
+```output
 tensor([0, 0, 0, 1, 1])
 
 ```
@@ -1347,7 +1361,7 @@ Since the training dataset is relatively small, we could compare the predicted l
 predictions == y_train
 ```
 
-```text
+```output
 tensor([True, True, True, True, True])
 ```
 
@@ -1357,7 +1371,7 @@ Using `torch.sum`, we can count the number of correct predictions.
 torch.sum(predictions == y_train)
 ```
 
-```text
+```output
 tensor(5)
 ```
 
@@ -1393,7 +1407,7 @@ def compute_accuracy(model, dataloader):
 print(compute_accuracy(model, train_loader))
 ```
 
-```text
+```output
 1.0
 
 ```
@@ -1403,7 +1417,7 @@ print(compute_accuracy(model, train_loader))
 print(compute_accuracy(model, test_loader))
 ```
 
-```text
+```output
 1.0
 
 ```
@@ -1425,7 +1439,7 @@ model =  NeuralNetwork(2, 2)
 model.load_state_dict(torch.load("model.pth"))
 ```
 
-```text
+```output
 <All keys matched successfully>
 ```
 
@@ -1447,7 +1461,7 @@ The CPU and the GPU are examples of devices. A PyTorch tensor resides in a devic
 print(torch.cuda.is_available())
 ```
 
-```text
+```output
 True
 
 ```
@@ -1460,7 +1474,7 @@ tensor_2 = torch.tensor([4., 5., 6.])
 print(tensor_1 + tensor_2)
 ```
 
-```text
+```output
 tensor([5., 7., 9.])
 
 ```
@@ -1473,7 +1487,7 @@ tensor_2 = tensor_2.to("cuda")
 print(tensor_1 + tensor_2)
 ```
 
-```text
+```output
 tensor([5., 7., 9.], device='cuda:0')
 
 ```
@@ -1491,7 +1505,7 @@ except RuntimeError as e:
     print(f"Erreur : {e}")
 ```
 
-```text
+```output
 tensor([5., 7., 9.], device='cuda:0')
 
 ```
@@ -1535,7 +1549,7 @@ for epoch in range(num_epochs):
 
 ```
 
-```text
+```output
 Epoch: 001/003 | Batch 000/002 | Train/ Val Loss:  0.75
 Epoch: 001/003 | Batch 001/002 | Train/ Val Loss:  0.65
 Epoch: 002/003 | Batch 000/002 | Train/ Val Loss:  0.44
@@ -1566,7 +1580,7 @@ Cette instruction ordonne à PyTorch d'allouer un bloc en VRAM et d'y copier les
 
 Le pipeline complet est donc le suivant :
 
-```text
+```output
 [Disque]
       │  lecture fichiers
       ▼
@@ -1613,7 +1627,7 @@ Il est donc tout à fait possible que le worker chargé du batch #2 termine avan
 
 Pour maintenir un ordre déterministe, PyTorch associe à chaque groupe d'indices un **numéro de séquence** au moment où le BatchSampler le génère :
 
-```text
+```output
 BatchSampler génère :
   batch #0 → indices [0,1,2,3]
   batch #1 → indices [4,5,6,7]
@@ -1622,7 +1636,7 @@ BatchSampler génère :
 
 Ce numéro accompagne le batch tout au long de son traitement. Lorsque les workers déposent leurs résultats dans la Result Queue, celle-ci peut donc recevoir les batchs dans un ordre quelconque :
 
-```text
+```output
 Result Queue (ordre d'arrivée réel) :
   (numéro=2, batch_2)
   (numéro=0, batch_0)
@@ -1631,7 +1645,7 @@ Result Queue (ordre d'arrivée réel) :
 
 Le processus principal ne consomme jamais simplement le premier batch disponible. Il attend **spécifiquement le numéro de séquence suivant attendu**. Les batchs arrivés en avance sont conservés dans un buffer interne jusqu'à ce que leur tour arrive :
 
-```text
+```output
 Main process attend #0 :
   → batch #2 arrive → placé en buffer
   → batch #0 arrive → transmis au GPU  ✅
@@ -1649,7 +1663,7 @@ Un GPU standard ne traite qu'un seul batch à la fois. Le parallélisme des work
 
 Le pipeline complet peut donc se résumer ainsi :
 
-```text
+```output
 [Workers — parallèle]
   W1 : batch #1 ──┐
   W2 : batch #0 ──┼──> Result Queue (ordre quelconque)
@@ -1674,7 +1688,7 @@ Dans ce contexte précis : c'est simplement un dictionnaire Python que PyTorch m
 
 Concrètement :
 
-```text
+```output
 Main process attend le numéro #0.
 
 → batch #2 arrive en premier dans la Result Queue.
@@ -1742,7 +1756,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_cpu @ b_cpu
 ```
 
-```text
+```output
 6.1 µs ± 1.17 µs per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 
 ```
@@ -1751,7 +1765,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_gpu @ b_gpu
 ```
 
-```text
+```output
 15 µs ± 1.57 µs per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 
 ```
@@ -1775,7 +1789,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_cpu @ b_cpu
 ```
 
-```text
+```output
 8.51 µs ± 217 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 
 ```
@@ -1784,7 +1798,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_gpu @ b_gpu
 ```
 
-```text
+```output
 14.3 µs ± 1.86 µs per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 
 ```
@@ -1808,7 +1822,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_cpu @ b_cpu
 ```
 
-```text
+```output
 54 µs ± 12.5 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 ```
@@ -1817,7 +1831,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_gpu @ b_gpu
 ```
 
-```text
+```output
 13.3 µs ± 1.14 µs per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 
 ```
@@ -1841,7 +1855,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_cpu @ b_cpu
 ```
 
-```text
+```output
 276 µs ± 6.94 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
 ```
@@ -1850,7 +1864,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_gpu @ b_gpu
 ```
 
-```text
+```output
 21.7 µs ± 247 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 ```
@@ -1874,7 +1888,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_cpu @ b_cpu
 ```
 
-```text
+```output
 2.04 ms ± 100 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
 ```
@@ -1883,7 +1897,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_gpu @ b_gpu
 ```
 
-```text
+```output
 64.5 µs ± 196 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 ```
@@ -1907,7 +1921,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_cpu @ b_cpu
 ```
 
-```text
+```output
 16.8 ms ± 2.65 ms per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
 ```
@@ -1916,7 +1930,7 @@ b_gpu = b_cpu.to("cuda")
 %timeit a_gpu @ b_gpu
 ```
 
-```text
+```output
 603 µs ± 3.74 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
 ```
@@ -1970,7 +1984,7 @@ Définir `CUDA_VISIBLE_DEVICES` de cette manière est un moyen simple et efficac
 
 Comme le montre la sortie ci-dessous, les lignes de précision apparaissent en double à la fin de l'exécution sur une machine avec deux GPUs:
 
-```text
+```output
 PyTorch version: 2.2.1+cu117
 CUDA available: True
 Number of GPUs available: 2

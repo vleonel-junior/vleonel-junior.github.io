@@ -113,3 +113,18 @@
 .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-primary/70;
 }
+
+/* Styling for code execution outputs */
+pre[data-language="output"] {
+    background-color: var(--color-quartz-light) !important;
+    border-left: 4px solid var(--color-quartz-accent) !important;
+    color: var(--text-primary) !important;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.dark pre[data-language="output"] {
+    background-color: #1a1a1a !important;
+    border-left: 4px solid var(--color-quartz-accent) !important;
+    color: #a0a0a0 !important;
+}

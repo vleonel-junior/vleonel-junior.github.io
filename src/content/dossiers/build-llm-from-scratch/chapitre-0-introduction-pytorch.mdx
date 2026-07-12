@@ -751,7 +751,7 @@ C'est ce à quoi nous tenterons de répondre dans les lignes à suivre.
 
 ### Partie I — Le DataLoader et les Workers : anatomie d'un pipeline de données
 
-**1.1 La boucle d'entraînement et son goulot d'étranglement fondamental**
+#### La boucle d'entraînement et son goulot d'étranglement fondamental
 
 
 Un réseau de neurones s'entraîne par itérations successives. À chaque itération, le modèle reçoit un *batch* de données, calcule une prédiction (*forward pass*), mesure son erreur via une fonction de perte (*loss*), puis rétropropage cette erreur à travers ses couches pour ajuster ses paramètres (*backward pass*). Cette séquence se répète des milliers, voire des millions de fois.
@@ -761,7 +761,7 @@ Si ces deux phases sont exécutées séquentiellement — c'est-à-dire si le GP
 
 La solution conceptuelle est celle du **pipeline** : préparer les prochains batches *pendant* que le GPU travaille sur le batch courant. C'est exactement ce que réalise le mécanisme des *workers*.
 
-**1.2 Architecture interne du DataLoader**
+#### Architecture interne du DataLoader
 
 
 Le `DataLoader` de PyTorch n'est pas un simple itérateur. C'est un **orchestrateur** qui coordonne plusieurs composants distincts, chacun ayant une responsabilité précise.
@@ -776,7 +776,7 @@ Le `DataLoader` de PyTorch n'est pas un simple itérateur. C'est un **orchestrat
 
 **Les workers** sont les processus fils chargés d'exécuter `dataset[i]` et d'appliquer les transformations, en parallèle du processus principal.
 
-**1.3 Le mode `num_workers=0` : tout dans le processus principal**
+#### Le mode `num_workers=0` : tout dans le processus principal
 
 
 Lorsque `num_workers=0` (valeur par défaut), il n'y a aucun processus fils. Le processus principal est seul, et il effectue **toutes les opérations séquentiellement** :
@@ -798,7 +798,7 @@ Dans ce mode, le GPU est **inactif** aux étapes 1 à 5. Il attend que le CPU ai
 
 Ce mode est cependant parfaitement adapté aux datasets de petite taille entièrement chargés en RAM (comme dans notre exemple jouet avec 5 tensors), car le coût de chargement est négligeable, et les workers introduiraient un surcoût de démarrage inutile.
 
-**1.4 Le mode `num_workers > 0` : parallélisme par processus**
+#### Le mode `num_workers > 0` : parallélisme par processus
 
 
 Dès que `num_workers=N` avec N > 0, PyTorch crée N processus fils au démarrage de l'itération. Ces processus sont créés via le mécanisme de **fork** (ou *spawn* sur Windows et macOS selon la configuration), qui est un appel système dupliquant l'espace mémoire du processus parent.
@@ -897,7 +897,7 @@ L’idée est que le GPU ne doive presque jamais attendre les données : pendant
   <p><em>Loading data without multiple workers (setting num_workers=0) will create a data loading bottleneck where the model sits idle until the next batch is loaded (left). If multiple workers are enabled, the data loader can queue up the next batch in the background (right).</em></p>
 </div>
 
-**1.5 Le mécanisme de *pin_memory***
+#### Le mécanisme de *pin_memory*
 
 
 Jusqu’ici, l’optimisation concernait principalement la communication entre les différents processus CPU. Grâce à la **shared memory**, les workers peuvent transmettre efficacement les batches préparés au processus principal sans recopier inutilement les tensors en mémoire.
@@ -988,7 +988,7 @@ Ces deux mécanismes interviennent donc à des étapes différentes mais complé
 
 ---
 
-**2.1 Pourquoi plusieurs GPUs ?**
+#### Pourquoi plusieurs GPUs ?
 
 
 Pour comprendre l'utilité de plusieurs GPUs, il faut d'abord saisir deux limites fondamentales et bien distinctes que l'on rencontre lors de l'entraînement de modèles modernes.
@@ -1001,7 +1001,7 @@ Ces deux motivations — l'une contraignante, l'autre optimisante — donnent na
 
 ---
 
-**2.2 DataParallel (DP) : la première approche, naïve**
+#### DataParallel (DP) : la première approche, naïve
 
 
 `torch.nn.DataParallel` est l'API historique de PyTorch pour l'entraînement multi-GPU. Pour bien comprendre ses limites, il faut d'abord comprendre comment elle fonctionne de l'intérieur — et cela commence par deux notions fondamentales : ce qu'est un **processus** et ce qu'est un **thread**.
@@ -1043,7 +1043,7 @@ Ces deux défauts — la centralisation sur le GPU 0 et le GIL — ne sont pas d
 
 ---
 
-**2.3 DistributedDataParallel (DDP) : le standard actuel**
+#### DistributedDataParallel (DDP) : le standard actuel
 
 
 <div align="center">
@@ -1108,7 +1108,7 @@ Pour plus de détails, vous pouvez consulter [Bringing HPC Techniques to Deep Le
 
 ---
 
-**2.4 Parallélisme de modèle (*Model Parallelism*)**
+#### Parallélisme de modèle (*Model Parallelism*)
 
 
 Aussi efficace que soit DDP, il suppose implicitement une chose : que le modèle tient dans la VRAM d'un seul GPU. Lorsque ce n'est plus le cas — ce qui est la norme pour les très grands modèles — une toute autre famille de stratégies s'impose, dans laquelle ce n'est plus le dataset qui est distribué, mais **le modèle lui-même**.
@@ -1539,7 +1539,7 @@ Epoch: 003/003 | Batch 001/002 | Train/ Val Loss:  0.00
 
 ```
 
-**1.6 Le rôle de `.to(device)` : déclencher le transfert vers le GPU**
+#### Le rôle de `.to(device)` : déclencher le transfert vers le GPU
 
 
 À ce stade, le pipeline CPU est entièrement optimisé :
@@ -1589,7 +1589,7 @@ Ainsi, `.to(device)` n'est pas un détail technique annexe. C'est le **dernier m
 ---
 
 
-**1.7 Ordonnancement des batchs et traitement par le GPU**
+#### Ordonnancement des batchs et traitement par le GPU
 
 
 Les sections précédentes ont montré comment les workers préparent les batchs en parallèle. Une question se pose alors naturellement : dans quel ordre le GPU traite-t-il ces batchs, sachant que plusieurs workers progressent simultanément et ne terminent pas nécessairement au même moment ?
@@ -1960,7 +1960,7 @@ Ou, si votre machine possède quatre GPU et que vous souhaitez uniquement utilis
 
 Définir `CUDA_VISIBLE_DEVICES` de cette manière est un moyen simple et efficace de gérer l'allocation des GPU sans avoir à modifier vos scripts PyTorch.
 
-**1.8 Sorties dupliquées et contrôle par le rang**
+#### Sorties dupliquées et contrôle par le rang
 
 
 Comme le montre la sortie ci-dessous, les lignes de précision apparaissent en double à la fin de l'exécution sur une machine avec deux GPUs:
@@ -2017,7 +2017,7 @@ C'est une règle générale sous DDP : **toute opération qui ne doit être effe
 
 ---
 
-**1.9 Alternatives à DDP pour l'entraînement multi-GPU**
+#### Alternatives à DDP pour l'entraînement multi-GPU
 
 
 DDP n'est pas la seule façon d'entraîner un modèle sur plusieurs GPUs avec PyTorch. Si vous préférez une approche plus simple et moins verbeuse, des bibliothèques complémentaires comme **Fabric** (open-source) permettent d'obtenir le même résultat avec beaucoup moins de code boilerplate.

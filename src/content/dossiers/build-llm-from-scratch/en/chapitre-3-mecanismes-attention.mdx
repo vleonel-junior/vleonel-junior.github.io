@@ -17,7 +17,7 @@ This chapter covers **attention mechanisms**, which are the core of the LLM arch
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.1.png" alt="Figure 3.1" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.1: The three main stages of building an LLM. This chapter focuses on step 2 of stage 1: implementing the attention mechanisms.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.1: The three main stages of building an LLM. This chapter focuses on step 2 of stage 1: implementing the attention mechanisms. Source: Raschka (2024).*</figcaption>
 </figure>
 
 Four variants of the attention mechanism will be implemented step by step, each building on the previous one:
@@ -29,7 +29,7 @@ Four variants of the attention mechanism will be implemented step by step, each 
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.2.png" alt="Figure 3.2" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.2: The four attention variants implemented in this chapter, from simplified self-attention to multi-head attention.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.2: The four attention variants implemented in this chapter, from simplified self-attention to multi-head attention. Source: Raschka (2024).*</figcaption>
 </figure>
 
 The final multi-head attention implementation will be reused as is in the LLM architecture in the next chapter.
@@ -46,7 +46,7 @@ Take a translation model. Translating word by word is impossible: the grammatica
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.3.png" alt="Figure 3.3" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.3: Translating word by word is not enough. Translation requires understanding the overall context and realigning the grammar between the two languages.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.3: Translating word by word is not enough. Translation requires understanding the overall context and realigning the grammar between the two languages. Source: Raschka (2024).*</figcaption>
 </figure>
 
 The classic solution is an **encoder-decoder** architecture: the encoder reads and compresses the input sequence, and the decoder produces the translated sequence from that compressed representation.
@@ -61,7 +61,7 @@ In an encoder-decoder RNN:
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.4.png" alt="Figure 3.4" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.4: In an encoder-decoder RNN, the encoder compresses the whole source sequence into a single final hidden state, which the decoder then uses to generate the translation token by token.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.4: In an encoder-decoder RNN, the encoder compresses the whole source sequence into a single final hidden state, which the decoder then uses to generate the translation token by token. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ### The fundamental limitation
@@ -82,7 +82,7 @@ To get around the bottleneck of the single hidden vector, Bahdanau et al. propos
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.5.png" alt="Figure 3.5" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.5: With an attention mechanism, the decoder can selectively access all the input tokens. Some tokens are more relevant than others for generating a given output token. This relevance is quantified by the attention weights.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.5: With an attention mechanism, the decoder can selectively access all the input tokens. Some tokens are more relevant than others for generating a given output token. This relevance is quantified by the attention weights. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ### The Transformer (2017), the second breakthrough
@@ -97,7 +97,7 @@ This mechanism is at the heart of modern LLMs such as GPT, and it is what this c
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.6.png" alt="Figure 3.6" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.6: Self-attention lets each position in the sequence interact with all the others and weigh their importance. This chapter codes the complete implementation.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.6: Self-attention lets each position in the sequence interact with all the others and weigh their importance. This chapter codes the complete implementation. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -115,7 +115,7 @@ Before introducing trainable weights, we implement a stripped-down version to gr
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.7.png" alt="Figure 3.7" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.7: For each input token $x^{(i)}$, self-attention computes a context vector $z^{(i)}$ by combining all the input vectors, weighted by the attention weights $\alpha_{21}$ to $\alpha_{2T}$. Here, we illustrate the computation of $z^{(2)}$ for the token "journey".*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.7: For each input token $x^{(i)}$, self-attention computes a context vector $z^{(i)}$ by combining all the input vectors, weighted by the attention weights $\alpha_{21}$ to $\alpha_{2T}$. Here, we illustrate the computation of $z^{(2)}$ for the token "journey". Source: Raschka (2024).*</figcaption>
 </figure>
 
 We work on the sentence *"Your journey starts with one step."*, already encoded as 3-dimensional vectors:
@@ -158,7 +158,7 @@ tensor([0.9544, 1.4950, 1.4754, 0.8434, 0.7070, 1.0865])
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.8.png" alt="Figure 3.8" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.8: The attention scores $\omega_{21}$ to $\omega_{2T}$ are computed as the
-dot product between the query vector $x^{(2)}$ and each input vector.*</figcaption>
+dot product between the query vector $x^{(2)}$ and each input vector. Source: Raschka (2024).*</figcaption>
 </figure>
 
 > **Dot product.** It multiplies two vectors element by element and sums the results. Writing the explicit loop is equivalent to using
@@ -284,7 +284,7 @@ Sum: tensor(1.)
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.9.png" alt="Figure 3.9" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.9: The attention scores $\omega_{21}$ to $\omega_{2T}$ are normalized with softmax
-to produce the attention weights $\alpha_{21}$ to $\alpha_{2T}$, which sum to 1.*</figcaption>
+to produce the attention weights $\alpha_{21}$ to $\alpha_{2T}$, which sum to 1. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -311,7 +311,7 @@ tensor([0.4419, 0.6515, 0.5683])
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.10.png" alt="Figure 3.10" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.10: $z^{(2)}$ is the weighted sum of all the input vectors $x^{(1)}$ to
-$x^{(T)}$, weighted by the corresponding attention weights.*</figcaption>
+$x^{(T)}$, weighted by the corresponding attention weights. Source: Raschka (2024).*</figcaption>
 </figure>
 
 Unlike the raw embedding of "journey" `[0.55, 0.87, 0.66]`, the context
@@ -329,7 +329,7 @@ We apply the same pipeline to **all tokens at once**, replacing the loops with m
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.11.png" alt="Figure 3.11" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.11: We extend the computation from the previous section to every row: one context vector $z^{(i)}$ per token.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.11: We extend the computation from the previous section to every row: one context vector $z^{(i)}$ per token. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -382,7 +382,7 @@ This version still has no trainable parameters. The next section introduces the 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.13.png" alt="Figure 3.13" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.13: We extend the previous mechanism with trainable weight matrices.
-The extensions (causal mask, multiple heads) come next.*</figcaption>
+The extensions (causal mask, multiple heads) come next. Source: Raschka (2024).*</figcaption>
 </figure>
 
 The structural difference from the simplified version is the introduction of **three trainable weight matrices** $W_Q$, $W_K$, $W_V$, updated through backpropagation. They are what give the model the ability to learn *which kind* of similarity matters for the task, rather than measuring raw similarity between embeddings.
@@ -453,7 +453,7 @@ We have projected the 6 three-dimensional tokens into a two-dimensional space. W
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.15.png" alt="Figure 3.15" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.15: The scores are now computed between the query and key projections, and no
-longer directly between the raw embeddings.*</figcaption>
+longer directly between the raw embeddings. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ```python
@@ -471,7 +471,7 @@ tensor([1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440])
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.16.png" alt="Figure 3.16" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.16: The scores are scaled before the softmax.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.16: The scores are scaled before the softmax. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ```python
@@ -552,7 +552,7 @@ The softmax inputs stay within reasonable ranges whatever $d_k$ is: the attentio
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.17.png" alt="Figure 3.17" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.17: The context vector is the weighted sum of the value vectors, and no
-longer of the raw embeddings.*</figcaption>
+longer of the raw embeddings. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ```python
@@ -618,7 +618,7 @@ tensor([[0.2996, 0.8053],
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.18.png" alt="Figure 3.18" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.18: Self-attention in matrix form. $X$ is projected into $Q$, $K$, $V$ through the three weight matrices. The scores $QK^\top / \sqrt{d_k}$ are normalized with softmax, then multiplied by $V$ to produce $Z$.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.18: Self-attention in matrix form. $X$ is projected into $Q$, $K$, $V$ through the three weight matrices. The scores $QK^\top / \sqrt{d_k}$ are normalized with softmax, then multiplied by $V$ to produce $Z$. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -1014,7 +1014,7 @@ In the attention mechanism, dropout is applied directly to the attention weights
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.22.png" alt="Figure 3.22" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.22: Starting from the causal attention matrix (zeroed upper triangle), a random dropout mask is applied to zero out additional weights among the visible positions, reducing the risk of overfitting during training.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.22: Starting from the causal attention matrix (zeroed upper triangle), a random dropout mask is applied to zero out additional weights among the visible positions, reducing the risk of overfitting during training. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -1195,7 +1195,7 @@ In `SelfAttention_v1` and `SelfAttention_v2`, we had `keys.T` because the inputs
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.23.png" alt="Figure 3.23" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.23: How the implementation has progressed, from simplified attention to causal attention with trainable weights, a causal mask and dropout. The next step is multi-head attention.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.23: How the implementation has progressed, from simplified attention to causal attention with trainable weights, a causal mask and dropout. The next step is multi-head attention. Source: Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -1213,7 +1213,7 @@ The most direct way to implement multi-head attention is to create several indep
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.24.png" alt="Figure 3.24" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.24: A multi-head attention module with two heads. Each head has its own weight matrices $W_Q$, $W_K$, $W_V$ and produces its own context vectors $Z_1$ and $Z_2$, which are then concatenated into $Z$.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.24: A multi-head attention module with two heads. Each head has its own weight matrices $W_Q$, $W_K$, $W_V$ and produces its own context vectors $Z_1$ and $Z_2$, which are then concatenated into $Z$. Source: Raschka (2024).*</figcaption>
 </figure>
 
 #### Implementation
@@ -1270,7 +1270,7 @@ The shape `(2, 6, 4)` reads as: 2 sequences in the batch, 6 tokens each, context
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.25.png" alt="Figure 3.25" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.25: With `num_heads=2` and `d_out=2`, each head produces a matrix of 2-dimensional context vectors. The two matrices are concatenated along the column dimension, giving a final dimension of $2 \times 2 = 4$.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.25: With `num_heads=2` and `d_out=2`, each head produces a matrix of 2-dimensional context vectors. The two matrices are concatenated along the column dimension, giving a final dimension of $2 \times 2 = 4$. Source: Raschka (2024).*</figcaption>
 </figure>
 
 #### Exercise 3.2: Reducing the dimension of the context vectors

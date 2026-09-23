@@ -69,6 +69,11 @@ const description = tr(dossier.description, lang);
 			</div>
 		</header>
 
+		<aside
+			class="mt-8 rounded-lg border border-border bg-surface px-4 py-3 text-sm leading-relaxed text-fg-muted [&_a]:text-fg [&_a]:underline [&_a]:decoration-accent/50 [&_a]:underline-offset-2"
+			set:html={t("series.notice")}
+		/>
+
 		<section class="mt-10">
 			<h2 class="flex items-baseline gap-2 text-sm font-semibold uppercase tracking-wider text-fg-subtle">
 				{t("post.chapters")}

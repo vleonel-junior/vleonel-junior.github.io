@@ -97,6 +97,8 @@ export const ui = {
         "post.readingSeries": "Reading series",
         "post.chapters": "Chapters",
         "post.comingSoon": "Coming soon",
+        "series.notice":
+            'These are personal, unofficial reading notes, not affiliated with Sebastian Raschka or Manning. Numbered figures are reproduced from <em>Build a Large Language Model (From Scratch)</em> (S. Raschka, Manning, 2024) with their source cited; all rights to them belong to their authors. Code builds on the <a href="https://github.com/rasbt/LLMs-from-scratch">book’s official repository</a> (Apache 2.0 license). For the full text, <a href="https://www.manning.com/books/build-a-large-language-model-from-scratch">get the book</a>.',
         "post.discuss": "Discussion",
         "post.share": "Share",
         "post.linkCopied": "Link copied",
@@ -204,6 +206,8 @@ export const ui = {
         "post.readingSeries": "Série de lecture",
         "post.chapters": "Chapitres",
         "post.comingSoon": "À venir",
+        "series.notice":
+            'Ces notes de lecture sont personnelles et non officielles : elles ne sont affiliées ni à Sebastian Raschka ni à Manning. Les figures numérotées sont reproduites du livre <em>Build a Large Language Model (From Scratch)</em> (S. Raschka, Manning, 2024), avec citation de leur source ; tous les droits sur ces figures appartiennent à leurs auteurs. Le code s’appuie sur le <a href="https://github.com/rasbt/LLMs-from-scratch">dépôt officiel du livre</a> (licence Apache 2.0). Pour le texte complet, <a href="https://www.manning.com/books/build-a-large-language-model-from-scratch">procurez-vous le livre</a>.',
         "post.discuss": "Discussion",
         "post.share": "Partager",
         "post.linkCopied": "Lien copié",

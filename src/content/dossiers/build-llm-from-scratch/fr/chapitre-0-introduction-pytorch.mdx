@@ -235,7 +235,7 @@ Un graphe de calcul est un graphe orienté qui nous permet d'exprimer et de visu
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-7.png" width="600" />
-  <p><em>Forward pass d'une régression logistique représenté comme un graphe de calcul. La caractéristique d'entrée x1 est multipliée par un poids du modèle w1 et passée à travers une fonction d'activation σ après avoir ajouté le biais. La loss est calculée en comparant la sortie du modèle a avec un label donné y.</em></p>
+  <p><em>Forward pass d'une régression logistique représenté comme un graphe de calcul. La caractéristique d'entrée x1 est multipliée par un poids du modèle w1 et passée à travers une fonction d'activation σ après avoir ajouté le biais. La loss est calculée en comparant la sortie du modèle a avec un label donné y. Source : Raschka (2024).</em></p>
 </div>
 
 
@@ -274,7 +274,7 @@ Si nous effectuons des calculs dans PyTorch, il construira par défaut un graphe
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-8.png" width="600" />
-  <p><em>La méthode la plus courante pour calculer les gradients de la loss dans un graphe de calcul consiste à appliquer la règle de dérivation en chaîne (chain rule) de droite à gauche, également appelée différenciation automatique en mode inverse ou backpropagation. Nous partons de la couche de sortie (ou de la loss elle-même) et remontons à travers le réseau jusqu'à la couche d'entrée. Nous faisons cela pour calculer le gradient de la loss par rapport à chaque paramètre (poids et biais) du réseau, ce qui nous indique comment mettre à jour ces paramètres pendant l'entraînement.</em></p>
+  <p><em>La méthode la plus courante pour calculer les gradients de la loss dans un graphe de calcul consiste à appliquer la règle de dérivation en chaîne (chain rule) de droite à gauche, également appelée différenciation automatique en mode inverse ou backpropagation. Nous partons de la couche de sortie (ou de la loss elle-même) et remontons à travers le réseau jusqu'à la couche d'entrée. Nous faisons cela pour calculer le gradient de la loss par rapport à chaque paramètre (poids et biais) du réseau, ce qui nous indique comment mettre à jour ces paramètres pendant l'entraînement. Source : Raschka (2024).</em></p>
 </div>
 
 - Les **dérivées partielles** mesurent la vitesse à laquelle une fonction change par rapport à l'une de ses variables. 
@@ -348,7 +348,7 @@ Jetons un œil à un perceptron multicouche, un réseau de neurones entièrement
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-9.png" width="600" />
-  <p><em>Un perceptron multicouche avec deux couches cachées. Chaque nœud représente une unité dans la couche respective. À des fins d'illustration, chaque couche a un très petit nombre de nœuds.</em></p>
+  <p><em>Un perceptron multicouche avec deux couches cachées. Chaque nœud représente une unité dans la couche respective. À des fins d'illustration, chaque couche a un très petit nombre de nœuds. Source : Raschka (2024).</em></p>
 </div>
 
 ### Définir l'architecture
@@ -598,7 +598,7 @@ L'idée générale derrière le chargement des données dans PyTorch est illustr
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-10.png" width="600" />
-  <p><em>PyTorch implémente une classe Dataset et une classe DataLoader. La classe Dataset est utilisée pour instancier des objets qui définissent comment chaque enregistrement de données est chargé. Le DataLoader gère la manière dont les données sont mélangées et assemblées en batchs.</em></p>
+  <p><em>PyTorch implémente une classe Dataset et une classe DataLoader. La classe Dataset est utilisée pour instancier des objets qui définissent comment chaque enregistrement de données est chargé. Le DataLoader gère la manière dont les données sont mélangées et assemblées en batchs. Source : Raschka (2024).</em></p>
 </div>
 
 ### Un jeu de données jouet avec `Dataset` et `DataLoader`
@@ -910,7 +910,7 @@ L’idée est que le GPU ne doive presque jamais attendre les données : pendant
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-11.png" width="800" />
-  <p><em>Loading data without multiple workers (setting num_workers=0) will create a data loading bottleneck where the model sits idle until the next batch is loaded (left). If multiple workers are enabled, the data loader can queue up the next batch in the background (right).</em></p>
+  <p><em>Loading data without multiple workers (setting num_workers=0) will create a data loading bottleneck where the model sits idle until the next batch is loaded (left). If multiple workers are enabled, the data loader can queue up the next batch in the background (right). Source : Raschka (2024).</em></p>
 </div>
 
 #### Le mécanisme de *pin_memory*
@@ -1924,7 +1924,7 @@ Pour illustrer cela, supposons que nous avons deux GPU que nous voulons utiliser
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-12.png" width="800" />
   <p><em>Le transfert du modèle et des données dans DDP implique deux étapes clés. Tout d'abord, nous créons une copie du modèle sur chacun des GPU. 
-         Ensuite, nous divisons les données d'entrée en minibatches uniques que nous transmettons à chaque copie du modèle.</em></p>
+         Ensuite, nous divisons les données d'entrée en minibatches uniques que nous transmettons à chaque copie du modèle. Source : Raschka (2024).</em></p>
 </div>
 
 Chacun des deux GPU recevra une copie du modèle. Ensuite, à chaque itération d'entraînement, chaque modèle recevra un minibatch (ou simplement batch) du data loader.
@@ -1936,7 +1936,7 @@ Puisque chaque copie du modèle verra un échantillon différent de données d'e
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-13.png" width="800" />
   <p><em>Les forward passes et backward passes dans DDP sont exécutées indépendamment sur chaque GPU avec son sous-ensemble de données correspondant. 
   Une fois les forward et backward passes terminées, les gradients de chaque réplique du modèle (sur chaque GPU) sont synchronisés sur tous les GPU. 
-  Cela garantit que chaque réplique du modèle possède les mêmes poids mis à jour.</em></p>
+  Cela garantit que chaque réplique du modèle possède les mêmes poids mis à jour. Source : Raschka (2024).</em></p>
 </div>
 
 L'avantage d'utiliser `DDP` réside dans l'accélération qu'il offre pour le traitement du jeu de données par rapport à un GPU unique. Mis à part un léger surcoût de communication entre les appareils (inhérent à l'utilisation de DDP), il peut théoriquement traiter une époque d'entraînement en deux fois moins de temps avec deux GPU par rapport à un seul. Ce gain de temps passe à l'échelle (ou évolue proportionnellement) avec le nombre de GPU, ce qui nous permet de traiter une époque huit fois plus rapidement si nous disposons de huit GPU, et ainsi de suite.

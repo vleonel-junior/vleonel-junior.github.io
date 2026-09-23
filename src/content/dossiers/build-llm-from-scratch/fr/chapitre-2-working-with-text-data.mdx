@@ -25,7 +25,7 @@ Pour pouvoir traiter du texte, un LLM ne lit pas des phrases brutes, mais conver
 
 ![Figure 2.1](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.1.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.1 : Les trois grandes étapes pour coder un LLM. Ce chapitre se concentre sur l'étape 1 de la phase 1 : l'implémentation du pipeline d'échantillonnage de données.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.1 : Les trois grandes étapes pour coder un LLM. Ce chapitre se concentre sur l'étape 1 de la phase 1 : l'implémentation du pipeline d'échantillonnage de données. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -42,7 +42,7 @@ Un embedding consiste à projeter des objets discrets (mots, phrases, audios, im
 
 ![Figure 2.2](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.2.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.2 : Les modèles de deep learning ne peuvent pas traiter des formats de données tels que la vidéo, l'audio et le texte dans leur forme brute. Ainsi, nous utilisons un modèle d'embedding pour transformer ces données brutes en une représentation vectorielle dense que les architectures de deep learning peuvent facilement comprendre et traiter. Plus précisément, cette figure illustre le processus de conversion de données brutes en un vecteur numérique tridimensionnel.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.2 : Les modèles de deep learning ne peuvent pas traiter des formats de données tels que la vidéo, l'audio et le texte dans leur forme brute. Ainsi, nous utilisons un modèle d'embedding pour transformer ces données brutes en une représentation vectorielle dense que les architectures de deep learning peuvent facilement comprendre et traiter. Plus précisément, cette figure illustre le processus de conversion de données brutes en un vecteur numérique tridimensionnel. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -53,7 +53,7 @@ Dans ce livre, nous nous intéressons uniquement aux **embeddings de mots** puis
 
 ![Figure 2.3](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.3.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.3 : Si les embeddings de mots sont bidimensionnels, nous pouvons les tracer dans un nuage de points en 2D pour les visualiser, comme montré ici. Lors de l'utilisation de techniques d'embedding de mots, telles que Word2Vec, les mots correspondant à des concepts similaires apparaissent souvent proches les uns des autres dans l'espace d'embedding. Par exemple, différents types d'oiseaux apparaissent plus proches les uns des autres dans l'espace d'embedding qu'ils ne le sont des pays et des villes.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.3 : Si les embeddings de mots sont bidimensionnels, nous pouvons les tracer dans un nuage de points en 2D pour les visualiser, comme montré ici. Lors de l'utilisation de techniques d'embedding de mots, telles que Word2Vec, les mots correspondant à des concepts similaires apparaissent souvent proches les uns des autres dans l'espace d'embedding. Par exemple, différents types d'oiseaux apparaissent plus proches les uns des autres dans l'espace d'embedding qu'ils ne le sont des pays et des villes. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -70,7 +70,7 @@ La tokenization (ou segmentation en lexèmes) est une étape de prétraitement i
 
 ![Figure 2.4](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.4.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.4 : Une vue des étapes de traitement du texte dans le contexte d'un LLM. Ici, nous divisons un texte d'entrée en tokens individuels (mots ou caractères spéciaux).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.4 : Une vue des étapes de traitement du texte dans le contexte d'un LLM. Ici, nous divisons un texte d'entrée en tokens individuels (mots ou caractères spéciaux). Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -171,7 +171,7 @@ print(result)
 
 ![Figure 2.5](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.5.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.5 : Le schéma de tokenization sépare correctement le texte en mots individuels et ponctuations.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.5 : Le schéma de tokenization sépare correctement le texte en mots individuels et ponctuations. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -203,7 +203,7 @@ Pour transformer les tokens en identifiants, nous devons d'abord construire un *
 
 ![Figure 2.6](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.6.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.6 : Construction d'un vocabulaire en tokenisant l'ensemble du dataset d'entraînement. Les tokens sont extraits, triés par ordre alphabétique, et les doublons retirés. Le vocabulaire fait correspondre chaque token unique à une valeur entière unique.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.6 : Construction d'un vocabulaire en tokenisant l'ensemble du dataset d'entraînement. Les tokens sont extraits, triés par ordre alphabétique, et les doublons retirés. Le vocabulaire fait correspondre chaque token unique à une valeur entière unique. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -245,7 +245,7 @@ for i, item in enumerate(vocab.items()):
 
 ![Figure 2.7](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.7.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.7 : À partir d'un nouvel échantillon de texte, nous le tokenisons et utilisons le vocabulaire pour convertir les tokens textuels en token IDs.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.7 : À partir d'un nouvel échantillon de texte, nous le tokenisons et utilisons le vocabulaire pour convertir les tokens textuels en token IDs. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -279,7 +279,7 @@ class SimpleTokenizerV1:
 
 ![Figure 2.8](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.8.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.8 : Les implémentations de tokenizers partagent deux méthodes communes : encode (convertit le texte en ID via le vocabulaire) et decode (reconvertit les IDs en texte naturel).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.8 : Les implémentations de tokenizers partagent deux méthodes communes : encode (convertit le texte en ID via le vocabulaire) et decode (reconvertit les IDs en texte naturel). Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -332,7 +332,7 @@ Il est indispensable de modifier le tokenizer pour gérer les mots inconnus. De 
 
 ![Figure 2.9](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.9.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.9 : Ajout des tokens spéciaux `<|unk|>` (pour les mots inconnus) et `<|endoftext|>` (pour séparer deux sources de texte non liées) au vocabulaire.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.9 : Ajout des tokens spéciaux `<|unk|>` (pour les mots inconnus) et `<|endoftext|>` (pour séparer deux sources de texte non liées) au vocabulaire. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -343,7 +343,7 @@ L'ajout du token `<|endoftext|>` est crucial lorsqu'on entraîne des LLMs de typ
 
 ![Figure 2.10](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.10.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.10 : Lors du traitement de plusieurs sources de texte indépendantes, le token `<|endoftext|>` agit comme un marqueur signalant le début ou la fin d'un segment.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.10 : Lors du traitement de plusieurs sources de texte indépendantes, le token `<|endoftext|>` agit comme un marqueur signalant le début ou la fin d'un segment. Source : Raschka (2024).*</figcaption>
 </figure>
 
 
@@ -532,7 +532,7 @@ La force du BPE réside dans sa capacité à **fractionner** un mot totalement i
 
 > ![Figure 2.11](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.11.png)
 >
-> *Figure 2.11 : Les tokenizers BPE décomposent les mots inconnus en sous-mots et en caractères individuels. Ainsi, un tokenizer BPE peut analyser n'importe quel mot et n'a pas besoin de remplacer les mots inconnus par des tokens spéciaux, tels que `<|unk|>`.*
+> *Figure 2.11 : Les tokenizers BPE décomposent les mots inconnus en sous-mots et en caractères individuels. Ainsi, un tokenizer BPE peut analyser n'importe quel mot et n'a pas besoin de remplacer les mots inconnus par des tokens spéciaux, tels que `<|unk|>`. Source : Raschka (2024).*
 
 </div>
 
@@ -582,7 +582,7 @@ Pour entraîner un LLM, on génère des paires entrée-cible (input-target pairs
 
 > ![Figure 2.12](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.12.png)
 >
-> *Figure 2.12 : Extraction de blocs d'entrée (input blocks) à partir d'un échantillon de texte pour l'entraînement du LLM. La tâche consiste à prédire le mot suivant le bloc d'entrée, en masquant les mots qui suivent la cible. (La tokenisation est omise ici pour plus de clarté).*
+> *Figure 2.12 : Extraction de blocs d'entrée (input blocks) à partir d'un échantillon de texte pour l'entraînement du LLM. La tâche consiste à prédire le mot suivant le bloc d'entrée, en masquant les mots qui suivent la cible. (La tokenisation est omise ici pour plus de clarté). Source : Raschka (2024).*
 
 </div>
 
@@ -605,7 +605,7 @@ Pour l'entraînement, les données doivent être converties en tenseurs et organ
 
 > ![Figure 2.13](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.13.png)
 >
-> *Figure 2.13 : Pour une efficacité maximale, les entrées sont regroupées dans un tenseur `x`, où chaque ligne représente le contexte d'entrée. Un second tenseur `y` contient les cibles prédictives correspondantes (les mots suivants), créées en décalant l'entrée d'une position.*
+> *Figure 2.13 : Pour une efficacité maximale, les entrées sont regroupées dans un tenseur `x`, où chaque ligne représente le contexte d'entrée. Un second tenseur `y` contient les cibles prédictives correspondantes (les mots suivants), créées en décalant l'entrée d'une position. Source : Raschka (2024).*
 
 </div>
 
@@ -671,7 +671,7 @@ def create_dataloader_v1(txt, batch_size=4, max_length=256, stride=128, shuffle=
 
 > ![Figure 2.14](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.14.png)
 >
-> *Figure 2.14 : En définissant un pas (stride) égal à la taille de la fenêtre d'entrée (input window size), on évite tout chevauchement entre les lots.*
+> *Figure 2.14 : En définissant un pas (stride) égal à la taille de la fenêtre d'entrée (input window size), on évite tout chevauchement entre les lots. Source : Raschka (2024).*
 
 </div>
 
@@ -690,7 +690,7 @@ Les poids de la matrice d'embeddings sont initialisés avec de petites valeurs a
 
 > ![Figure 2.15](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.15.png)
 >
-> *Figure 2.15 : La préparation du texte passe par la tokenisation, la conversion en identifiants (token IDs), et enfin la projection de ces identifiants en vecteurs continus via une couche d'embedding.*
+> *Figure 2.15 : La préparation du texte passe par la tokenisation, la conversion en identifiants (token IDs), et enfin la projection de ces identifiants en vecteurs continus via une couche d'embedding. Source : Raschka (2024).*
 
 </div>
 
@@ -718,7 +718,7 @@ tensor([[ 1.2753, -0.2010, -0.1606],   # Ligne d'index 2
 
 > ![Figure 2.16](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.16.png)
 >
-> *Figure 2.16 : L'extraction de vecteurs d'embedding. Chaque token ID sert d'index pour extraire la ligne correspondante depuis la matrice de poids de la couche d'embedding.*
+> *Figure 2.16 : L'extraction de vecteurs d'embedding. Chaque token ID sert d'index pour extraire la ligne correspondante depuis la matrice de poids de la couche d'embedding. Source : Raschka (2024).*
 
 </div>
 
@@ -736,7 +736,7 @@ Les embeddings de tokens présentent un défaut structurel majeur : peu importe 
 <figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.17 : La couche d'embedding assigne la même représentation vectorielle à un token,
 quelle que soit sa position dans la séquence. Par exemple, le `token_id` 5, qu'il soit en
 première ou en quatrième position dans le vecteur d'entrée, produira toujours le même vecteur
-d'embedding.*</figcaption>
+d'embedding. Source : Raschka (2024).*</figcaption>
 </figure>
 
 Il est donc indispensable d'injecter une information de position dans ces embeddings pour que le réseau comprenne l'ordre des mots.
@@ -760,7 +760,7 @@ L'avantage principal est une **meilleure généralisation hors-distribution** : 
 
 <figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.18 : Les embeddings positionnels sont additionnés aux embeddings de tokens pour
 former les embeddings d'entrée finaux du LLM. Les vecteurs positionnels ont la même dimension
-que les embeddings de tokens.*</figcaption>
+que les embeddings de tokens. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -866,7 +866,7 @@ Grâce au mécanisme de *broadcasting* de PyTorch, le tenseur `pos_embeddings` d
 
 ![Figure 2.19](/images/dossiers/build-llm-from-scratch/chapitre-2/figure_2.19.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.19 : Résumé du pipeline de traitement de l'entrée. Le texte est tokenisé, converti en `token_ids`, transformé en embeddings de tokens, auxquels on additionne les embeddings positionnels pour former les `input_embeddings` transmis aux couches principales du LLM.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Figure 2.19 : Résumé du pipeline de traitement de l'entrée. Le texte est tokenisé, converti en `token_ids`, transformé en embeddings de tokens, auxquels on additionne les embeddings positionnels pour former les `input_embeddings` transmis aux couches principales du LLM. Source : Raschka (2024).*</figcaption>
 </figure>
 
 

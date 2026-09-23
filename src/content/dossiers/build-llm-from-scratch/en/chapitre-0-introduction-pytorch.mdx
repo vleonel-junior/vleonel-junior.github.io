@@ -235,7 +235,7 @@ A computation graph is a directed graph that lets us express and visualize mathe
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-7.png" width="600" />
-  <p><em>The forward pass of a logistic regression represented as a computation graph. The input feature x1 is multiplied by a model weight w1 and passed through an activation function σ after the bias is added. The loss is computed by comparing the model output a with a given label y.</em></p>
+  <p><em>The forward pass of a logistic regression represented as a computation graph. The input feature x1 is multiplied by a model weight w1 and passed through an activation function σ after the bias is added. The loss is computed by comparing the model output a with a given label y. Source: Raschka (2024).</em></p>
 </div>
 
 
@@ -274,7 +274,7 @@ When we run computations in PyTorch, it builds a computation graph internally by
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-8.png" width="600" />
-  <p><em>The most common way to compute the gradients of the loss in a computation graph is to apply the chain rule from right to left, also called reverse-mode automatic differentiation or backpropagation. We start from the output layer (or the loss itself) and work backward through the network to the input layer. We do this to compute the gradient of the loss with respect to each parameter (weights and biases) of the network, which tells us how to update these parameters during training.</em></p>
+  <p><em>The most common way to compute the gradients of the loss in a computation graph is to apply the chain rule from right to left, also called reverse-mode automatic differentiation or backpropagation. We start from the output layer (or the loss itself) and work backward through the network to the input layer. We do this to compute the gradient of the loss with respect to each parameter (weights and biases) of the network, which tells us how to update these parameters during training. Source: Raschka (2024).</em></p>
 </div>
 
 - **Partial derivatives** measure how fast a function changes with respect to one of its variables. 
@@ -348,7 +348,7 @@ Let's look at a multilayer perceptron, a fully connected neural network, as show
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-9.png" width="600" />
-  <p><em>A multilayer perceptron with two hidden layers. Each node represents a unit in its layer. For illustration purposes, each layer has a very small number of nodes.</em></p>
+  <p><em>A multilayer perceptron with two hidden layers. Each node represents a unit in its layer. For illustration purposes, each layer has a very small number of nodes. Source: Raschka (2024).</em></p>
 </div>
 
 ### Defining the architecture
@@ -598,7 +598,7 @@ The general idea behind data loading in PyTorch is shown in the figure below:
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-10.png" width="600" />
-  <p><em>PyTorch implements a Dataset class and a DataLoader class. The Dataset class is used to create objects that define how each data record is loaded. The DataLoader handles how the data is shuffled and assembled into batches.</em></p>
+  <p><em>PyTorch implements a Dataset class and a DataLoader class. The Dataset class is used to create objects that define how each data record is loaded. The DataLoader handles how the data is shuffled and assembled into batches. Source: Raschka (2024).</em></p>
 </div>
 
 ### A toy dataset with `Dataset` and `DataLoader`
@@ -910,7 +910,7 @@ The idea is that the GPU should almost never have to wait for data: while it tra
 
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-11.png" width="800" />
-  <p><em>Loading data without multiple workers (setting num_workers=0) will create a data loading bottleneck where the model sits idle until the next batch is loaded (left). If multiple workers are enabled, the data loader can queue up the next batch in the background (right).</em></p>
+  <p><em>Loading data without multiple workers (setting num_workers=0) will create a data loading bottleneck where the model sits idle until the next batch is loaded (left). If multiple workers are enabled, the data loader can queue up the next batch in the background (right). Source: Raschka (2024).</em></p>
 </div>
 
 #### The *pin_memory* mechanism
@@ -1924,7 +1924,7 @@ To illustrate this, suppose we have two GPUs that we want to use to train a neur
 <div align="center">
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-12.png" width="800" />
   <p><em>Transferring the model and data in DDP involves two key steps. First, we create a copy of the model on each GPU. 
-         Then, we split the input data into unique minibatches that we pass to each copy of the model.</em></p>
+         Then, we split the input data into unique minibatches that we pass to each copy of the model. Source: Raschka (2024).</em></p>
 </div>
 
 Each of the two GPUs receives a copy of the model. Then, at every training iteration, each model receives a minibatch (or simply batch) from the data loader.
@@ -1936,7 +1936,7 @@ Since each copy of the model sees a different sample of training data, the model
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-13.png" width="800" />
   <p><em>In DDP, the forward and backward passes run independently on each GPU with its corresponding subset of the data. 
   Once the forward and backward passes are done, the gradients of each model replica (on each GPU) are synchronized across all the GPUs. 
-  This guarantees that every model replica has the same updated weights.</em></p>
+  This guarantees that every model replica has the same updated weights. Source: Raschka (2024).</em></p>
 </div>
 
 The benefit of using `DDP` is the speedup it brings to processing the dataset compared with a single GPU. Apart from a small communication overhead between the devices (inherent to DDP), it can theoretically process a training epoch in half the time with two GPUs compared with one. This time saving scales with the number of GPUs, letting us process an epoch eight times faster with eight GPUs, and so on.

@@ -17,7 +17,7 @@ Ce chapitre porte sur les **mécanismes d'attention**, qui constituent le cœur 
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.1.png" alt="Figure 3.1" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.1 : Les trois grandes étapes de la construction d'un LLM. Ce chapitre se concentre sur l'étape 2 de la phase 1 : l'implémentation des mécanismes d'attention.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.1 : Les trois grandes étapes de la construction d'un LLM. Ce chapitre se concentre sur l'étape 2 de la phase 1 : l'implémentation des mécanismes d'attention. Source : Raschka (2024).*</figcaption>
 </figure>
 
 Quatre variantes du mécanisme d'attention seront implémentées progressivement, chacune construisant sur la précédente :
@@ -29,7 +29,7 @@ Quatre variantes du mécanisme d'attention seront implémentées progressivement
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.2.png" alt="Figure 3.2" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.2 : Les quatre variantes d'attention implémentées dans ce chapitre, de la self-attention simplifiée jusqu'à l'attention multi-têtes.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.2 : Les quatre variantes d'attention implémentées dans ce chapitre, de la self-attention simplifiée jusqu'à l'attention multi-têtes. Source : Raschka (2024).*</figcaption>
 </figure>
 
 L'implémentation finale de l'attention multi-têtes sera directement réutilisée dans l'architecture du LLM au chapitre suivant.
@@ -46,7 +46,7 @@ Prenons l'exemple d'un modèle de traduction. Une traduction mot à mot est impo
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.3.png" alt="Figure 3.3" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.3 : Traduire mot à mot est insuffisant. La traduction exige une compréhension du contexte global et un réalignement grammatical entre les deux langues.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.3 : Traduire mot à mot est insuffisant. La traduction exige une compréhension du contexte global et un réalignement grammatical entre les deux langues. Source : Raschka (2024).*</figcaption>
 </figure>
 
 La solution classique consiste à utiliser une architecture **encodeur-décodeur** : l'encodeur lit et compresse la séquence d'entrée, le décodeur produit la séquence traduite à partir de cette représentation compressée.
@@ -61,7 +61,7 @@ Dans un RNN encodeur-décodeur :
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.4.png" alt="Figure 3.4" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.4 : Dans un RNN encodeur-décodeur, l'encodeur compresse toute la séquence source en un unique état caché final, que le décodeur utilise ensuite pour générer la traduction token par token.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.4 : Dans un RNN encodeur-décodeur, l'encodeur compresse toute la séquence source en un unique état caché final, que le décodeur utilise ensuite pour générer la traduction token par token. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ### La limite fondamentale
@@ -82,7 +82,7 @@ Pour contourner le goulot d'étranglement du vecteur caché unique, Bahdanau et 
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.5.png" alt="Figure 3.5" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.5 : Avec un mécanisme d'attention, le décodeur peut accéder sélectivement à tous les tokens d'entrée. Certains tokens sont plus pertinents que d'autres pour générer un token donné en sortie. Cette pertinence est quantifiée par les poids d'attention.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.5 : Avec un mécanisme d'attention, le décodeur peut accéder sélectivement à tous les tokens d'entrée. Certains tokens sont plus pertinents que d'autres pour générer un token donné en sortie. Cette pertinence est quantifiée par les poids d'attention. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ### Le Transformer (2017), deuxième rupture
@@ -97,7 +97,7 @@ C'est ce mécanisme qui est au cœur des LLMs modernes comme GPT, et c'est ce qu
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.6.png" alt="Figure 3.6" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.6 : La self-attention permet à chaque position de la séquence d'interagir avec toutes les autres et d'en pondérer l'importance. Ce chapitre en code l'implémentation complète.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.6 : La self-attention permet à chaque position de la séquence d'interagir avec toutes les autres et d'en pondérer l'importance. Ce chapitre en code l'implémentation complète. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -115,7 +115,7 @@ Avant d'introduire les poids apprenables, on implémente une version épurée po
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.7.png" alt="Figure 3.7" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.7 : Pour chaque token d'entrée $x^{(i)}$, la self-attention calcule un vecteur de contexte $z^{(i)}$ en combinant tous les vecteurs d'entrée, pondérés par les poids d'attention $\alpha_{21}$ à $\alpha_{2T}$. Ici, on illustre le calcul de $z^{(2)}$ à partir du token « journey ».*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.7 : Pour chaque token d'entrée $x^{(i)}$, la self-attention calcule un vecteur de contexte $z^{(i)}$ en combinant tous les vecteurs d'entrée, pondérés par les poids d'attention $\alpha_{21}$ à $\alpha_{2T}$. Ici, on illustre le calcul de $z^{(2)}$ à partir du token « journey ». Source : Raschka (2024).*</figcaption>
 </figure>
 
 On travaille sur la phrase *"Your journey starts with one step."*, déjà encodée en vecteurs de dimension 3 :
@@ -158,7 +158,7 @@ tensor([0.9544, 1.4950, 1.4754, 0.8434, 0.7070, 1.0865])
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.8.png" alt="Figure 3.8" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.8 : Les scores d'attention $\omega_{21}$ à $\omega_{2T}$ sont calculés comme le
-produit scalaire entre le vecteur requête $x^{(2)}$ et chaque vecteur d'entrée.*</figcaption>
+produit scalaire entre le vecteur requête $x^{(2)}$ et chaque vecteur d'entrée. Source : Raschka (2024).*</figcaption>
 </figure>
 
 > **Produit scalaire.** C'est une multiplication terme à terme de deux vecteurs, dont on somme les résultats. Il est équivalent d'écrire la boucle explicite ou d'utiliser
@@ -284,7 +284,7 @@ Sum: tensor(1.)
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.9.png" alt="Figure 3.9" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.9 : Les scores d'attention $\omega_{21}$ à $\omega_{2T}$ sont normalisés via softmax
-pour produire les poids d'attention $\alpha_{21}$ à $\alpha_{2T}$, qui somment à 1.*</figcaption>
+pour produire les poids d'attention $\alpha_{21}$ à $\alpha_{2T}$, qui somment à 1. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -311,7 +311,7 @@ tensor([0.4419, 0.6515, 0.5683])
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.10.png" alt="Figure 3.10" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.10 : $z^{(2)}$ est la somme pondérée de tous les vecteurs d'entrée $x^{(1)}$ à
-$x^{(T)}$, pondérés par les poids d'attention correspondants.*</figcaption>
+$x^{(T)}$, pondérés par les poids d'attention correspondants. Source : Raschka (2024).*</figcaption>
 </figure>
 
 Contrairement à l'embedding brut de « journey » `[0.55, 0.87, 0.66]`, le vecteur de
@@ -329,7 +329,7 @@ On applique le même pipeline à **tous les tokens simultanément**, en remplaç
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.11.png" alt="Figure 3.11" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.11 : On étend le calcul de la section précédente à toutes les lignes : un vecteur de contexte $z^{(i)}$ par token.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.11 : On étend le calcul de la section précédente à toutes les lignes : un vecteur de contexte $z^{(i)}$ par token. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -382,7 +382,7 @@ Cette version reste sans paramètres apprenables. La section suivante introduit 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.13.png" alt="Figure 3.13" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.13 : On enrichit le mécanisme précédent avec des matrices de poids apprenables.
-Les extensions (masque causal, multi-têtes) viendront ensuite.*</figcaption>
+Les extensions (masque causal, multi-têtes) viendront ensuite. Source : Raschka (2024).*</figcaption>
 </figure>
 
 La différence structurelle avec la version simplifiée est l'introduction de **trois matrices de poids apprenables** $W_Q$, $W_K$, $W_V$, mises à jour par rétropropagation. Ce sont elles qui donnent au modèle la capacité d'apprendre *quel type* de similarité est pertinent pour la tâche, plutôt que de mesurer une similarité brute entre embeddings.
@@ -453,7 +453,7 @@ On a projeté les 6 tokens de dimension 3 vers un espace de dimension 2. On calc
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.15.png" alt="Figure 3.15" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.15 : Les scores sont maintenant calculés entre les projections query/key, et non
-plus directement entre les embeddings bruts.*</figcaption>
+plus directement entre les embeddings bruts. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ```python
@@ -471,7 +471,7 @@ tensor([1.2705, 1.8524, 1.8111, 1.0795, 0.5577, 1.5440])
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.16.png" alt="Figure 3.16" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.16 : Les scores sont mis à l'échelle avant la softmax.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.16 : Les scores sont mis à l'échelle avant la softmax. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ```python
@@ -552,7 +552,7 @@ Les entrées de la softmax restent dans des plages raisonnables quel que soit $d
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.17.png" alt="Figure 3.17" class="rounded-xl shadow-2xl" />
     <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.17 : Le vecteur de contexte est la somme pondérée des vecteurs value, et non
-plus des embeddings bruts.*</figcaption>
+plus des embeddings bruts. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ```python
@@ -618,7 +618,7 @@ tensor([[0.2996, 0.8053],
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.18.png" alt="Figure 3.18" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.18 : Résumé matriciel de la self-attention. $X$ est projeté en $Q$, $K$, $V$ via les trois matrices de poids. Les scores $QK^\top / \sqrt{d_k}$ sont normalisés par softmax, puis multipliés par $V$ pour produire $Z$.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.18 : Résumé matriciel de la self-attention. $X$ est projeté en $Q$, $K$, $V$ via les trois matrices de poids. Les scores $QK^\top / \sqrt{d_k}$ sont normalisés par softmax, puis multipliés par $V$ pour produire $Z$. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -1014,7 +1014,7 @@ Dans le mécanisme d'attention, le dropout s'applique directement sur les poids 
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.22.png" alt="Figure 3.22" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.22 : À partir de la matrice d'attention causale (triangle supérieur nul), un masque de dropout aléatoire est appliqué pour annuler des poids supplémentaires parmi les positions visibles, réduisant le risque de sur-apprentissage pendant l'entraînement.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.22 : À partir de la matrice d'attention causale (triangle supérieur nul), un masque de dropout aléatoire est appliqué pour annuler des poids supplémentaires parmi les positions visibles, réduisant le risque de sur-apprentissage pendant l'entraînement. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -1195,7 +1195,7 @@ Dans `SelfAttention_v1` et `SelfAttention_v2`, on avait `keys.T` car les entrée
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.23.png" alt="Figure 3.23" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.23 : Progression de l'implémentation, de l'attention simplifiée à l'attention causale avec poids entraînables, masque causal et dropout. La prochaine étape est l'attention multi-têtes.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.23 : Progression de l'implémentation, de l'attention simplifiée à l'attention causale avec poids entraînables, masque causal et dropout. La prochaine étape est l'attention multi-têtes. Source : Raschka (2024).*</figcaption>
 </figure>
 
 ---
@@ -1213,7 +1213,7 @@ La façon la plus directe d'implémenter l'attention multi-têtes est d'instanci
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.24.png" alt="Figure 3.24" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.24 : Un module d'attention multi-têtes avec deux têtes. Chaque tête dispose de ses propres matrices de poids $W_Q$, $W_K$, $W_V$, et produit ses propres vecteurs de contexte $Z_1$ et $Z_2$, ensuite concaténés en $Z$.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.24 : Un module d'attention multi-têtes avec deux têtes. Chaque tête dispose de ses propres matrices de poids $W_Q$, $W_K$, $W_V$, et produit ses propres vecteurs de contexte $Z_1$ et $Z_2$, ensuite concaténés en $Z$. Source : Raschka (2024).*</figcaption>
 </figure>
 
 #### Implémentation
@@ -1270,7 +1270,7 @@ La forme `(2, 6, 4)` se lit : 2 séquences dans le batch, 6 tokens chacune, vect
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/figure_3.25.png" alt="Figure 3.25" class="rounded-xl shadow-2xl" />
-    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.25 : Avec `num_heads=2` et `d_out=2`, chaque tête produit une matrice de vecteurs de contexte de dimension 2. Les deux matrices sont concaténées le long de la dimension des colonnes, donnant une dimension finale de $2 \times 2 = 4$.*</figcaption>
+    <figcaption class="text-sm text-center text-gray-400 italic">*Figure 3.25 : Avec `num_heads=2` et `d_out=2`, chaque tête produit une matrice de vecteurs de contexte de dimension 2. Les deux matrices sont concaténées le long de la dimension des colonnes, donnant une dimension finale de $2 \times 2 = 4$. Source : Raschka (2024).*</figcaption>
 </figure>
 
 #### Exercice 3.2 : Réduire la dimension des vecteurs de contexte

@@ -3,48 +3,27 @@ import type { Text } from "../i18n/utils";
 export interface VolunteeringItem {
     role: Text;
     organization: Text;
-    period: string;
+    period: Text;
     description: Text;
+    /** Public page about the activity */
+    url?: string;
 }
 
 export const volunteeringData: VolunteeringItem[] = [
     {
         role: {
-            en: "Teaching Assistant (Electricity for Engineers)",
-            fr: "Assistant d'enseignement (Électricité pour l'ingénieur)",
+            en: "Volunteer trainer: AI for artisans and entrepreneurs",
+            fr: "Formateur bénévole : l'IA au service des artisans et entrepreneurs",
         },
         organization: {
-            en: "National Higher Institute of Preparatory Classes (INSPEI)",
-            fr: "Institut National Supérieur de Classes Préparatoires aux Études d'Ingénieur (INSPEI)",
+            en: "iSHEERO, Sèmè City Open Park (Benin)",
+            fr: "iSHEERO, Sèmè City Open Park (Bénin)",
         },
-        period: "2025",
+        period: { en: "July 2026", fr: "Juillet 2026" },
         description: {
-            en: "Assisted the professor (Dr.) in the 'Electricity for Engineers' course for 2nd-year Preparatory Class students. Conducted tutorial sessions and helped students master concepts in electromagnetism and circuit analysis.",
-            fr: "Assistance du professeur (Dr.) dans le cours « Électricité pour l'ingénieur » destiné aux étudiants de 2e année de classes préparatoires. Animation de travaux dirigés et accompagnement des étudiants sur l'électromagnétisme et l'analyse de circuits.",
+            en: "Co-led a hands-on introduction to generative AI tools (ChatGPT, Gemini) for about twenty artisans and local entrepreneurs: tailors, electricians, hairdressers, farmers. Use cases were built from the participants' own day-to-day challenges (customer relations, promotional content, work organization), followed by two hours of group practice and a final presentation of the solutions each group designed.",
+            fr: "Co-animation d'un atelier d'initiation pratique aux outils d'IA générative (ChatGPT, Gemini) pour une vingtaine d'artisans et d'entrepreneurs locaux : couturiers, électriciens, coiffeurs, agriculteurs. Cas d'usage construits à partir des difficultés concrètes des participants (relation client, contenu promotionnel, organisation du travail), deux heures de pratique en groupes et restitution des solutions imaginées par chaque groupe.",
         },
-    },
-    {
-        role: {
-            en: "Private Tutor in Mathematics",
-            fr: "Professeur particulier de mathématiques",
-        },
-        organization: { en: "Private Instruction", fr: "Cours particuliers" },
-        period: "2025",
-        description: {
-            en: "Provided advanced mathematics tutoring for high school students in the Science Track (Première Scientifique). Focused on strengthening analytical skills, algebra, and exam preparation.",
-            fr: "Cours de mathématiques approfondis pour des lycéens de Première scientifique. Accent mis sur le raisonnement, l'algèbre et la préparation aux examens.",
-        },
-    },
-    {
-        role: {
-            en: "Private Tutor in Sciences (Physics, Chemistry, Technology)",
-            fr: "Professeur particulier de sciences (physique, chimie, technologie)",
-        },
-        organization: { en: "Private Instruction", fr: "Cours particuliers" },
-        period: "2023 - 2024",
-        description: {
-            en: "Delivered academic support and personalized tutoring for high school students (Seconde & Première). Helped improve student performance in Physics, Chemistry, and Technology through targeted exercises and conceptual clarification.",
-            fr: "Soutien scolaire personnalisé pour des lycéens de Seconde et de Première. Amélioration des résultats en physique, chimie et technologie grâce à des exercices ciblés et à la clarification des notions.",
-        },
+        url: "https://www.isheero.com/intelligence-artificielle-au-profit-des-artisans-juillet-2026/",
     },
 ];

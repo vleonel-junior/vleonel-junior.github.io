@@ -54,7 +54,9 @@ export const ui = {
         "home.viewGithub": "View on GitHub",
         "home.allProjects": "View all projects",
         "home.certifications": "Certifications",
-        "home.volunteering": "Volunteering / Teaching",
+        "home.volunteering": "Volunteering",
+        "home.community": "Community & events",
+        "home.readMoreEvent": "About the event",
 
 
         "projects.title": "Projects - Léonel VODOUNOU",
@@ -159,7 +161,9 @@ export const ui = {
         "home.viewGithub": "Voir sur GitHub",
         "home.allProjects": "Voir tous les projets",
         "home.certifications": "Certifications",
-        "home.volunteering": "Bénévolat / Enseignement",
+        "home.volunteering": "Bénévolat",
+        "home.community": "Communauté & événements",
+        "home.readMoreEvent": "Voir l'événement",
 
 
         "projects.title": "Projets - Léonel VODOUNOU",

@@ -1,5 +1,11 @@
 ---
+import { useTranslations, type Lang } from "../i18n/utils";
 
+interface Props {
+    lang: Lang;
+}
+
+const t = useTranslations(Astro.props.lang);
 ---
 
 <section
@@ -25,13 +31,12 @@
                 ></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
             </svg>
-            Weekly Notes
+            {t("newsletter.title")}
         </h3>
         <p
             class="text-sm text-quartz/70 dark:text-quartz-light/70 mb-6 leading-relaxed"
         >
-            Every Sunday, I share what I’ve been learning — papers, ideas,
-            experiments, and questions that stayed with me.
+            {t("newsletter.text")}
         </p>
 
         <form
@@ -42,7 +47,7 @@
             <input
                 type="email"
                 name="email"
-                placeholder="your@email.com"
+                placeholder={t("newsletter.placeholder")}
                 required
                 class="flex-1 px-4 py-2.5 rounded-lg border-2 border-quartz/10 dark:border-quartz-light/10 bg-white dark:bg-black/20 text-sm focus:border-quartz-accent outline-none transition-all shadow-sm"
             />
@@ -51,13 +56,13 @@
                 type="submit"
                 class="bg-quartz dark:bg-quartz-light text-white dark:text-quartz px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-quartz-accent hover:text-white dark:hover:bg-quartz-accent dark:hover:text-white transition-all shadow-md active:scale-95"
             >
-                Subscribe
+                {t("newsletter.subscribe")}
             </button>
         </form>
         <p
             class="mt-4 text-[10px] text-quartz/40 dark:text-quartz-light/40 italic"
         >
-            You can unsubscribe at any time with a single click.
+            {t("newsletter.unsubscribe")}
         </p>
     </div>
 </section>

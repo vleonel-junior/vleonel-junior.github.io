@@ -5,6 +5,11 @@ import Newsletter from "../../components/Newsletter.astro";
 import TableOfContents from "../../components/TableOfContents.astro";
 import { getCollection } from "astro:content";
 import type { CollectionEntry } from "astro:content";
+import {
+    formatDate,
+    localizePath,
+    useTranslations,
+} from "../../i18n/utils";
 
 export async function getStaticPaths() {
     const posts = await getCollection("blog");
@@ -19,11 +24,16 @@ type Props = CollectionEntry<"blog">;
 const post = Astro.props;
 const { Content, headings } = await post.render();
 
-const formattedDate = post.data.pubDate.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-});
+// Articles are not translated: the page chrome follows the article language,
+// and the language switch leads to the blog index of the other language.
+const lang = post.data.lang;
+const t = useTranslations(lang);
+const blogIndexPaths = {
+    en: localizePath("blog", "en"),
+    fr: localizePath("blog", "fr"),
+};
+
+const formattedDate = formatDate(post.data.pubDate, lang);
 
 const words = post.body.split(/\s+/).length;
 const readingTime = Math.ceil(words / 200);
@@ -34,6 +44,8 @@ const readingTime = Math.ceil(words / 200);
     description={post.data.description}
     image={post.data.image}
     type="article"
+    lang={lang}
+    fallbackPaths={blogIndexPaths}
 >
     <main
         class="flex-1 pt-32 pb-24 text-quartz dark:text-quartz-light overflow-x-clip"
@@ -64,7 +76,7 @@ const readingTime = Math.ceil(words / 200);
                     <div>
                         <span
                             class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                            >Authors</span
+                            >{t("post.authors")}</span
                         >
                         <span class="text-sm font-medium"
                             >{post.data.author || "Léonel VODOUNOU"}</span
@@ -73,26 +85,26 @@ const readingTime = Math.ceil(words / 200);
                     <div>
                         <span
                             class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                            >Affiliations</span
+                            >{t("post.affiliations")}</span
                         >
                         <span class="text-sm font-medium"
-                            >Mathematical Engineering & AI</span
+                            >{t("post.affiliationValue")}</span
                         >
                     </div>
                     <div>
                         <span
                             class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                            >Published</span
+                            >{t("post.published")}</span
                         >
                         <span class="text-sm font-medium">{formattedDate}</span>
                     </div>
                     <div>
                         <span
                             class="block text-[10px] font-bold uppercase tracking-widest text-quartz/40 dark:text-quartz-light/40 mb-2"
-                            >Read Time</span
+                            >{t("post.readTime")}</span
                         >
                         <span class="text-sm font-medium"
-                            >{readingTime} min read</span
+                            >{readingTime} {t("blog.minRead")}</span
                         >
                     </div>
                 </div>
@@ -105,7 +117,7 @@ const readingTime = Math.ceil(words / 200);
                 <!-- Left Sidebar TOC — Desktop only -->
                 <aside class="blog-sidebar">
                     <div class="sticky top-32">
-                        <TableOfContents headings={headings} mode="sidebar" />
+                        <TableOfContents headings={headings} mode="sidebar" lang={lang} />
                     </div>
                 </aside>
 
@@ -132,8 +144,8 @@ const readingTime = Math.ceil(words / 200);
                     <div
                         class="border-t border-quartz/10 dark:border-quartz-light/10 pt-16"
                     >
-                        <Newsletter />
-                        <Comments />
+                        <Newsletter lang={lang} />
+                        <Comments lang={lang} />
                     </div>
                 </div>
             </div>
@@ -141,7 +153,7 @@ const readingTime = Math.ceil(words / 200);
 
         <!-- Mobile TOC — Floating button + overlay (rendered at root level, outside aside) -->
         <div class="blog-mobile-toc">
-            <TableOfContents headings={headings} mode="mobile" />
+            <TableOfContents headings={headings} mode="mobile" lang={lang} />
         </div>
     </main>
 </Layout>

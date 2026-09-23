@@ -2,6 +2,7 @@
 import Layout from "../../../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 import { dossiers } from "../../../data/dossiers";
+import { localizePath, useTranslations, withBase } from "../../../i18n/utils";
 
 export async function getStaticPaths() {
 	return dossiers.map((dossier) => ({
@@ -24,21 +25,31 @@ const processedChapters = chapterEntries.map((chapter) => {
 	return { ...chapter, readingTime };
 });
 
-const title = `${dossier.title} - Notes de lecture`;
+// The notes are written in one language; the page chrome follows it
+const lang = dossier.lang;
+const t = useTranslations(lang);
+
+const title = `${dossier.title} - ${t("blog.readingNotes")}`;
 const description = dossier.description;
 ---
 
-<Layout title={title} description={description} image={dossier.cover}>
+<Layout
+	title={title}
+	description={description}
+	image={dossier.cover}
+	lang={lang}
+	fallbackPaths={{ en: localizePath("blog", "en"), fr: localizePath("blog", "fr") }}
+>
 	<section class="py-20 md:py-32">
 		<div class="container-custom max-w-4xl">
 			
 			<div class="mb-12">
-				<a href={`${import.meta.env.BASE_URL}blog/`} class="inline-flex items-center gap-2 text-sm font-bold text-quartz/60 dark:text-quartz-light/60 hover:text-green-700 dark:hover:text-green-400 transition-colors">
+				<a href={localizePath("blog", lang)} class="inline-flex items-center gap-2 text-sm font-bold text-quartz/60 dark:text-quartz-light/60 hover:text-green-700 dark:hover:text-green-400 transition-colors">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="19" y1="12" x2="5" y2="12" />
 						<polyline points="12 19 5 12 12 5" />
 					</svg>
-					Retour au Blog
+					{t("post.backToBlog")}
 				</a>
 			</div>
 
@@ -47,9 +58,7 @@ const description = dossier.description;
 					<div class="w-48 md:w-64 aspect-[3/4] flex-shrink-0 relative overflow-hidden rounded-xl shadow-xl border border-quartz/10 dark:border-white/10">
 						<img
 							src={
-								dossier.cover.startsWith("/")
-									? `${import.meta.env.BASE_URL}${dossier.cover.slice(1)}`
-									: dossier.cover
+								withBase(dossier.cover)
 							}
 							alt={dossier.title}
 							class="absolute inset-0 w-full h-full object-cover"
@@ -59,14 +68,14 @@ const description = dossier.description;
 				<div>
 					<div class="flex items-center gap-3 text-xs font-medium uppercase tracking-wider text-quartz/50 dark:text-quartz-light/50 mb-4">
 						<span class="text-green-700 dark:text-green-400 font-bold bg-green-700/10 dark:bg-green-400/10 px-3 py-1 rounded-full">
-							Série de Lecture
+							{t("post.readingSeries")}
 						</span>
 					</div>
 					<h1 class="text-4xl md:text-5xl font-serif font-bold text-quartz dark:text-quartz-light mb-4 leading-tight">
 						{dossier.title}
 					</h1>
 					<p class="text-xl text-quartz/70 dark:text-quartz-light/70 font-serif italic mb-6">
-						Par {dossier.bookAuthor}
+						{t("blog.by")} {dossier.bookAuthor}
 					</p>
 					<p class="text-lg text-quartz/80 dark:text-quartz-light/80 leading-relaxed mb-6">
 						{dossier.description}
@@ -83,7 +92,7 @@ const description = dossier.description;
 			</header>
 
 			<h2 class="text-3xl font-serif font-bold text-quartz dark:text-quartz-light mb-8 flex items-center gap-3">
-				Chapitres
+				{t("post.chapters")}
 				<span class="text-lg text-quartz/50 dark:text-quartz-light/50 font-sans ml-2">({processedChapters.length}/{dossier.totalChapters})</span>
 			</h2>
 
@@ -110,7 +119,7 @@ const description = dossier.description;
 							<div class="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-4 rounded-xl border border-quartz/10 dark:border-white/10 shadow-sm bg-bg-secondary transition-all">
 								<div class="flex flex-col gap-2">
 									<div class="flex items-center gap-2">
-										<span class="text-xs font-bold uppercase tracking-widest text-green-700 dark:text-green-400">Chapitre {chapterObj.number}</span>
+										<span class="text-xs font-bold uppercase tracking-widest text-green-700 dark:text-green-400">{t("post.chapter")} {chapterObj.number}</span>
 										{isPublished && publishedEntry && (
 											<>
 												<span class="text-quartz/40 dark:text-quartz-light/40">•</span>
@@ -134,7 +143,7 @@ const description = dossier.description;
 									)}
 									{!isPublished && (
 										<span class="inline-flex mt-2 text-xs font-bold text-quartz/40 dark:text-quartz-light/40 bg-quartz/5 dark:bg-white/5 self-start px-2 py-1 rounded">
-											À venir
+											{t("post.comingSoon")}
 										</span>
 									)}
 								</div>

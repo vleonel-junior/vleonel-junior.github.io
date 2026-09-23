@@ -1,5 +1,11 @@
 ---
-const currentYear = new Date().getFullYear();
+import { useTranslations, type Lang } from "../i18n/utils";
+
+interface Props {
+  lang: Lang;
+}
+
+const t = useTranslations(Astro.props.lang);
 ---
 
 <footer
@@ -109,7 +115,7 @@ const currentYear = new Date().getFullYear();
     </div>
 
     <p class="text-sm text-quartz-light/60 font-mono">
-      &copy; 2026 Léonel VODOUNOU - All rights reserved.
+      &copy; 2026 Léonel VODOUNOU - {t("footer.rights")}
     </p>
   </div>
 </footer>

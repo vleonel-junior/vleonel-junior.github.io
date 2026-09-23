@@ -15,6 +15,12 @@ import preact from '@astrojs/preact';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://vleonel-junior.github.io',
+  // English at /, French under /fr/ (see src/i18n)
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'fr'],
+    routing: { prefixDefaultLocale: false },
+  },
   vite: {
     plugins: [tailwindcss()]
   },

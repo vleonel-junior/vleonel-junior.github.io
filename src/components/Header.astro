@@ -1,9 +1,31 @@
 ---
+import {
+  getRoutePath,
+  languages,
+  localizePath,
+  useTranslations,
+  type Lang,
+} from "../i18n/utils";
+
+interface Props {
+  lang: Lang;
+  /** URL of this page in each language (from Layout) */
+  langPaths: Record<Lang, string>;
+}
+
+const { lang, langPaths } = Astro.props;
+const t = useTranslations(lang);
+const routePath = getRoutePath(Astro.url);
+
+// `section` is the route prefix that marks the item as active
 const navItems = [
-  { name: "Resume", href: `${import.meta.env.BASE_URL}#about` },
-  { name: "Projects", href: `${import.meta.env.BASE_URL}projects` },
-  { name: "Blog", href: `${import.meta.env.BASE_URL}blog` },
+  { name: t("nav.resume"), href: localizePath("#about", lang), section: "/" },
+  { name: t("nav.projects"), href: localizePath("projects", lang), section: "/projects" },
+  { name: t("nav.blog"), href: localizePath("blog", lang), section: "/blog" },
 ];
+
+const isActive = (section: string) =>
+  section === "/" ? routePath === "/" : routePath.startsWith(section);
 ---
 
 <header
@@ -11,7 +33,7 @@ const navItems = [
 >
   <div class="container-custom h-16 flex items-center justify-between">
     <!-- Logo - Image only on mobile, full name on desktop -->
-    <a href={import.meta.env.BASE_URL} class="flex items-center gap-2 sm:gap-3">
+    <a href={localizePath("", lang)} class="flex items-center gap-2 sm:gap-3">
       <img
         src={`${import.meta.env.BASE_URL}logo.jpg`}
         alt="Logo"
@@ -33,16 +55,13 @@ const navItems = [
     <nav class="hidden md:flex items-center gap-6">
       {
         navItems.map((item) => {
-          const itemPath = item.href.startsWith("/#") ? "/" : item.href;
-          const isActive =
-            Astro.url.pathname === itemPath ||
-            (itemPath !== "/" && Astro.url.pathname.startsWith(itemPath));
+          const active = isActive(item.section);
           return (
             <a
               href={item.href}
               class:list={[
                 "text-sm font-medium transition-colors",
-                isActive
+                active
                   ? "text-white font-bold"
                   : "text-quartz-light/60 hover:text-white",
               ]}
@@ -58,11 +77,41 @@ const navItems = [
       id="header-actions"
       class="flex items-center gap-1 transition-transform duration-300 relative z-[70]"
     >
+      <!-- Language Switch: links to this same page in the other language -->
+      <nav
+        id="lang-switch"
+        aria-label={t("nav.language")}
+        class="flex items-center transition-opacity duration-300 rounded-full border border-white/15 text-xs font-bold mr-1"
+      >
+        {
+          (Object.keys(languages) as Lang[]).map((l) =>
+            l === lang ? (
+              <span
+                aria-current="true"
+                class="px-2.5 py-1 rounded-full bg-white/15 text-white"
+              >
+                {t(`lang.${l}`)}
+              </span>
+            ) : (
+              <a
+                href={langPaths[l]}
+                hreflang={l}
+                lang={l}
+                title={languages[l]}
+                class="px-2.5 py-1 rounded-full text-quartz-light/60 hover:text-white transition-colors"
+              >
+                {t(`lang.${l}`)}
+              </a>
+            ),
+          )
+        }
+      </nav>
+
       <!-- Theme Toggle -->
       <button
         id="theme-toggle"
         class="p-2 rounded-full hover:bg-white/10 transition-colors"
-        aria-label="Toggle Theme"
+        aria-label={t("nav.theme")}
       >
         <svg
           id="theme-toggle-light-icon"
@@ -150,22 +199,19 @@ const navItems = [
     <div class="py-10 pb-4 border-b border-white/5 text-center">
       <span
         class="text-white/30 uppercase tracking-[0.2em] text-xs font-bold font-sans"
-        >Menu</span
+        >{t("nav.menu")}</span
       >
     </div>
     <nav class="flex flex-col p-2 pt-4 gap-1 transform">
       {
         navItems.map((item) => {
-          const itemPath = item.href.startsWith("/#") ? "/" : item.href;
-          const isActive =
-            Astro.url.pathname === itemPath ||
-            (itemPath !== "/" && Astro.url.pathname.startsWith(itemPath));
+          const active = isActive(item.section);
           return (
             <a
               href={item.href}
               class:list={[
                 "mobile-menu-link py-4 px-2 rounded-xl text-lg font-medium transition-all duration-200 text-center",
-                isActive
+                active
                   ? "text-white font-bold"
                   : "text-quartz-light/60 hover:text-white",
               ]}
@@ -215,6 +261,8 @@ const navItems = [
   const menuCloseIcon = document.getElementById("menu-close-icon");
 
   const headerActions = document.getElementById("header-actions");
+  // Hidden while the menu is open: the actions slide left over the logo
+  const langSwitch = document.getElementById("lang-switch");
 
   function openMobileMenu() {
     mobileMenu?.classList.remove("pointer-events-none");
@@ -223,6 +271,7 @@ const navItems = [
     menuOpenIcon?.classList.add("hidden");
     menuCloseIcon?.classList.remove("hidden");
     headerActions?.classList.add("-translate-x-[120px]");
+    langSwitch?.classList.add("opacity-0", "pointer-events-none");
   }
 
   function closeMobileMenu() {
@@ -232,6 +281,7 @@ const navItems = [
     menuOpenIcon?.classList.remove("hidden");
     menuCloseIcon?.classList.add("hidden");
     headerActions?.classList.remove("-translate-x-[120px]");
+    langSwitch?.classList.remove("opacity-0", "pointer-events-none");
   }
 
   mobileMenuBtn?.addEventListener("click", () => {

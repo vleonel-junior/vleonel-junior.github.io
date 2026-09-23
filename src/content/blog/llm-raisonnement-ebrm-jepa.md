@@ -4,6 +4,7 @@ description: "Ce que proposent les modèles à énergie (EBM), JEPA et les World
 pubDate: 2026-07-10
 author: "Léonel VODOUNOU"
 category: "Analyse"
+lang: "fr"
 tags: ["LLM", "Raisonnement", "EBM", "JEPA", "IA"]
 image: "/images/blog/ebm-logical-intelligence.png"
 ---

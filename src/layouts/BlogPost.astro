@@ -5,10 +5,10 @@ import Comments from '../components/Comments.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, image } = Astro.props;
+const { title, description, pubDate, image, lang } = Astro.props;
 ---
 
-<Layout title={title} description={description} image={image} type="article">
+<Layout title={title} description={description} image={image} type="article" lang={lang}>
     <article class="py-12 md:py-20">
         <div class="container-custom max-w-3xl">
             <header class="mb-12 text-center">
@@ -39,7 +39,7 @@ const { title, description, pubDate, image } = Astro.props;
             </div>
             
             <!-- Comments Section -->
-            <Comments />
+            <Comments lang={lang} />
         </div>
     </article>
 </Layout>

@@ -1,5 +1,9 @@
+import type { Lang } from "../i18n/utils";
+
 export interface DossierMeta {
     slug: string;
+    /** Language the notes are written in */
+    lang: Lang;
     title: string;
     bookAuthor: string;
     description: string;
@@ -16,6 +20,7 @@ export interface DossierMeta {
 export const dossiers: DossierMeta[] = [
     {
         slug: "build-llm-from-scratch",
+        lang: "fr",
         title: "Build a Large Language Model (from Scratch)",
         bookAuthor: "Sebastian Raschka",
         description:

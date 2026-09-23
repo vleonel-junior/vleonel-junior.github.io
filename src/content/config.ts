@@ -12,6 +12,8 @@ const blog = defineCollection({
         category: z.string(),
         readTime: z.number().optional(),
         draft: z.boolean().default(false),
+        // Language the article is written in (drives the page chrome)
+        lang: z.enum(['en', 'fr']),
     }),
 });
 

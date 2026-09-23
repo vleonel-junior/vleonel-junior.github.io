@@ -4,6 +4,7 @@ description: "On studying machine learning in depth — from formal foundations 
 pubDate: 2026-02-23
 author: "Léonel VODOUNOU"
 category: "Prologue"
+lang: "en"
 tags: ["Machine Learning", "Philosophy", "Research"]
 ---
 

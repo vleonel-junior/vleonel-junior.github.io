@@ -44,8 +44,20 @@ export const academicProjects: ProjectItem[] = [
 ];
 
 export const personalProjects: ProjectItem[] = [
-    // Placeholder for future personal projects
+    {
+        title: "Logic Tensor Networks",
+        description: {
+            en: "A presentation and hands-on case study of Logic Tensor Networks, a neuro-symbolic framework that combines deep learning with first-order logic. Covers how symbols, connectives and quantifiers become differentiable operations, and a semi-supervised MNIST experiment where the network learns to recognize single digits only from the sum of two digits, compared with a purely supervised baseline.",
+            fr: "Présentation et étude de cas des Logic Tensor Networks, un framework neuro-symbolique qui combine apprentissage profond et logique du premier ordre. Traduction des symboles, connecteurs et quantificateurs en opérations différentiables, et expérience semi-supervisée sur MNIST où le réseau apprend à reconnaître des chiffres uniquement à partir de la somme de deux chiffres, comparée à une baseline purement supervisée.",
+        },
+        technologies: ["Neuro-symbolic AI", "PyTorch", "LTNtorch", "First-order logic"],
+        githubUrl: "https://github.com/vleonel-junior/logic-tensor-networks",
+        year: "2026",
+        category: "personal"
+    }
 ];
 
 // For backward compatibility if other pages use it (though we should update them)
-export const projectsData: ProjectItem[] = [...academicProjects, ...personalProjects];
+export const projectsData: ProjectItem[] = [...academicProjects, ...personalProjects].sort(
+    (a, b) => Number(b.year ?? 0) - Number(a.year ?? 0),
+);

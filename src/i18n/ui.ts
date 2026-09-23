@@ -14,7 +14,7 @@ export const ui = {
     en: {
         "site.title": "Léonel VODOUNOU - Mathematical Engineering & AI",
         "site.description":
-            "Portfolio of Léonel VODOUNOU, mathematical engineer and data scientist specialized in statistics, stochastic modeling and machine learning.",
+            "Portfolio of Léonel VODOUNOU, mathematical engineer and aspiring AI researcher specialized in statistics, stochastic modeling and machine learning.",
 
         "nav.resume": "Resume",
         "nav.projects": "Projects",
@@ -23,7 +23,7 @@ export const ui = {
         "nav.theme": "Toggle theme",
         "nav.language": "Language",
 
-        "hero.kicker": "Mathematical Engineer · Data Scientist",
+        "hero.kicker": "Mathematical Engineer · Aspiring AI Researcher",
         "hero.tagline":
             "Statistics, stochastic modeling and machine learning, from the math on paper to models that run. Currently rebuilding an LLM from scratch and writing about it.",
         "hero.cv": "Download CV",
@@ -33,7 +33,7 @@ export const ui = {
         "home.location": "Cotonou, Benin",
         "home.role": "Mathematical Engineering & AI Research",
         "home.bio.1":
-            "<strong>Hello, I'm Léonel!</strong> I am a <strong>Mathematical Engineer</strong> and <strong>Data Scientist</strong> driven by the mission of bridging the gap between rigorous mathematical research and practical AI deployment.",
+            "<strong>Hello, I'm Léonel!</strong> I am a <strong>Mathematical Engineer</strong> and an <strong>aspiring AI researcher</strong>, driven by the mission of bridging the gap between rigorous mathematical research and practical AI deployment.",
         "home.bio.2":
             "With a background in <strong>stochastic modeling</strong> and <strong>statistics</strong>, I specialize in transforming complex theoretical ideas into robust AI prototypes. I am particularly passionate about <strong>Machine Learning</strong>, <strong>Large Language Models (LLMs)</strong>, and <strong>Computer Vision</strong>, where I focus on improving both the performance and the theoretical foundations of modern models.",
         "home.bio.3":
@@ -121,7 +121,7 @@ export const ui = {
     fr: {
         "site.title": "Léonel VODOUNOU - Génie Mathématique & IA",
         "site.description":
-            "Portfolio de Léonel VODOUNOU, ingénieur mathématicien et data scientist spécialisé en statistiques, modélisation stochastique et machine learning.",
+            "Portfolio de Léonel VODOUNOU, ingénieur mathématicien et futur chercheur en IA, spécialisé en statistiques, modélisation stochastique et machine learning.",
 
         "nav.resume": "Parcours",
         "nav.projects": "Projets",
@@ -130,7 +130,7 @@ export const ui = {
         "nav.theme": "Changer de thème",
         "nav.language": "Langue",
 
-        "hero.kicker": "Ingénieur mathématicien · Data Scientist",
+        "hero.kicker": "Ingénieur mathématicien · Futur chercheur en IA",
         "hero.tagline":
             "Statistiques, modélisation stochastique et machine learning : des mathématiques sur le papier aux modèles qui tournent. En ce moment, je reconstruis un LLM de zéro et je documente chaque étape.",
         "hero.cv": "Télécharger mon CV",
@@ -140,7 +140,7 @@ export const ui = {
         "home.location": "Cotonou, Bénin",
         "home.role": "Génie mathématique & recherche en IA",
         "home.bio.1":
-            "<strong>Bonjour, je suis Léonel !</strong> Je suis <strong>ingénieur en génie mathématique</strong> et <strong>data scientist</strong>, avec une ambition : rapprocher la recherche mathématique rigoureuse du déploiement concret de l'IA.",
+            "<strong>Bonjour, je suis Léonel !</strong> Je suis <strong>ingénieur en génie mathématique</strong> et <strong>futur chercheur en IA</strong>, avec une ambition : rapprocher la recherche mathématique rigoureuse du déploiement concret de l'IA.",
         "home.bio.2":
             "Formé à la <strong>modélisation stochastique</strong> et aux <strong>statistiques</strong>, je transforme des idées théoriques complexes en prototypes d'IA robustes. Je m'intéresse particulièrement au <strong>machine learning</strong>, aux <strong>grands modèles de langage (LLM)</strong> et à la <strong>vision par ordinateur</strong>, en cherchant à améliorer à la fois les performances et les fondements théoriques des modèles modernes.",
         "home.bio.3":

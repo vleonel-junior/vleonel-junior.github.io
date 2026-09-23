@@ -1,0 +1,143 @@
+% Academic CV, published on the website as public/cv_leonel_vodounou.pdf.
+% Build:  latexmk -pdf cv_leonel_vodounou_academic.tex
+% This version is public: no phone number or street address.
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[left=1.8cm, right=1.8cm, top=1.6cm, bottom=1.6cm]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fontawesome5}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{ink}{RGB}{33, 37, 41}
+\definecolor{accent}{RGB}{4, 120, 87}   % site accent green
+\definecolor{muted}{RGB}{95, 99, 104}
+
+\hypersetup{
+    colorlinks=true,
+    urlcolor=accent,
+    linkcolor=accent,
+    pdftitle={Léonel Vodounou - Academic CV},
+    pdfauthor={Léonel Vodounou},
+}
+
+\color{ink}
+\setlength{\parindent}{0pt}
+\setlist{nosep}
+
+\titleformat{\section}{\large\bfseries\color{accent}}{}{0em}{}[\vspace{-0.6ex}{\color{accent!40}\titlerule}]
+\titlespacing*{\section}{0pt}{2.2ex}{1.2ex}
+
+% \entry{title}{dates}{subtitle}{place}
+\newcommand{\entry}[4]{%
+  \textbf{#1}\hfill{\color{muted}#2}\\
+  \textit{#3}\hfill{\color{muted}\small #4}\par\vspace{2pt}}
+\newcommand{\details}[1]{%
+  \begin{itemize}[leftmargin=1.1em, label={\color{muted}\textbullet}, itemsep=1pt, topsep=1pt]
+  #1
+  \end{itemize}\vspace{5pt}}
+
+\pagestyle{empty}
+
+\begin{document}
+
+%-----------------------------------------------------------------------------
+\begin{center}
+  {\LARGE\bfseries Léonel Vodounou}\\[4pt]
+  {\large Mathematical Engineer \textperiodcentered{} Aspiring AI Researcher}\\[6pt]
+  \small
+  \faMapMarker*\ Cotonou, Benin \quad
+  \faEnvelope\ \href{mailto:vleoneljunior@gmail.com}{vleoneljunior@gmail.com} \quad
+  \faGlobe\ \href{https://vleonel-junior.github.io}{vleonel-junior.github.io}\\[2pt]
+  \faGithub\ \href{https://github.com/vleonel-junior}{github.com/vleonel-junior} \quad
+  \faLinkedin\ \href{https://www.linkedin.com/in/leonel-vodounou}{linkedin.com/in/leonel-vodounou}
+\end{center}
+
+%-----------------------------------------------------------------------------
+\section{Research Interests}
+Large language models and the limits of autoregressive reasoning;
+neuro-symbolic learning (Logic Tensor Networks);
+mathematical foundations of deep learning: probability, stochastic modeling and optimization.
+I am interested in understanding models down to their equations and rebuilding them from first principles.
+
+%-----------------------------------------------------------------------------
+\section{Education}
+\entry{Engineering Degree in Mathematical Engineering and Modeling}{2022 -- 2025}
+      {National School of Mathematical Engineering and Modeling (ENSGMM), UNSTIM}{Benin}
+\details{\item Specialization in random modeling, statistics and machine learning.}
+
+\entry{Preparatory Classes for Engineering Studies (MPSI/PCSI)}{2020 -- 2022}
+      {National Higher Institute of Preparatory Classes (INSPEI), UNSTIM}{Benin}
+\details{\item Intensive training in mathematics, physics and engineering sciences.}
+
+%-----------------------------------------------------------------------------
+\section{Research Projects}
+\entry{Logic Tensor Networks: presentation and case study}{2026}
+      {\href{https://github.com/vleonel-junior/logic-tensor-networks}{github.com/vleonel-junior/logic-tensor-networks}}{}
+\details{
+  \item Presentation of the neuro-symbolic LTN framework: grounding of logical symbols as tensors, differentiable connectives and quantifiers, knowledge-base satisfaction as a training objective.
+  \item Case study with LTNtorch: semi-supervised MNIST digit recognition learned only from the sum of two digits, compared with a purely supervised baseline.
+}
+
+\entry{Building a Large Language Model from Scratch: reading notes}{2026}
+      {Bilingual (EN/FR) chapter-by-chapter notes on S.~Raschka's book, \href{https://vleonel-junior.github.io/blog/dossier/build-llm-from-scratch/}{published online}}{}
+\details{
+  \item From-scratch PyTorch implementations of tokenization, byte pair encoding, data sampling, embeddings, self-attention, causal and multi-head attention.
+  \item Complementary derivations: softmax Jacobian, the $1/\sqrt{d_k}$ scaling factor, equivalence of causal masking strategies, variance under weight initialization.
+}
+
+\entry{Earlier projects}{2025}{Mathematical programming and quantitative finance}{}
+\details{
+  \item \href{https://github.com/vleonel-junior/Gomory}{Gomory cutting-plane method}: pure Python solver for integer linear programs with exact fractional arithmetic.
+  \item \href{https://github.com/vleonel-junior/Black-sholes}{Black--Scholes}: analytical solution through the heat equation, pricing formula and Delta of a European call.
+}
+
+%-----------------------------------------------------------------------------
+\section{Writing}
+\details{
+  \item \textit{Why LLMs Struggle to Reason: The Limits of Autoregression}, blog article, July 2026.
+  \item \textit{Descriptive Statistics}, interactive blog article, March 2026.
+  \item All articles in English and French at \href{https://vleonel-junior.github.io/blog/}{vleonel-junior.github.io/blog}.
+}
+
+%-----------------------------------------------------------------------------
+\section{Experience}
+\entry{Data Scientist Intern (end-of-studies internship)}{Sep 2025 -- Dec 2025}
+      {LKA Services}{Benin}
+\details{\item Designed data processing and analysis solutions, automated classification processes and improved data management to support decision-making.}
+
+\entry{Data Scientist Intern}{Aug 2024 -- Oct 2024}
+      {LESCAL, Laboratory for Statistical Studies and Application \& Software Design}{Benin}
+\details{\item Contributed to statistical studies and the design of data-driven applications.}
+
+%-----------------------------------------------------------------------------
+\section{Conferences and Communities}
+\entry{Deep Learning Indaba 2026}{Aug 2026}{Participant}{Lagos, Nigeria}
+\entry{Deep Learning IndabaX Benin 2026}{Sep 2026}{In-person participant}{Benin}
+\entry{Cohere Labs, Open Science Initiative}{2026}{Community member, attending community courses and sessions}{Online}
+
+%-----------------------------------------------------------------------------
+\section{Teaching and Outreach}
+\entry{Volunteer trainer: AI for artisans and entrepreneurs}{Jul 2026}{iSHEERO, Sèmè City Open Park}{Benin}
+\details{\item Co-led a hands-on workshop on generative AI tools for about twenty artisans and local entrepreneurs, built around their day-to-day challenges.}
+
+%-----------------------------------------------------------------------------
+\section{Training and Certifications}
+\entry{Machine Learning Engineer program}{2026}{iSheero $\times$ DataCamp, 12-month program with applied projects}{}
+\entry{Data Scientist}{2024}{Africa Tech Up Tour / OpenClassrooms}{}
+\entry{Introduction to High-Performance Computing}{Jun 2024}{Supercomputer access, job management with SLURM, parallel programming}{}
+
+%-----------------------------------------------------------------------------
+\section{Skills}
+\begin{tabular}{@{}p{3.2cm}p{13cm}@{}}
+  \textbf{Mathematics} & Probability and statistics, stochastic modeling, optimization, numerical analysis (PDEs) \\
+  \textbf{Machine learning} & PyTorch, transformers and attention mechanisms, LTNtorch \\
+  \textbf{Programming} & Python, R, MATLAB, \LaTeX, Git \\
+  \textbf{Languages} & French (native), Fon (native), English (fluent) \\
+\end{tabular}
+
+\end{document}

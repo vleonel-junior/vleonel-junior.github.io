@@ -22,3 +22,13 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# CV: LaTeX build files, and the professional CV (contains a phone number)
+cv/*.aux
+cv/*.log
+cv/*.out
+cv/*.fls
+cv/*.fdb_latexmk
+cv/build.log
+cv/*.pdf
+cv/pro/

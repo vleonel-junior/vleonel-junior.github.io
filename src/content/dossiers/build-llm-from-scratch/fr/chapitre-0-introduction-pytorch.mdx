@@ -4,11 +4,11 @@ description: "Chapitre 0 : Introduction pratique à PyTorch, tenseurs, graphes d
 pubDate: 2026-06-27
 author: "Léonel VODOUNOU"
 dossier: "build-llm-from-scratch"
+lang: "fr"
 chapter: 0
 order: 0
 tags: ["PyTorch", "Tensors", "Deep Learning", "Python"]
 draft: false
-showToc: false
 ---
 
 ## Introduction
@@ -44,6 +44,8 @@ True
 ```
 
 ## Comprendre les tenseurs
+
+### Créer des tenseurs et choisir leur type
 
 ```python
 tensor0d = torch.tensor(1)
@@ -98,6 +100,8 @@ tensor([[1, 2, 3],
 
 ```
 
+### Forme et remodelage : `.reshape()` et `.view()`
+
 L'attribut **.shape** nous permet d'accéder à la forme (shape) d'un tensor :
 
 ```python
@@ -139,7 +143,7 @@ La différence subtile entre **.view()** et **.reshape()** dans PyTorch réside 
 
 Oubliez les mathématiques un instant et imaginons comment fonctionne la **mémoire physique** de votre ordinateur (la RAM ou la VRAM).
 
-### Qu'est-ce que les "données physiques" ?
+#### Qu'est-ce que les « données physiques » ?
 La mémoire de votre ordinateur n'a pas de concept de "tableau en 2D" ou de "cube en 3D". La mémoire est simplement une très longue **ligne droite de petites boîtes**.
 
 Imaginons que vous créez un tenseur PyTorch simple, un tableau de 2 lignes et 2 colonnes :
@@ -155,7 +159,7 @@ Quand PyTorch veut lire la première ligne `[1, 2]`, il lit les deux premières 
 
 ---
 
-### Comment un tenseur devient "non-contigu" (modifié de façon complexe) ?
+#### Comment un tenseur devient non contigu
 Maintenant, appliquons une opération mathématique, par exemple la **transposition** (qui échange les lignes et les colonnes).
 
 ```python
@@ -174,14 +178,14 @@ Le tenseur est devenu **non-contigu**. C'est cela une "modification complexe" : 
 
 ---
 
-### Le drame avec `.view()`
+#### Pourquoi `.view()` échoue
 La fonction `.view()` sert à donner une nouvelle forme à un tenseur (par exemple, transformer notre 2x2 en une ligne de 4). Mais `.view()` a une limitation technique : **elle refuse de travailler si elle doit sauter des boîtes.** Elle veut lire les boîtes sagement de gauche à droite.
 
 Si vous faites `t_transpose.view(4)`, PyTorch panique : *"Hé, ce tenseur me demande de faire des sauts dans la mémoire physique, je ne peux pas faire un `.view()` là-dessus !"* -> **Erreur (Crash).**
 
 ---
 
-### Le côté magique de `.reshape()`
+#### Pourquoi `.reshape()` fonctionne toujours
 La fonction `.reshape(4)` est beaucoup plus intelligente. 
 Quand vous la lancez sur `t_transpose` :
 
@@ -191,6 +195,8 @@ Quand vous la lancez sur `t_transpose` :
 
 C'est pour ça qu'on dit que `.reshape()` "copie les données si nécessaire", et que c'est la méthode recommandée pour être tranquille !
 
+
+### Transposer et multiplier des matrices
 
 Nous pouvons utiliser **.T** pour transposer un tensor, ce qui signifie le retourner par rapport à sa diagonale
 
@@ -220,9 +226,9 @@ tensor([[14, 32],
 ## Voir les modèles comme des graphes de calcul
 
 Le système autograd de PyTorch fournit des fonctions pour calculer automatiquement les gradients dans des graphes de calcul dynamiques.
-Un graphe de calcul est un graphe orienté qui nous permet d'exprimer et de visualiser des expressions mathématiques. Dans le contexte du Deep Learning, un graphe de calcul détaille la séquence de calculs nécessaires pour calculer la sortie d'un réseau de neurones — nous en aurons besoin pour calculer les gradients requis pour la backpropagation, l'algorithme d'entraînement principal pour les réseaux de neurones.
+Un graphe de calcul est un graphe orienté qui nous permet d'exprimer et de visualiser des expressions mathématiques. Dans le contexte du Deep Learning, un graphe de calcul détaille la séquence de calculs nécessaires pour calculer la sortie d'un réseau de neurones. Nous en aurons besoin pour calculer les gradients requis pour la backpropagation, l'algorithme d'entraînement principal pour les réseaux de neurones.
 
-#### Un forward pass de régression logistique
+### Le forward pass d'une régression logistique
 
 
 
@@ -277,6 +283,8 @@ Si nous effectuons des calculs dans PyTorch, il construira par défaut un graphe
 
 `Pour faire simple, tout ce que vous devez savoir, c'est que la règle de dérivation en chaîne (chain rule) est un moyen de calculer les gradients d'une fonction de loss étant donné les paramètres du modèle dans un graphe de calcul. Cela fournit les informations nécessaires pour mettre à jour chaque paramètre afin de minimiser la fonction de loss (qui sert de proxy pour mesurer les performances du modèle en utilisant une méthode telle que la descente de gradient).`
 
+### Calculer des gradients avec `grad`
+
 Le **moteur autograd** de PyTorch construit un graphe de calcul en arrière-plan en suivant chaque opération effectuée sur les tenseurs. Ensuite, en appelant la fonction **grad**, nous pouvons calculer le gradient de la loss concernant le paramètre de modèle w1, comme indiqué dans le listing suivant.
 
 ```python
@@ -317,6 +325,8 @@ print(grad_L_b)
 Ici, nous avons utilisé la fonction grad manuellement, ce qui peut être utile pour l'expérimentation, le débogage et la démonstration de concepts. 
 
 
+### Automatiser avec `.backward()`
+
 Mais, en pratique, PyTorch fournit des outils de plus haut niveau pour automatiser ce processus. Par exemple, nous pouvons appeler **.backward** sur la loss, et PyTorch calculera les gradients de tous les nœuds feuilles dans le graphe, qui seront stockés via les attributs **.grad** des tenseurs.
 
 ```python
@@ -340,6 +350,8 @@ Jetons un œil à un perceptron multicouche, un réseau de neurones entièrement
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-9.png" width="600" />
   <p><em>Un perceptron multicouche avec deux couches cachées. Chaque nœud représente une unité dans la couche respective. À des fins d'illustration, chaque couche a un très petit nombre de nœuds.</em></p>
 </div>
+
+### Définir l'architecture
 
 Lors de l'implémentation d'un réseau de neurones dans PyTorch, nous pouvons créer une sous-classe de la classe `torch.nn.Module` pour définir notre propre architecture de réseau personnalisée. Cette classe de base Module fournit de nombreuses fonctionnalités, rendant plus facile la construction et l'entraînement des modèles. Par exemple, elle nous permet d'encapsuler les couches et les opérations et de garder une trace des paramètres du modèle.
 
@@ -421,6 +433,8 @@ NeuralNetwork(
 )
 
 ```
+
+### Compter les paramètres entraînables
 
 **1. `model.parameters()`**
 
@@ -506,7 +520,7 @@ tensor([ 0.1108,  0.0739, -0.0027, -0.0209,  0.0596, -0.0188, -0.1029, -0.0371,
 
 ```
 
-### Nous pouvons rendre l'initialisation des nombres aléatoires reproductible en fixant la graine du générateur aléatoire de PyTorch via `manual_seed`
+### Rendre l'initialisation reproductible
 
 ```python
 torch.manual_seed(123)
@@ -527,7 +541,7 @@ tensor([[-0.0577,  0.0047, -0.0702,  ...,  0.0222,  0.1260,  0.0865],
 
 ```
 
-### Voyons brièvement comment NeuralNetwork est utilisé via la passe forward 
+### La passe forward et l'inférence
 
 ```python
 torch.manual_seed(123)
@@ -586,6 +600,8 @@ L'idée générale derrière le chargement des données dans PyTorch est illustr
   <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-10.png" width="600" />
   <p><em>PyTorch implémente une classe Dataset et une classe DataLoader. La classe Dataset est utilisée pour instancier des objets qui définissent comment chaque enregistrement de données est chargé. Le DataLoader gère la manière dont les données sont mélangées et assemblées en batchs.</em></p>
 </div>
+
+### Un jeu de données jouet avec `Dataset` et `DataLoader`
 
 ```python
 X_train = torch.tensor([
@@ -749,15 +765,15 @@ C'est ce à quoi nous tenterons de répondre dans les lignes à suivre.
 
 ---
 
-### Partie I — Le DataLoader et les Workers : anatomie d'un pipeline de données
+### Sous le capot : le DataLoader et ses workers
 
 #### La boucle d'entraînement et son goulot d'étranglement fondamental
 
 
 Un réseau de neurones s'entraîne par itérations successives. À chaque itération, le modèle reçoit un *batch* de données, calcule une prédiction (*forward pass*), mesure son erreur via une fonction de perte (*loss*), puis rétropropage cette erreur à travers ses couches pour ajuster ses paramètres (*backward pass*). Cette séquence se répète des milliers, voire des millions de fois.
 
-Or, cette boucle possède une structure temporelle asymétrique : le GPU, lorsqu'il effectue un *forward* et un *backward pass*, travaille à une vitesse considérable — de l'ordre de quelques millisecondes pour un batch sur du matériel moderne. En revanche, **charger ce batch depuis le disque, le décoder, lui appliquer des transformations, et l'assembler en tenseur** peut prendre un temps comparable, voire supérieur.
-Si ces deux phases sont exécutées séquentiellement — c'est-à-dire si le GPU attend que les données soient prêtes avant de commencer à calculer — alors le GPU est en réalité **inactif la moitié du temps**. C'est ce qu'on appelle un *I/O bottleneck* (goulot d'étranglement sur les entrées/sorties). Pour un équipement qui coûte plusieurs milliers d'euros, ce gaspillage est inacceptable.
+Or, cette boucle possède une structure temporelle asymétrique : le GPU, lorsqu'il effectue un *forward* et un *backward pass*, travaille à une vitesse considérable, de l'ordre de quelques millisecondes pour un batch sur du matériel moderne. En revanche, **charger ce batch depuis le disque, le décoder, lui appliquer des transformations, et l'assembler en tenseur** peut prendre un temps comparable, voire supérieur.
+Si ces deux phases sont exécutées séquentiellement (c'est-à-dire si le GPU attend que les données soient prêtes avant de commencer à calculer), alors le GPU est en réalité **inactif la moitié du temps**. C'est ce qu'on appelle un *I/O bottleneck* (goulot d'étranglement sur les entrées/sorties). Pour un équipement qui coûte plusieurs milliers d'euros, ce gaspillage est inacceptable.
 
 La solution conceptuelle est celle du **pipeline** : préparer les prochains batches *pendant* que le GPU travaille sur le batch courant. C'est exactement ce que réalise le mécanisme des *workers*.
 
@@ -766,7 +782,7 @@ La solution conceptuelle est celle du **pipeline** : préparer les prochains bat
 
 Le `DataLoader` de PyTorch n'est pas un simple itérateur. C'est un **orchestrateur** qui coordonne plusieurs composants distincts, chacun ayant une responsabilité précise.
 
-**Le Dataset** est la couche d'abstraction qui représente les données. Il expose une interface minimale : `__len__()` pour connaître le nombre d'éléments, et `__getitem__(i)` pour accéder à l'élément d'indice `i`. C'est dans cette méthode que réside toute la logique de chargement : ouverture de fichier, décodage d'image, lecture depuis une base de données, etc. Le `Dataset` est volontairement ignorant de la notion de batch — il travaille sur des échantillons individuels.
+**Le Dataset** est la couche d'abstraction qui représente les données. Il expose une interface minimale : `__len__()` pour connaître le nombre d'éléments, et `__getitem__(i)` pour accéder à l'élément d'indice `i`. C'est dans cette méthode que réside toute la logique de chargement : ouverture de fichier, décodage d'image, lecture depuis une base de données, etc. Le `Dataset` est volontairement ignorant de la notion de batch : il travaille sur des échantillons individuels.
 
 **Le Sampler** est responsable de définir *l'ordre* dans lequel les indices seront parcourus. Le `SequentialSampler` les parcourt dans l'ordre naturel (0, 1, 2, ..., N-1). Le `RandomSampler`, activé par `shuffle=True`, génère une permutation aléatoire de ces indices à chaque nouvelle epoch. Cette randomisation est cruciale pour l'entraînement : elle empêche le modèle de mémoriser l'ordre des données et améliore la généralisation.
 
@@ -910,7 +926,7 @@ Autrement dit, le pipeline complet ressemble désormais à ceci :
 Workers CPU ──(shared memory)──> Main Process CPU ──(?)──> GPU
 ```
 
-La *shared memory* optimise donc uniquement la première liaison — celle entre les processus CPU. Mais elle n’accélère pas directement le transfert des données vers le GPU. C’est précisément pour optimiser cette seconde liaison qu’intervient le mécanisme de **pinned memory**, activé via `pin_memory=True`.
+La *shared memory* optimise donc uniquement la première liaison, celle entre les processus CPU. Mais elle n’accélère pas directement le transfert des données vers le GPU. C’est précisément pour optimiser cette seconde liaison qu’intervient le mécanisme de **pinned memory**, activé via `pin_memory=True`.
 
 Pour bien comprendre son utilité, il faut d’abord distinguer les deux grandes mémoires d’un ordinateur :
 
@@ -984,171 +1000,6 @@ Ces deux mécanismes interviennent donc à des étapes différentes mais complé
 
 ---
 
-### Partie II — Entraînement Multi-GPU : stratégies et mécanismes
-
----
-
-#### Pourquoi plusieurs GPUs ?
-
-
-Pour comprendre l'utilité de plusieurs GPUs, il faut d'abord saisir deux limites fondamentales et bien distinctes que l'on rencontre lors de l'entraînement de modèles modernes.
-
-La première limite est une limite **physique de stockage**. Chaque GPU dispose d'une mémoire vidéo (VRAM) dont la capacité est fixe et non extensible — typiquement entre 16 Go et 80 Go selon les modèles haut de gamme. Or, un grand modèle de langage comme GPT-3 pèse à lui seul 350 Go en précision float16. Il est donc tout simplement *impossible*, au sens physique du terme, de loger l'intégralité de ses paramètres dans un seul GPU. Peu importe la rapidité du matériel, le problème n'est pas de vitesse mais de capacité d'accueil : on ne peut pas faire tenir un meuble de cinq mètres dans une pièce de deux mètres. Il faut alors **distribuer le modèle** lui-même sur plusieurs GPUs, chacun n'en hébergeant qu'une fraction.
-
-La seconde limite est une limite **de temps**. Même lorsque le modèle tient confortablement dans un seul GPU, l'entraînement peut durer des semaines ou des mois. Ici, l'enjeu n'est plus la capacité mais la vitesse. Si l'on dispose de N GPUs capables de traiter des données en parallèle, on peut théoriquement diviser le temps d'entraînement par N en traitant N fois plus d'exemples à chaque instant.
-
-Ces deux motivations — l'une contraignante, l'autre optimisante — donnent naissance à deux grandes familles de stratégies que nous allons explorer : le **parallélisme de données** (Data Parallelism), où le modèle est dupliqué et les données sont réparties ; et le **parallélisme de modèle** (Model Parallelism), où c'est le modèle lui-même qui est fractionné entre les GPUs.
-
----
-
-#### DataParallel (DP) : la première approche, naïve
-
-
-`torch.nn.DataParallel` est l'API historique de PyTorch pour l'entraînement multi-GPU. Pour bien comprendre ses limites, il faut d'abord comprendre comment elle fonctionne de l'intérieur — et cela commence par deux notions fondamentales : ce qu'est un **processus** et ce qu'est un **thread**.
-
----
-
-**Processus et threads : poser les bases.**
-
-Lorsque vous lancez un programme Python, le système d'exploitation crée un **processus**. Ce processus est une unité d'exécution totalement autonome et isolée : il possède son propre espace mémoire, ses propres ressources, sa propre identité. Deux processus ne partagent rien par défaut. Si l'un plante, l'autre continue de tourner sans en être affecté.
-
-Un **thread** est quelque chose de plus fin. C'est un fil d'exécution secondaire qui vit *à l'intérieur* d'un même processus. Plusieurs threads coexistent dans le même processus, partagent le même espace mémoire et les mêmes ressources, mais avancent chacun dans le code à leur propre rythme.
-
-L'analogie la plus parlante est celle d'un **bureau et de ses employés**. Le processus est le bureau : il a ses propres murs, ses propres dossiers, son propre matériel. Les threads sont les employés qui travaillent dans ce bureau. Ils ont tous accès aux mêmes armoires, aux mêmes fichiers, aux mêmes outils — c'est précisément ce partage qui leur permet de collaborer rapidement, sans avoir à s'échanger des copies de documents. Mais ce même partage crée un risque : si deux employés modifient le même fichier en même temps, le résultat sera corrompu.
-
-C'est exactement pour éviter cette corruption que Python a introduit le **GIL** (*Global Interpreter Lock*). Imaginez qu'il n'existe qu'**un seul stylo** dans le bureau, et qu'un employé doit l'avoir en main pour avoir le droit d'agir. Les autres peuvent attendre, observer, se préparer — mais ils ne peuvent rien *exécuter* tant que le stylo n'est pas libre.
-Conséquence directe et non intuitive : même si votre machine possède 8 cœurs physiques capables d'exécuter 8 fils d'exécution simultanément, Python ne laissera jamais deux threads s'exécuter *vraiment* en même temps. L'un tient le stylo, les autres attendent leur tour. Le parallélisme apparent est donc une **illusion** : on a l'impression d'une exécution simultanée, mais les threads se relaient en réalité en alternance très rapide.
-
----
-
-**Le fonctionnement de DataParallel.**
-
-`DataParallel` s'appuie précisément sur ce modèle de threads. Pour comprendre pourquoi c'est problématique, suivons le déroulement d'une itération d'entraînement.
-
-Le **processus principal** — un bureau unique avec un seul chef — prend en charge l'ensemble du batch depuis le DataLoader. Il le découpe en portions égales et en confie une à chacun des GPUs disponibles. Chaque GPU effectue alors, en parallèle, un *forward pass* indépendant sur sa portion. Jusqu'ici, l'organisation semble efficace.
-
-Mais voici où le premier problème se révèle : une fois les calculs terminés sur chaque GPU, **toutes les sorties sont renvoyées au GPU 0** pour qu'il les rassemble, calcule la loss globale, effectue le *backward pass*, puis redistribue les gradients et resynchronise les poids de tous les GPUs. Autrement dit, la phase de travail parallèle est éphémère — le reste de l'itération est entièrement séquentiel et concentré sur une seule machine.
-
-Ce modèle crée un **goulot d'étranglement structurel** sur le GPU 0. Il est le seul à recevoir le batch complet, à assembler les résultats, à calculer les gradients globaux, et à redistribuer les poids. Il est donc, en permanence, bien plus sollicité que ses homologues. En pratique, au-delà de 2 à 4 GPUs, les GPUs supplémentaires n'apportent presque aucun gain réel : ils passent la majorité de leur temps à attendre que le GPU 0 ait terminé.
-
----
-
-**Le second défaut : le GIL paralyse la coordination.**
-
-Un second problème, moins visible mais tout aussi pénalisant, découle directement de l'architecture à threads décrite plus haut. Dans `DataParallel`, les différents GPUs sont pilotés par des threads Python distincts, tous logés dans le **même processus**. L'intention est louable : faire avancer plusieurs GPUs en parallèle. Mais dès que ces threads ont besoin d'exécuter du code Python pur — interpréter une boucle, évaluer une condition, appeler une fonction personnalisée dans le *forward pass* — ils se retrouvent à faire la queue devant le GIL.
-
-Pendant que le thread du GPU 0 tient le stylo, le thread du GPU 1 est suspendu, quand bien même son GPU est matériellement disponible et impatient de travailler. Plus le *forward pass* du modèle contient de logique Python complexe, plus cette file d'attente s'allonge — et plus le bénéfice du multi-GPU s'évapore. La coordination entre threads, au lieu d'accélérer les choses, finit par les freiner.
-
-Ces deux défauts — la centralisation sur le GPU 0 et le GIL — ne sont pas des bugs corrigeables par un patch : ils sont la conséquence directe du choix architectural fondateur de `DataParallel`, celui d'un processus unique pilotant tout. C'est ce choix qu'il fallait remettre en cause, et c'est exactement ce que fait DDP.
-
----
-
-#### DistributedDataParallel (DDP) : le standard actuel
-
-
-<div align="center">
-  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-12.png" width="800" />
-  <p><em>Le transfert du modèle et des données dans DDP implique deux étapes clés. Tout d'abord, nous créons une copie du modèle sur chacun des GPUs. 
-         Ensuite, nous divisons les données d'entrée en minibatches uniques que nous transmettons à chaque copie du modèle.</em></p>
-</div>
-
----
-
-<div align="center">
-  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/A-13.png" width="800" />
-  <p><em>Les forward pass et backward pass dans DDP sont exécutés indépendamment sur chaque GPU avec son sous-ensemble de données correspondant. 
-  Une fois les forward pass et backward pass terminés, les gradients de chaque réplique du modèle (sur chaque GPU) sont synchronisés sur l'ensemble des GPUs. 
-  Cela garantit que chaque réplique du modèle possède les mêmes poids mis à jour.</em></p>
-</div>
-
----
-
-Pour comprendre pourquoi `DistributedDataParallel` (DDP) représente une rupture architecturale et non une simple amélioration, il faut revenir sur la source du problème précédent : la centralisation. `DataParallel` avait un chef unique. DDP supprime entièrement cette hiérarchie.
-
-**De la cuisine centralisée à la brigade décentralisée.**
-
-Avec DDP, chaque GPU est géré par son **propre processus Python indépendant**, lancé via `torchrun`. Il n'existe plus de processus maître vers lequel tout converge. Chaque processus charge ses propres données, calcule ses propres gradients, et prend ses propres décisions — tout en restant parfaitement synchronisé avec ses pairs.
-Cette indépendance des processus résout immédiatement le problème du GIL : puisqu'il s'agit désormais de processus distincts.
-
-**Chaque processus charge ses propres données.**
-
-Pour éviter que tous les GPUs ne traitent les mêmes exemples — ce qui serait un gaspillage total — PyTorch fournit un `DistributedSampler`. Son rôle est de partitionner le dataset en sous-ensembles disjoints, un par processus. Si l'on dispose de N processus et M exemples au total, le processus numéro k se voit attribuer les exemples d'indices k, k+N, k+2N, etc. L'ensemble des processus couvre ainsi exactement l'intégralité du dataset, sans redondance ni omission.
-
-**La synchronisation des gradients par AllReduce.**
-
-À l'issue du *backward pass*, chaque processus a calculé ses propres gradients — exacts pour son mini-batch, mais partiels au regard de l'ensemble des données. Pour que tous les modèles évoluent de façon identique et convergent vers la même solution, il est impératif que chaque GPU applique **la même mise à jour**, c'est-à-dire la moyenne des gradients calculés sur l'ensemble des processus.
-
-C'est précisément la fonction de l'opération **AllReduce**. Elle garantit que, quel que soit le GPU interrogé, chacun reçoit la somme (ou la moyenne) complète de tous les gradients calculés par ses pairs. Cette opération est implémentée par **NCCL** (*NVIDIA Collective Communications Library*), qui exploite les connexions physiques directes entre GPUs : NVLink pour les GPUs sur la même machine, InfiniBand ou Ethernet pour les GPUs répartis sur des serveurs distants.
-
-**L'algorithme Ring-AllReduce : pourquoi un anneau ?**
-
-L'implémentation naïve d'un AllReduce consisterait à envoyer tous les gradients vers un nœud central qui les somme puis les redistribue. On retomberait alors dans le goulot d'étranglement de DataParallel. NCCL évite ce piège grâce au **Ring-AllReduce**, dont l'élégance mérite une explication.
-
-Voici une explication reformulée, construite directement depuis le contenu du papier.
-
----
-
-**Le Ring-AllReduce : comment N GPUs s'échangent leurs gradients sans goulot d'étranglement**
-
-Dans l'entraînement distribué en données parallèles, chaque GPU calcule ses propres gradients sur son sous-ensemble du batch. Il faut ensuite les moyenner entre tous les GPUs avant de mettre à jour les poids. Mais le défaut est immédiat : le GPU central doit recevoir les gradients de tous les autres, puis les renvoyer à tous. Sa charge de communication croît linéairement avec le nombre de GPUs. Avec un modèle de 300 millions de paramètres (soit 1,2 Go de gradients) et 10 GPUs, chaque itération se ralentit de plus de 10 secondes. La solution ne passe pas à l'échelle.
-
-Le **Ring-AllReduce** élimine ce goulot en supprimant le réducteur central. Voici comment il fonctionne.
-
-**La topologie.** On dispose les N GPUs en anneau logique. Chaque GPU a exactement un voisin à sa gauche et un à sa droite. Il n'envoie des données qu'à droite, il n'en reçoit que depuis la gauche.
-
-**La première phase : le Scatter-Reduce.** Chaque GPU découpe son tableau de gradients en N fragments de taille égale. Puis on fait N-1 tours dans l'anneau. À chaque tour, chaque GPU envoie un fragment à son voisin de droite et reçoit un fragment de son voisin de gauche — qu'il **additionne** à son propre fragment correspondant. Le fragment envoyé à chaque tour est toujours celui reçu au tour précédent. Au bout de N-1 tours, chaque GPU détient un fragment qui contient la **somme complète** de ce fragment, agrégée sur l'ensemble des GPUs. Pas l'intégralité des gradients — juste sa portion à lui, mais parfaitement réduite.
-
-**La deuxième phase : l'Allgather.** On refait N-1 tours dans l'anneau, mais cette fois chaque GPU, au lieu d'additionner ce qu'il reçoit, **écrase** simplement le fragment correspondant avec la valeur reçue. Au bout de N-1 tours, chaque GPU a reçu successivement tous les fragments réduits et possède donc l'intégralité des gradients agrégés.
-
-**Pourquoi la bande passante est indépendante de N.** À chaque tour, chaque GPU envoie et reçoit un fragment de taille K/N (où K est la taille totale du tableau). Sur les 2(N-1) tours au total (N-1 par phase), la quantité totale de données transférée par chaque GPU est donc 2(N-1) × K/N, ce qui tend vers 2K quand N est grand — et surtout **ne dépend pas de N**. Peu importe qu'on ait 4 ou 400 GPUs dans l'anneau, chaque lien transporte la même quantité de données. C'est la propriété fondamentale qui rend l'algorithme scalable : ajouter des GPUs n'aggrave pas la communication.
-
-**L'optimisation supplémentaire.** Puisque la backpropagation calcule les gradients depuis la dernière couche vers la première, les gradients des couches de sortie sont disponibles bien avant ceux des couches d'entrée. On peut donc démarrer le Ring-AllReduce sur les premiers gradients disponibles pendant que les autres sont encore en cours de calcul, chevauchant communication et calcul. Dans les expériences du papier sur un modèle de 300 millions de paramètres, cela permettait d'économiser 70 à 120 ms par itération.
-
-Pour plus de détails, vous pouvez consulter [Bringing HPC Techniques to Deep Learning](../Introduction to PyTorch/baidu_allreduce_oct6.pdf).
-
----
-
-#### Parallélisme de modèle (*Model Parallelism*)
-
-
-Aussi efficace que soit DDP, il suppose implicitement une chose : que le modèle tient dans la VRAM d'un seul GPU. Lorsque ce n'est plus le cas — ce qui est la norme pour les très grands modèles — une toute autre famille de stratégies s'impose, dans laquelle ce n'est plus le dataset qui est distribué, mais **le modèle lui-même**.
-
-**Le pipeline parallelism : la chaîne de montage.**
-
-La forme la plus intuitive de parallélisme de modèle consiste à assigner des groupes de couches à des GPUs différents. Le GPU 0 héberge les premières couches, le GPU 1 les suivantes, et ainsi de suite. Lors d'un *forward pass*, les activations sont calculées sur le GPU 0, transmises au GPU 1 pour la suite du calcul, puis au GPU 2, etc. L'analogie avec une chaîne de montage industrielle est directe : chaque station effectue une opération précise et passe le résultat à la suivante.
-
-Mais cette analogie révèle aussi immédiatement le défaut majeur de l'approche naïve. Sur une vraie chaîne de montage où une seule pièce circule à la fois, toutes les stations sont inactives sauf une. C'est exactement ce qui se passe ici : à chaque instant, un seul GPU travaille pendant que tous les autres attendent. L'utilisation effective est de 1/N — catastrophique.
-
-La solution consiste à ne plus faire circuler un seul batch, mais à le découper en **micro-batchs** injectés en rafale dans le pipeline. Dès que le GPU 0 a traité le micro-batch 1 et l'a transmis au GPU 1, il n'attend pas le résultat final : il attaque immédiatement le micro-batch 2. Pendant ce temps, le GPU 1 reçoit le micro-batch 1 et commence à le traiter. Le GPU 2 fait de même un cycle plus tard. Les premiers cycles servent à remplir le pipeline — c'est inévitable, comme le début de toute chaîne de montage. Mais une fois ce remplissage terminé, tous les GPUs travaillent en permanence, chacun sur un micro-batch différent au même instant. Cette technique, introduite par GPipe et PipeDream, a rendu l'entraînement des très grands modèles économiquement viable.
-<div align="center">
-  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/Pipeline parallelism diagram.png" width="1000" />
-</div>
-
-
-**Le tensor parallelism : découper les matrices elles-mêmes.**
-
-Le pipeline parallelism distribue les couches *entre* les GPUs, mais que faire lorsqu'une seule couche — une matrice de projection dans un mécanisme d'attention, par exemple — est à elle seule trop volumineuse pour un GPU ?
-
-Le **tensor parallelism** répond à cette question en distribuant les **matrices de poids elles-mêmes** entre GPUs. Concrètement, une grande matrice peut être découpée soit par colonnes, soit par lignes. Chaque GPU ne stocke et ne calcule qu'un fragment de cette matrice, produisant un résultat partiel. Ces résultats partiels sont ensuite agrégés via AllReduce pour reconstituer la sortie complète. Cette approche, popularisée par **Megatron-LM** (voir l'article <a href="../Introduction to PyTorch/Megatron-LM-Training Multi-Billion Parameter Language Models Using.pdf">Megatron-LM-Training Multi-Billion Parameter Language Models Using</a>) de NVIDIA, opère donc *au sein* d'une même couche, là où le pipeline parallelism opérait *entre* couches.
-
-**Le 3D Parallelism : la synthèse des trois stratégies.**
-
-En pratique, les modèles d'envergure comme GPT-4 ou LLaMA 3 ne choisissent pas entre ces stratégies : ils les **combinent toutes trois simultanément**, dans une organisation appelée *3D Parallelism* (voir l'article <a href="../Introduction to PyTorch/Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM.pdf">Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM</a>).
-
-- Le **parallélisme de données** (DDP) opère entre groupes de GPUs : plusieurs répliques du même sous-modèle traitent des mini-batchs différents et synchronisent leurs gradients.
-- Le **parallélisme de pipeline** opère entre étages de couches : les différents blocs du modèle sont répartis sur des GPUs distincts mis en cascade.
-- Le **parallélisme de tenseurs** opère *au sein* de chaque couche : les matrices sont fragmentées entre GPUs d'un même étage.
-
-Chaque dimension de ce cube résout un problème différent : le tensor parallelism gère les couches trop larges, le pipeline parallelism gère les modèles trop profonds, et le data parallelism maximise le débit. Leur combinaison est ce qui rend techniquement possible l'entraînement de modèles comptant des centaines de milliards de paramètres sur des clusters de milliers de GPUs.
-
----
-
-*Autres ressources très intéressantes :*
-
-- <a href="https://lilianweng.github.io/posts/2021-09-25-train-large/#data-parallelism">How to Train Really Large Models on Many GPUs?</a>
-
-- <a href="https://huggingface.co/spaces/nanotron/ultrascale-playbook?section=high-level_overview">The Ultra-Scale Playbook: Training LLMs on GPU Clusters</a>
-
 ## Une boucle d'entraînement typique
 
 **Entraînons maintenant le réseau de neurones sur le dataset jouet**
@@ -1219,7 +1070,7 @@ Ensuite, l'appel à `loss.backward()` calculera les gradients dans le graphe de 
 Dans le cas de l'`optimizer SGD`, cela signifie multiplier les gradients par le learning rate et ajouter le gradient négatif mis à l'échelle aux paramètres.
 
 ---
-#### Pourquoi passer les Logits directement à la fonction Cross-Entropy ?
+### Pourquoi passer les logits directement à la cross-entropy ?
 
 En PyTorch, on passe généralement les **logits** (sorties brutes) directement à la fonction de perte `cross_entropy`, sans appliquer le `Softmax` nous-mêmes, pour des raisons de **stabilité numérique**.
 
@@ -1272,6 +1123,8 @@ $$P_{nouveau}(x_i) = \frac{e^{x_i}}{\sum e^{x}} = P(x_i)$$
 **Conclusion :** 
 Soustraire le maximum modifie les nombres intermédiaires pour éviter le crash mémoire, mais la division finale rétablit l'équilibre. En donnant directement les *logits* à la `cross_entropy`, PyTorch effectue cette optimisation complexe en un seul bloc ultra-rapide.
 
+
+### Faire des prédictions et mesurer la précision
 
 ```python
 # After we have trained the model, we can use it to make predictions
@@ -1490,7 +1343,7 @@ tensor([5., 7., 9.], device='cuda:0')
 
 ```
 
-### Entraînement sur un seul GPU (Single-GPU)
+### Entraînement sur un seul GPU
 
 Une boucle d'entraînement sur un GPU
 
@@ -1545,10 +1398,10 @@ Epoch: 003/003 | Batch 001/002 | Train/ Val Loss:  0.00
 À ce stade, le pipeline CPU est entièrement optimisé :
 
 * les workers ont construit le batch dans la **shared memory** ;
-* la Result Queue a transmis au processus principal une **référence** vers cette zone mémoire — et non une copie des données ;
+* la Result Queue a transmis au processus principal une **référence** vers cette zone mémoire, et non une copie des données ;
 * si `pin_memory=True`, ce batch est déjà verrouillé dans une zone de RAM stable, prête pour un transfert DMA.
 
-Pourtant, tout cela n'a encore rien envoyé sur le GPU. Le batch existe uniquement en RAM. Le GPU ne peut exécuter des calculs que sur des données résidant dans **sa propre mémoire** (VRAM) — il ne peut pas accéder directement à la RAM du CPU à chaque opération.
+Pourtant, tout cela n'a encore rien envoyé sur le GPU. Le batch existe uniquement en RAM. Le GPU ne peut exécuter des calculs que sur des données résidant dans **sa propre mémoire** (VRAM) : il ne peut pas accéder directement à la RAM du CPU à chaque opération.
 
 C'est précisément ce que déclenche explicitement la ligne :
 
@@ -1582,7 +1435,7 @@ Le pipeline complet est donc le suivant :
       └── forward / backward / mise à jour des poids
 ```
 
-Une contrainte supplémentaire rend ce transfert obligatoire : PyTorch exige que **toutes les opérations impliquent des tenseurs sur le même device**. Le modèle ayant été placé en VRAM via `model.to(device)`, toute donnée qui lui est passée doit impérativement s'y trouver également — sans quoi PyTorch lève une erreur d'exécution immédiate.
+Une contrainte supplémentaire rend ce transfert obligatoire : PyTorch exige que **toutes les opérations impliquent des tenseurs sur le même device**. Le modèle ayant été placé en VRAM via `model.to(device)`, toute donnée qui lui est passée doit impérativement s'y trouver également, sans quoi PyTorch lève une erreur d'exécution immédiate.
 
 Ainsi, `.to(device)` n'est pas un détail technique annexe. C'est le **dernier maillon** du pipeline de chargement, celui qui rend les données effectivement exploitables par le GPU pour le calcul.
 
@@ -1633,19 +1486,18 @@ Main process attend #0 :
 Main process attend #1 :
   → batch #1 arrive → transmis au GPU  ✅
 
-```
 Main process attend #2 :
   → batch #2 déjà en buffer → transmis au GPU  ✅
 ```
 
 **Le GPU traite les batchs séquentiellement.**
 
-Un GPU standard ne traite qu'un seul batch à la fois. Le parallélisme des workers ne vise donc pas à alimenter plusieurs calculs GPU simultanément — il vise uniquement à **éliminer les temps d'attente** du GPU entre deux batchs. Sans workers, le GPU resterait inactif pendant toute la durée de préparation du batch suivant. Avec plusieurs workers, ce batch est déjà prêt dans la Result Queue avant même que le GPU en ait besoin.
+Un GPU standard ne traite qu'un seul batch à la fois. Le parallélisme des workers ne vise donc pas à alimenter plusieurs calculs GPU simultanément : il vise uniquement à **éliminer les temps d'attente** du GPU entre deux batchs. Sans workers, le GPU resterait inactif pendant toute la durée de préparation du batch suivant. Avec plusieurs workers, ce batch est déjà prêt dans la Result Queue avant même que le GPU en ait besoin.
 
 Le pipeline complet peut donc se résumer ainsi :
 
 ```output
-[Workers — parallèle]
+[Workers en parallèle]
   W1 : batch #1 ──┐
   W2 : batch #0 ──┼──> Result Queue (ordre quelconque)
   W3 : batch #2 ──┘           │
@@ -1689,7 +1541,7 @@ Main process attend le numéro #0.
   buffer = {}  ← vidé
 ```
 
-Le buffer évite de rejeter ou d'ignorer un batch arrivé en avance — il le conserve simplement en RAM jusqu'au bon moment. C'est juste une structure d'attente, rien de plus.
+Le buffer évite de rejeter ou d'ignorer un batch arrivé en avance : il le conserve simplement en RAM jusqu'au bon moment. C'est juste une structure d'attente, rien de plus.
 
 Nous pouvons utiliser `.to("cuda")` au lieu de `device = torch.device("cuda")`.
 Transférer un tensor vers `cuda` au lieu de `torch.device("cuda")` fonctionne également et est plus court.
@@ -1698,19 +1550,19 @@ Transférer un tensor vers `cuda` au lieu de `torch.device("cuda")` fonctionne �
 
 Nous pouvons également modifier l'instruction, ce qui rendra le même code exécutable sur un CPU si un GPU n'est pas disponible. Ceci est considéré comme une bonne pratique lors du partage d'un code PyTorch :
 
-`device = torch.device("cuda" if torch.cuda_is_available() else "cpu")`
+`device = torch.device("cuda" if torch.cuda.is_available() else "cpu")`
 
 ---
 
 Sur un Mac Apple avec une puce Apple Silicon (comme les M1, M2, M3, ou modèles plus récents) au lieu d'un ordinateur avec un GPU Nvidia, vous pouvez changer 
 
-`device = torch.device("cuda" if torch.cuda_is_available() else "cpu")`
+`device = torch.device("cuda" if torch.cuda.is_available() else "cpu")`
 
 en 
 
 `device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")`
 
-### Exercice A.4
+### Exercice A.4 : le CPU ou le GPU, lequel est le plus rapide ?
 
 Comparez le temps d'exécution de la multiplication matricielle sur un CPU par rapport à un GPU. 
 
@@ -1916,7 +1768,152 @@ b_gpu = b_cpu.to("cuda")
 
 ```
 
-### Entraînement avec plusieurs GPU
+### Entraînement multi-GPU : stratégies et mécanismes
+
+---
+
+#### Pourquoi plusieurs GPUs ?
+
+
+Pour comprendre l'utilité de plusieurs GPUs, il faut d'abord saisir deux limites fondamentales et bien distinctes que l'on rencontre lors de l'entraînement de modèles modernes.
+
+La première limite est une limite **physique de stockage**. Chaque GPU dispose d'une mémoire vidéo (VRAM) dont la capacité est fixe et non extensible : typiquement entre 16 Go et 80 Go selon les modèles haut de gamme. Or, un grand modèle de langage comme GPT-3 pèse à lui seul 350 Go en précision float16. Il est donc tout simplement *impossible*, au sens physique du terme, de loger l'intégralité de ses paramètres dans un seul GPU. Peu importe la rapidité du matériel, le problème n'est pas de vitesse mais de capacité d'accueil : on ne peut pas faire tenir un meuble de cinq mètres dans une pièce de deux mètres. Il faut alors **distribuer le modèle** lui-même sur plusieurs GPUs, chacun n'en hébergeant qu'une fraction.
+
+La seconde limite est une limite **de temps**. Même lorsque le modèle tient confortablement dans un seul GPU, l'entraînement peut durer des semaines ou des mois. Ici, l'enjeu n'est plus la capacité mais la vitesse. Si l'on dispose de N GPUs capables de traiter des données en parallèle, on peut théoriquement diviser le temps d'entraînement par N en traitant N fois plus d'exemples à chaque instant.
+
+Ces deux motivations, l'une contraignante, l'autre optimisante, donnent naissance à deux grandes familles de stratégies que nous allons explorer : le **parallélisme de données** (Data Parallelism), où le modèle est dupliqué et les données sont réparties ; et le **parallélisme de modèle** (Model Parallelism), où c'est le modèle lui-même qui est fractionné entre les GPUs.
+
+---
+
+#### DataParallel (DP) : la première approche, naïve
+
+
+`torch.nn.DataParallel` est l'API historique de PyTorch pour l'entraînement multi-GPU. Pour bien comprendre ses limites, il faut d'abord comprendre comment elle fonctionne de l'intérieur, ce qui commence par deux notions fondamentales : ce qu'est un **processus** et ce qu'est un **thread**.
+
+---
+
+**Processus et threads : poser les bases.**
+
+Lorsque vous lancez un programme Python, le système d'exploitation crée un **processus**. Ce processus est une unité d'exécution totalement autonome et isolée : il possède son propre espace mémoire, ses propres ressources, sa propre identité. Deux processus ne partagent rien par défaut. Si l'un plante, l'autre continue de tourner sans en être affecté.
+
+Un **thread** est quelque chose de plus fin. C'est un fil d'exécution secondaire qui vit *à l'intérieur* d'un même processus. Plusieurs threads coexistent dans le même processus, partagent le même espace mémoire et les mêmes ressources, mais avancent chacun dans le code à leur propre rythme.
+
+L'analogie la plus parlante est celle d'un **bureau et de ses employés**. Le processus est le bureau : il a ses propres murs, ses propres dossiers, son propre matériel. Les threads sont les employés qui travaillent dans ce bureau. Ils ont tous accès aux mêmes armoires, aux mêmes fichiers, aux mêmes outils. C'est précisément ce partage qui leur permet de collaborer rapidement, sans avoir à s'échanger des copies de documents. Mais ce même partage crée un risque : si deux employés modifient le même fichier en même temps, le résultat sera corrompu.
+
+C'est exactement pour éviter cette corruption que Python a introduit le **GIL** (*Global Interpreter Lock*). Imaginez qu'il n'existe qu'**un seul stylo** dans le bureau, et qu'un employé doit l'avoir en main pour avoir le droit d'agir. Les autres peuvent attendre, observer, se préparer, mais ils ne peuvent rien *exécuter* tant que le stylo n'est pas libre.
+Conséquence directe et non intuitive : même si votre machine possède 8 cœurs physiques capables d'exécuter 8 fils d'exécution simultanément, Python ne laissera jamais deux threads s'exécuter *vraiment* en même temps. L'un tient le stylo, les autres attendent leur tour. Le parallélisme apparent est donc une **illusion** : on a l'impression d'une exécution simultanée, mais les threads se relaient en réalité en alternance très rapide.
+
+---
+
+**Le fonctionnement de DataParallel.**
+
+`DataParallel` s'appuie précisément sur ce modèle de threads. Pour comprendre pourquoi c'est problématique, suivons le déroulement d'une itération d'entraînement.
+
+Le **processus principal** (un bureau unique avec un seul chef) prend en charge l'ensemble du batch depuis le DataLoader. Il le découpe en portions égales et en confie une à chacun des GPUs disponibles. Chaque GPU effectue alors, en parallèle, un *forward pass* indépendant sur sa portion. Jusqu'ici, l'organisation semble efficace.
+
+Mais voici où le premier problème se révèle : une fois les calculs terminés sur chaque GPU, **toutes les sorties sont renvoyées au GPU 0** pour qu'il les rassemble, calcule la loss globale, effectue le *backward pass*, puis redistribue les gradients et resynchronise les poids de tous les GPUs. Autrement dit, la phase de travail parallèle est éphémère : le reste de l'itération est entièrement séquentiel et concentré sur une seule machine.
+
+Ce modèle crée un **goulot d'étranglement structurel** sur le GPU 0. Il est le seul à recevoir le batch complet, à assembler les résultats, à calculer les gradients globaux, et à redistribuer les poids. Il est donc, en permanence, bien plus sollicité que ses homologues. En pratique, au-delà de 2 à 4 GPUs, les GPUs supplémentaires n'apportent presque aucun gain réel : ils passent la majorité de leur temps à attendre que le GPU 0 ait terminé.
+
+---
+
+**Le second défaut : le GIL paralyse la coordination.**
+
+Un second problème, moins visible mais tout aussi pénalisant, découle directement de l'architecture à threads décrite plus haut. Dans `DataParallel`, les différents GPUs sont pilotés par des threads Python distincts, tous logés dans le **même processus**. L'intention est louable : faire avancer plusieurs GPUs en parallèle. Mais dès que ces threads ont besoin d'exécuter du code Python pur (interpréter une boucle, évaluer une condition, appeler une fonction personnalisée dans le *forward pass*), ils se retrouvent à faire la queue devant le GIL.
+
+Pendant que le thread du GPU 0 tient le stylo, le thread du GPU 1 est suspendu, quand bien même son GPU est matériellement disponible et impatient de travailler. Plus le *forward pass* du modèle contient de logique Python complexe, plus cette file d'attente s'allonge, et plus le bénéfice du multi-GPU s'évapore. La coordination entre threads, au lieu d'accélérer les choses, finit par les freiner.
+
+Ces deux défauts, la centralisation sur le GPU 0 et le GIL, ne sont pas des bugs corrigeables par un patch : ils sont la conséquence directe du choix architectural fondateur de `DataParallel`, celui d'un processus unique pilotant tout. C'est ce choix qu'il fallait remettre en cause, et c'est exactement ce que fait DDP.
+
+---
+
+#### DistributedDataParallel (DDP) : le standard actuel
+
+Pour comprendre pourquoi `DistributedDataParallel` (DDP) représente une rupture architecturale et non une simple amélioration, il faut revenir sur la source du problème précédent : la centralisation. `DataParallel` avait un chef unique. DDP supprime entièrement cette hiérarchie.
+
+**De la cuisine centralisée à la brigade décentralisée.**
+
+Avec DDP, chaque GPU est géré par son **propre processus Python indépendant**, lancé via `torchrun`. Il n'existe plus de processus maître vers lequel tout converge. Chaque processus charge ses propres données, calcule ses propres gradients, et prend ses propres décisions, tout en restant parfaitement synchronisé avec ses pairs.
+Cette indépendance des processus résout immédiatement le problème du GIL : puisqu'il s'agit désormais de processus distincts.
+
+**Chaque processus charge ses propres données.**
+
+Pour éviter que tous les GPUs ne traitent les mêmes exemples (ce qui serait un gaspillage total), PyTorch fournit un `DistributedSampler`. Son rôle est de partitionner le dataset en sous-ensembles disjoints, un par processus. Si l'on dispose de N processus et M exemples au total, le processus numéro k se voit attribuer les exemples d'indices k, k+N, k+2N, etc. L'ensemble des processus couvre ainsi exactement l'intégralité du dataset, sans redondance ni omission.
+
+**La synchronisation des gradients par AllReduce.**
+
+À l'issue du *backward pass*, chaque processus a calculé ses propres gradients, exacts pour son mini-batch, mais partiels au regard de l'ensemble des données. Pour que tous les modèles évoluent de façon identique et convergent vers la même solution, il est impératif que chaque GPU applique **la même mise à jour**, c'est-à-dire la moyenne des gradients calculés sur l'ensemble des processus.
+
+C'est précisément la fonction de l'opération **AllReduce**. Elle garantit que, quel que soit le GPU interrogé, chacun reçoit la somme (ou la moyenne) complète de tous les gradients calculés par ses pairs. Cette opération est implémentée par **NCCL** (*NVIDIA Collective Communications Library*), qui exploite les connexions physiques directes entre GPUs : NVLink pour les GPUs sur la même machine, InfiniBand ou Ethernet pour les GPUs répartis sur des serveurs distants.
+
+**L'algorithme Ring-AllReduce : pourquoi un anneau ?**
+
+L'implémentation naïve d'un AllReduce consisterait à envoyer tous les gradients vers un nœud central qui les somme puis les redistribue. On retomberait alors dans le goulot d'étranglement de DataParallel. NCCL évite ce piège grâce au **Ring-AllReduce**, dont l'élégance mérite une explication.
+
+---
+
+**Le Ring-AllReduce : comment N GPUs s'échangent leurs gradients sans goulot d'étranglement**
+
+Dans l'entraînement distribué en données parallèles, chaque GPU calcule ses propres gradients sur son sous-ensemble du batch. Il faut ensuite les moyenner entre tous les GPUs avant de mettre à jour les poids. Mais le défaut est immédiat : le GPU central doit recevoir les gradients de tous les autres, puis les renvoyer à tous. Sa charge de communication croît linéairement avec le nombre de GPUs. Avec un modèle de 300 millions de paramètres (soit 1,2 Go de gradients) et 10 GPUs, chaque itération se ralentit de plus de 10 secondes. La solution ne passe pas à l'échelle.
+
+Le **Ring-AllReduce** élimine ce goulot en supprimant le réducteur central. Voici comment il fonctionne.
+
+**La topologie.** On dispose les N GPUs en anneau logique. Chaque GPU a exactement un voisin à sa gauche et un à sa droite. Il n'envoie des données qu'à droite, il n'en reçoit que depuis la gauche.
+
+**La première phase : le Scatter-Reduce.** Chaque GPU découpe son tableau de gradients en N fragments de taille égale. Puis on fait N-1 tours dans l'anneau. À chaque tour, chaque GPU envoie un fragment à son voisin de droite et reçoit un fragment de son voisin de gauche, qu'il **additionne** à son propre fragment correspondant. Le fragment envoyé à chaque tour est toujours celui reçu au tour précédent. Au bout de N-1 tours, chaque GPU détient un fragment qui contient la **somme complète** de ce fragment, agrégée sur l'ensemble des GPUs. Pas l'intégralité des gradients : juste sa portion à lui, mais parfaitement réduite.
+
+**La deuxième phase : l'Allgather.** On refait N-1 tours dans l'anneau, mais cette fois chaque GPU, au lieu d'additionner ce qu'il reçoit, **écrase** simplement le fragment correspondant avec la valeur reçue. Au bout de N-1 tours, chaque GPU a reçu successivement tous les fragments réduits et possède donc l'intégralité des gradients agrégés.
+
+**Pourquoi la bande passante est indépendante de N.** À chaque tour, chaque GPU envoie et reçoit un fragment de taille K/N (où K est la taille totale du tableau). Sur les 2(N-1) tours au total (N-1 par phase), la quantité totale de données transférée par chaque GPU est donc 2(N-1) × K/N, ce qui tend vers 2K quand N est grand et, surtout, **ne dépend pas de N**. Peu importe qu'on ait 4 ou 400 GPUs dans l'anneau, chaque lien transporte la même quantité de données. C'est la propriété fondamentale qui rend l'algorithme scalable : ajouter des GPUs n'aggrave pas la communication.
+
+**L'optimisation supplémentaire.** Puisque la backpropagation calcule les gradients depuis la dernière couche vers la première, les gradients des couches de sortie sont disponibles bien avant ceux des couches d'entrée. On peut donc démarrer le Ring-AllReduce sur les premiers gradients disponibles pendant que les autres sont encore en cours de calcul, chevauchant communication et calcul. Dans les expériences du papier sur un modèle de 300 millions de paramètres, cela permettait d'économiser 70 à 120 ms par itération.
+
+Pour plus de détails, vous pouvez consulter [Bringing HPC Techniques to Deep Learning](../Introduction to PyTorch/baidu_allreduce_oct6.pdf).
+
+---
+
+#### Parallélisme de modèle (*Model Parallelism*)
+
+
+Aussi efficace que soit DDP, il suppose implicitement une chose : que le modèle tient dans la VRAM d'un seul GPU. Lorsque ce n'est plus le cas (ce qui est la norme pour les très grands modèles), une toute autre famille de stratégies s'impose, dans laquelle ce n'est plus le dataset qui est distribué, mais **le modèle lui-même**.
+
+**Le pipeline parallelism : la chaîne de montage.**
+
+La forme la plus intuitive de parallélisme de modèle consiste à assigner des groupes de couches à des GPUs différents. Le GPU 0 héberge les premières couches, le GPU 1 les suivantes, et ainsi de suite. Lors d'un *forward pass*, les activations sont calculées sur le GPU 0, transmises au GPU 1 pour la suite du calcul, puis au GPU 2, etc. L'analogie avec une chaîne de montage industrielle est directe : chaque station effectue une opération précise et passe le résultat à la suivante.
+
+Mais cette analogie révèle aussi immédiatement le défaut majeur de l'approche naïve. Sur une vraie chaîne de montage où une seule pièce circule à la fois, toutes les stations sont inactives sauf une. C'est exactement ce qui se passe ici : à chaque instant, un seul GPU travaille pendant que tous les autres attendent. L'utilisation effective est de 1/N, ce qui est catastrophique.
+
+La solution consiste à ne plus faire circuler un seul batch, mais à le découper en **micro-batchs** injectés en rafale dans le pipeline. Dès que le GPU 0 a traité le micro-batch 1 et l'a transmis au GPU 1, il n'attend pas le résultat final : il attaque immédiatement le micro-batch 2. Pendant ce temps, le GPU 1 reçoit le micro-batch 1 et commence à le traiter. Le GPU 2 fait de même un cycle plus tard. Les premiers cycles servent à remplir le pipeline. C'est inévitable, comme le début de toute chaîne de montage. Mais une fois ce remplissage terminé, tous les GPUs travaillent en permanence, chacun sur un micro-batch différent au même instant. Cette technique, introduite par GPipe et PipeDream, a rendu l'entraînement des très grands modèles économiquement viable.
+<div align="center">
+  <img src="/images/dossiers/build-llm-from-scratch/chapitre-0/Pipeline parallelism diagram.png" width="1000" />
+</div>
+
+
+**Le tensor parallelism : découper les matrices elles-mêmes.**
+
+Le pipeline parallelism distribue les couches *entre* les GPUs, mais que faire lorsqu'une seule couche (une matrice de projection dans un mécanisme d'attention, par exemple) est à elle seule trop volumineuse pour un GPU ?
+
+Le **tensor parallelism** répond à cette question en distribuant les **matrices de poids elles-mêmes** entre GPUs. Concrètement, une grande matrice peut être découpée soit par colonnes, soit par lignes. Chaque GPU ne stocke et ne calcule qu'un fragment de cette matrice, produisant un résultat partiel. Ces résultats partiels sont ensuite agrégés via AllReduce pour reconstituer la sortie complète. Cette approche, popularisée par **Megatron-LM** (voir l'article <a href="../Introduction to PyTorch/Megatron-LM-Training Multi-Billion Parameter Language Models Using.pdf">Megatron-LM-Training Multi-Billion Parameter Language Models Using</a>) de NVIDIA, opère donc *au sein* d'une même couche, là où le pipeline parallelism opérait *entre* couches.
+
+**Le 3D Parallelism : la synthèse des trois stratégies.**
+
+En pratique, les modèles d'envergure comme GPT-4 ou LLaMA 3 ne choisissent pas entre ces stratégies : ils les **combinent toutes trois simultanément**, dans une organisation appelée *3D Parallelism* (voir l'article <a href="../Introduction to PyTorch/Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM.pdf">Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM</a>).
+
+- Le **parallélisme de données** (DDP) opère entre groupes de GPUs : plusieurs répliques du même sous-modèle traitent des mini-batchs différents et synchronisent leurs gradients.
+- Le **parallélisme de pipeline** opère entre étages de couches : les différents blocs du modèle sont répartis sur des GPUs distincts mis en cascade.
+- Le **parallélisme de tenseurs** opère *au sein* de chaque couche : les matrices sont fragmentées entre GPUs d'un même étage.
+
+Chaque dimension de ce cube résout un problème différent : le tensor parallelism gère les couches trop larges, le pipeline parallelism gère les modèles trop profonds, et le data parallelism maximise le débit. Leur combinaison est ce qui rend techniquement possible l'entraînement de modèles comptant des centaines de milliards de paramètres sur des clusters de milliers de GPUs.
+
+---
+
+*Autres ressources très intéressantes :*
+
+- <a href="https://lilianweng.github.io/posts/2021-09-25-train-large/#data-parallelism">How to Train Really Large Models on Many GPUs?</a>
+
+- <a href="https://huggingface.co/spaces/nanotron/ultrascale-playbook?section=high-level_overview">The Ultra-Scale Playbook: Training LLMs on GPU Clusters</a>
+
+### DDP en pratique
 
 `DDP` **(Distributed DataParallel)** permet le parallélisme en répartissant les données d'entrée sur les appareils disponibles et en traitant ces sous-ensembles de données simultanément.
 
@@ -1950,7 +1947,7 @@ L'avantage d'utiliser `DDP` réside dans l'accélération qu'il offre pour le tr
 
 **SÉLECTIONNER LES GPU DISPONIBLES SUR UNE MACHINE MULTI-GPU**
 
-Si vous souhaitez restreindre le nombre de GPU utilisés pour l'entraînement sur une machine multi-GPU, le moyen le plus simple est d'utiliser la variable d'environnement `CUDA_VISIBLE_DEVICES`. Pour illustrer cela, supposons que votre machine possède plusieurs GPU et que vous ne souhaitiez en utiliser qu'un seul — par exemple, le GPU portant l'indice 0. Au lieu de `python some_script.py`, vous pouvez exécuter la commande suivante depuis le terminal :
+Si vous souhaitez restreindre le nombre de GPU utilisés pour l'entraînement sur une machine multi-GPU, le moyen le plus simple est d'utiliser la variable d'environnement `CUDA_VISIBLE_DEVICES`. Pour illustrer cela, supposons que votre machine possède plusieurs GPU et que vous ne souhaitiez en utiliser qu'un seul, par exemple le GPU portant l'indice 0. Au lieu de `python some_script.py`, vous pouvez exécuter la commande suivante depuis le terminal :
 
 `CUDA_VISIBLE_DEVICES=0 python some_script.py`
 
@@ -1981,7 +1978,7 @@ Number of GPUs available: 2
 [GPU0] Test accuracy 1.0       ← même valeur, affichée deux fois
 ```
 
-Ce comportement n'est pas un bug — c'est une conséquence directe du fonctionnement de DDP.
+Ce comportement n'est pas un bug : c'est une conséquence directe du fonctionnement de DDP.
 
 Lorsque DDP est utilisé, **le script Python est exécuté en intégralité par chaque processus**. Avec deux GPUs, deux processus indépendants tournent simultanément sur la machine :
 
@@ -1996,7 +1993,7 @@ print(f"Training accuracy {accuracy}")
 
 et l'exécute indépendamment. Le terminal affiche la sortie combinée des deux processus, ce qui produit les lignes dupliquées observées.
 
-On remarque également que les deux processus affichent la **même précision**. Ce n'est pas une coïncidence — c'est la conséquence directe de la synchronisation des gradients opérée par DDP à chaque batch :
+On remarque également que les deux processus affichent la **même précision**. Ce n'est pas une coïncidence : c'est la conséquence directe de la synchronisation des gradients opérée par DDP à chaque batch :
 
 1. chaque GPU calcule les gradients sur sa portion de données ;
 2. DDP **fait la moyenne de ces gradients** entre tous les processus (*AllReduce*) ;
@@ -2011,9 +2008,9 @@ if rank == 0:
     print(f"Test accuracy: {accuracy}")
 ```
 
-Le processus 1 lit cette condition, constate qu'il n'est pas le rang 0, et ne produit aucune sortie. Seul le processus 0 s'exprime — les duplications disparaissent.
+Le processus 1 lit cette condition, constate qu'il n'est pas le rang 0, et ne produit aucune sortie. Seul le processus 0 s'exprime, et les duplications disparaissent.
 
-C'est une règle générale sous DDP : **toute opération qui ne doit être effectuée qu'une seule fois** — sauvegarder un checkpoint, loguer des métriques, afficher des résultats — doit être protégée par un `if rank == 0`.
+C'est une règle générale sous DDP : **toute opération qui ne doit être effectuée qu'une seule fois** (sauvegarder un checkpoint, loguer des métriques, afficher des résultats) doit être protégée par un `if rank == 0`.
 
 ---
 
@@ -2024,8 +2021,20 @@ DDP n'est pas la seule façon d'entraîner un modèle sur plusieurs GPUs avec Py
 
 L'auteur mentionne également deux techniques avancées abordées dans l'article *"Accelerating PyTorch Model Training: Using Mixed-Precision and Fully Sharded Data Parallelism"* (disponible à l'adresse [https://mng.bz/jXle](https://mng.bz/jXle)) :
 
-* la **mixed-precision** (précision mixte) : au lieu d'effectuer tous les calculs en `float32` (32 bits), certaines opérations sont réalisées en `float16` (16 bits). Les calculs sont plus rapides, la mémoire GPU consommée est réduite de moitié sur ces opérations — avec une perte de précision négligeable en pratique pour l'entraînement.
+* la **mixed-precision** (précision mixte) : au lieu d'effectuer tous les calculs en `float32` (32 bits), certaines opérations sont réalisées en `float16` (16 bits). Les calculs sont plus rapides, la mémoire GPU consommée est réduite de moitié sur ces opérations, avec une perte de précision négligeable en pratique pour l'entraînement.
 
-* le **Fully Sharded Data Parallelism (FSDP)** : une extension de DDP où non seulement les données sont distribuées entre les GPUs, mais aussi les **poids du modèle lui-même**. Chaque GPU ne stocke qu'une fraction des paramètres. Cela permet d'entraîner des modèles bien trop volumineux pour tenir entièrement dans la VRAM d'un seul GPU — ce qui est précisément le cas des très grands modèles de langage.
+* le **Fully Sharded Data Parallelism (FSDP)** : une extension de DDP où non seulement les données sont distribuées entre les GPUs, mais aussi les **poids du modèle lui-même**. Chaque GPU ne stocke qu'une fraction des paramètres. Cela permet d'entraîner des modèles bien trop volumineux pour tenir entièrement dans la VRAM d'un seul GPU, ce qui est précisément le cas des très grands modèles de langage.
 
 Ces deux techniques répondent donc à des problèmes distincts : la mixed-precision accélère et allège l'entraînement, tandis que FSDP repousse les limites de taille des modèles entraînables.
+
+---
+
+## Résumé
+
+* **Les tenseurs** sont la structure de données centrale de PyTorch. `.reshape()` fonctionne dans tous les cas, alors que `.view()` exige un tenseur contigu en mémoire, ce qui n'est plus le cas après une transposition.
+* **Autograd** construit un graphe de calcul pendant la passe forward et applique la règle de dérivation en chaîne pour obtenir les gradients, soit à la demande avec `grad`, soit pour tous les paramètres avec `.backward()`.
+* **Un réseau de neurones** se définit en héritant de `torch.nn.Module` : les couches dans `__init__`, le flux des données dans `forward`. Les modèles renvoient des logits, et la softmax est appliquée par la fonction de perte.
+* **`Dataset` et `DataLoader`** séparent la lecture des exemples de leur assemblage en batchs. Les workers, la *shared memory* et `pin_memory` préparent les batchs suivants pendant que le GPU calcule.
+* **La boucle d'entraînement** enchaîne passe forward, calcul de la loss, `zero_grad()`, `backward()` et `step()`. `model.train()` et `model.eval()` basculent le comportement des couches comme le dropout.
+* **Sauvegarder un modèle** revient à enregistrer son `state_dict`, puis à le recharger dans une instance de la même architecture.
+* **Sur GPU**, le modèle et les données doivent être sur le même device. Au-delà d'un GPU, DDP réplique le modèle et synchronise les gradients avec AllReduce, tandis que le parallélisme de modèle répartit le modèle lui-même quand il ne tient plus dans un seul GPU.

@@ -25,7 +25,7 @@ export const ui = {
 
         "hero.kicker": "Mathematical Engineer · Data Scientist",
         "hero.tagline":
-            "Statistics, stochastic modeling and machine learning — from the math on paper to models that run. Currently rebuilding an LLM from scratch and writing about it.",
+            "Statistics, stochastic modeling and machine learning, from the math on paper to models that run. Currently rebuilding an LLM from scratch and writing about it.",
         "hero.cv": "Download CV",
         "hero.notes": "Read my notes",
 
@@ -45,7 +45,6 @@ export const ui = {
         "home.education": "Education",
         "home.publications": "Publications",
         "home.experience": "Experience",
-        "home.fullExperience": "View full experience →",
         "home.projects": "Recent Projects",
         "home.academic": "Academic",
         "home.personal": "Personal",
@@ -57,12 +56,6 @@ export const ui = {
         "home.certifications": "Certifications",
         "home.volunteering": "Volunteering / Teaching",
 
-        "experience.title": "Experience - Léonel VODOUNOU",
-        "experience.description":
-            "Professional experience of Léonel VODOUNOU in data science, machine learning and applied mathematics.",
-        "experience.heading": "Professional Experience",
-        "experience.subtitle":
-            "My professional path at the crossroads of mathematics, data and AI.",
 
         "projects.title": "Projects - Léonel VODOUNOU",
         "projects.description":
@@ -73,7 +66,7 @@ export const ui = {
 
         "blog.title": "Blog - Léonel VODOUNOU",
         "blog.description":
-            "Articles on mathematical engineering, AI and deep learning.",
+            "Notes on machine learning, LLMs and the math behind them.",
         "blog.heading": "Blog",
         "blog.readingNotes": "Reading notes",
         "blog.seriesOf": "{n}-chapter series",
@@ -83,8 +76,6 @@ export const ui = {
         "blog.articles": "Articles",
         "blog.readMore": "Read more",
         "blog.minRead": "min read",
-        "blog.langNote":
-            "Articles are published in the language they were written in.",
 
         "lang.en": "EN",
         "lang.fr": "FR",
@@ -104,13 +95,16 @@ export const ui = {
         "post.readingSeries": "Reading series",
         "post.chapters": "Chapters",
         "post.comingSoon": "Coming soon",
+        "post.discuss": "Discussion",
+        "post.share": "Share",
+        "post.linkCopied": "Link copied",
 
         "toc.title": "Contents",
         "toc.close": "Close",
 
         "newsletter.title": "Weekly Notes",
         "newsletter.text":
-            "Every Sunday, I share what I've been learning — papers, ideas, experiments, and questions that stayed with me.",
+            "Every Sunday, I share what I've been learning: papers, ideas, experiments, and questions that stayed with me.",
         "newsletter.placeholder": "your@email.com",
         "newsletter.subscribe": "Subscribe",
         "newsletter.unsubscribe":
@@ -136,7 +130,7 @@ export const ui = {
 
         "hero.kicker": "Ingénieur mathématicien · Data Scientist",
         "hero.tagline":
-            "Statistiques, modélisation stochastique et machine learning — des mathématiques sur le papier aux modèles qui tournent. En ce moment, je reconstruis un LLM de zéro et je documente chaque étape.",
+            "Statistiques, modélisation stochastique et machine learning : des mathématiques sur le papier aux modèles qui tournent. En ce moment, je reconstruis un LLM de zéro et je documente chaque étape.",
         "hero.cv": "Télécharger mon CV",
         "hero.notes": "Lire mes notes",
 
@@ -156,7 +150,6 @@ export const ui = {
         "home.education": "Formation",
         "home.publications": "Publications",
         "home.experience": "Expérience",
-        "home.fullExperience": "Voir tout mon parcours →",
         "home.projects": "Projets récents",
         "home.academic": "Académiques",
         "home.personal": "Personnels",
@@ -168,12 +161,6 @@ export const ui = {
         "home.certifications": "Certifications",
         "home.volunteering": "Bénévolat / Enseignement",
 
-        "experience.title": "Expérience - Léonel VODOUNOU",
-        "experience.description":
-            "Parcours professionnel de Léonel VODOUNOU en data science, machine learning et mathématiques appliquées.",
-        "experience.heading": "Expérience professionnelle",
-        "experience.subtitle":
-            "Mon parcours professionnel, au croisement des mathématiques, de la donnée et de l'IA.",
 
         "projects.title": "Projets - Léonel VODOUNOU",
         "projects.description":
@@ -184,7 +171,7 @@ export const ui = {
 
         "blog.title": "Blog - Léonel VODOUNOU",
         "blog.description":
-            "Articles sur le génie mathématique, l'IA et le deep learning.",
+            "Des notes sur le machine learning, les LLM et les mathématiques qui se cachent derrière.",
         "blog.heading": "Blog",
         "blog.readingNotes": "Notes de lecture",
         "blog.seriesOf": "Série de {n} chapitres",
@@ -194,8 +181,6 @@ export const ui = {
         "blog.articles": "Articles",
         "blog.readMore": "Lire la suite",
         "blog.minRead": "min de lecture",
-        "blog.langNote":
-            "Les articles sont publiés dans la langue dans laquelle ils ont été écrits.",
 
         "lang.en": "EN",
         "lang.fr": "FR",
@@ -215,13 +200,16 @@ export const ui = {
         "post.readingSeries": "Série de lecture",
         "post.chapters": "Chapitres",
         "post.comingSoon": "À venir",
+        "post.discuss": "Discussion",
+        "post.share": "Partager",
+        "post.linkCopied": "Lien copié",
 
         "toc.title": "Sommaire",
         "toc.close": "Fermer",
 
         "newsletter.title": "Notes de la semaine",
         "newsletter.text":
-            "Chaque dimanche, je partage ce que j'ai appris — articles de recherche, idées, expériences et questions qui me sont restées en tête.",
+            "Chaque dimanche, je partage ce que j'ai appris : articles de recherche, idées, expériences et questions qui me sont restées en tête.",
         "newsletter.placeholder": "vous@email.com",
         "newsletter.subscribe": "S'abonner",
         "newsletter.unsubscribe":

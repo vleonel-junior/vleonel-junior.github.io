@@ -1,6 +1,6 @@
 ---
-import DossierPage from "../../../views/DossierPage.astro";
-import { dossiers } from "../../../data/dossiers";
+import DossierPage from "../../../../views/DossierPage.astro";
+import { dossiers } from "../../../../data/dossiers";
 
 export function getStaticPaths() {
 	return dossiers.map((dossier) => ({
@@ -12,4 +12,4 @@ export function getStaticPaths() {
 const { dossier } = Astro.props;
 ---
 
-<DossierPage dossier={dossier} lang="en" />
+<DossierPage dossier={dossier} lang="fr" />

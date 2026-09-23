@@ -1,0 +1,16 @@
+---
+import ChapterPage from "../../../../views/ChapterPage.astro";
+import { chapterPaths } from "../../../../i18n/content";
+
+export async function getStaticPaths() {
+	return chapterPaths("en");
+}
+
+type Props = Awaited<ReturnType<typeof chapterPaths>>[number]["props"];
+const { entry, redirectTo, langPaths, translated } = Astro.props;
+
+// Not written in this language yet: send readers to the existing version
+if (!entry) return Astro.redirect(redirectTo!);
+---
+
+<ChapterPage chapter={entry} langPaths={langPaths} translated={translated} />

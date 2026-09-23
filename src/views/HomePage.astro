@@ -1,6 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import SectionTitle from "../components/SectionTitle.astro";
 import {
+	formatDate,
 	localizePath,
 	period,
 	tag,
@@ -9,14 +11,9 @@ import {
 	withBase,
 	type Lang,
 } from "../i18n/utils";
-import SectionTitle from "../components/SectionTitle.astro";
-import { getCollection } from "astro:content";
+import { chaptersFor, postsFor, postUrl } from "../i18n/content";
 import { experienceData } from "../data/experience";
-import {
-	projectsData,
-	academicProjects,
-	personalProjects,
-} from "../data/projects";
+import { academicProjects, personalProjects } from "../data/projects";
 import { certificationsData } from "../data/certifications";
 import { educationData } from "../data/education";
 import { publicationsData } from "../data/publications";
@@ -30,562 +27,326 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 
-// Get latest blog posts
-const allPosts = await getCollection("blog");
-const latestPosts = allPosts
-	.filter((post) => !post.data.draft)
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-	.slice(0, 3);
+// Latest articles, in this language when translated
+const latestPosts = (await postsFor(lang)).slice(0, 3);
 
 // Published chapters per reading-notes series
-const publishedChapters = (await getCollection("dossiers")).filter(
-	(c) => !c.data.draft,
+const featuredDossiers = await Promise.all(
+	dossiers.map(async (d) => ({
+		...d,
+		published: (await chaptersFor(d.slug, lang)).length,
+	})),
 );
-const featuredDossiers = dossiers.map((d) => ({
-	...d,
-	published: publishedChapters.filter((c) => c.data.dossier === d.slug)
-		.length,
-}));
 
+const projects = [...academicProjects, ...personalProjects].sort(
+	(a, b) => Number(b.year ?? 0) - Number(a.year ?? 0),
+);
 const base = import.meta.env.BASE_URL;
-
 ---
 
 <Layout title={t("site.title")} description={t("site.description")} lang={lang}>
-	<main class="container-custom py-12 md:py-20">
-		<!-- 0. Hero -->
-		<section class="mb-16 md:mb-24">
-			<p
-				class="text-sm font-mono uppercase tracking-wider text-quartz/50 dark:text-quartz-light/50 mb-3"
-			>
-				{t("hero.kicker")}
-			</p>
-			<h1
-				class="text-4xl md:text-6xl font-serif font-bold text-quartz dark:text-quartz-light leading-tight mb-5"
-			>
-				Léonel VODOUNOU
+	<div class="mx-auto w-full max-w-3xl px-4 sm:px-6">
+		<!-- Hero -->
+		<section id="about" class="scroll-mt-20 pb-16 pt-16 sm:pt-24">
+			<img
+				src={`${base}images/me_cropped.png`}
+				alt="Léonel Vodounou"
+				width="72"
+				height="72"
+				class="mb-6 h-18 w-18 rounded-full border border-border object-cover object-[center_35%]"
+			/>
+			<h1 class="text-3xl font-semibold tracking-tight text-fg sm:text-4xl">
+				Léonel Vodounou
 			</h1>
-			<p
-				class="text-lg md:text-xl text-quartz/70 dark:text-quartz-light/70 max-w-2xl leading-relaxed mb-8"
-			>
+			<p class="mt-2 text-base text-fg-muted">
+				{t("hero.kicker")} · {t("home.location")}
+			</p>
+			<p class="mt-6 max-w-2xl text-lg leading-relaxed text-fg-muted">
 				{t("hero.tagline")}
 			</p>
-			<div class="flex flex-wrap gap-3">
-				<a
-					href={`${base}cv_leonel_vodounou.pdf`}
-					target="_blank"
-					class="inline-flex items-center gap-2 font-bold text-bg-primary bg-text-primary px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
-				>
+
+			<div class="mt-8 flex flex-wrap gap-3">
+				<a href={`${base}cv_leonel_vodounou.pdf`} target="_blank" class="btn-primary">
 					{t("hero.cv")}
 				</a>
-				<a
-					href="#writing"
-					class="inline-flex items-center gap-2 font-medium px-5 py-2.5 rounded-lg border border-quartz/20 dark:border-quartz-light/20 text-quartz dark:text-quartz-light hover:bg-quartz/5 dark:hover:bg-white/5 transition-colors"
-				>
-					{t("hero.notes")}
-				</a>
-				<a
-					href="https://github.com/vleonel-junior"
-					target="_blank"
-					class="inline-flex items-center gap-2 font-medium px-5 py-2.5 rounded-lg border border-quartz/20 dark:border-quartz-light/20 text-quartz dark:text-quartz-light hover:bg-quartz/5 dark:hover:bg-white/5 transition-colors"
-				>
+				<a href="#writing" class="btn-secondary">{t("hero.notes")}</a>
+				<a href="https://github.com/vleonel-junior" target="_blank" rel="noopener" class="btn-secondary">
 					GitHub
 				</a>
 			</div>
-		</section>
 
-		<!-- 1. About Me (Bio) -->
-		<section id="about" class="mb-20 md:mb-28">
-			<SectionTitle title={t("home.about")} />
-			<div
-				class="flex flex-col md:flex-row gap-8 md:gap-12 items-center md:items-start text-center md:text-left"
-			>
-				<div
-					class="flex flex-col items-center flex-shrink-0 w-full md:w-auto"
-				>
-					<!-- Photo -->
-					<div
-						class="w-40 h-40 md:w-56 md:h-56 relative group mx-auto md:mx-0"
-					>
-						<div
-							class="absolute inset-0 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"
-						>
-						</div>
-						<img
-							src={`${import.meta.env.BASE_URL}images/me_cropped.png`}
-							alt="Léonel VODOUNOU"
-							class="w-full h-full object-cover object-[center_35%] rounded-full border-2 border-white dark:border-gray-800 shadow-lg relative z-10"
-						/>
-					</div>
-
-					<!-- Profile Info List -->
-					<div
-						class="mt-6 flex flex-col items-center text-center gap-2"
-					>
-						<div
-							class="flex items-center gap-2 text-sm text-quartz/60 dark:text-quartz-light/60"
-						>
-							<span>📍</span> {t("home.location")} 🇧🇯
-						</div>
-						<div
-							class="flex items-center gap-2 text-sm font-medium text-quartz/80 dark:text-quartz-light/80"
-						>
-							<span>🧑🏻‍💻</span> {t("home.role")}
-						</div>
-					</div>
-				</div>
-
-				<!-- Bio Text -->
-				<div class="flex-1">
-					<div
-						class="prose dark:prose-invert max-w-none text-quartz/80 dark:text-quartz-light/80 leading-relaxed text-left"
-					>
-						<p set:html={t("home.bio.1")} />
-						<p set:html={t("home.bio.2")} />
-						<p set:html={t("home.bio.3")} />
-						<div
-							class="flex gap-4 pt-4 justify-center md:justify-start"
-						>
-							<a
-								href="mailto:vleoneljunior@gmail.com"
-								class="text-sm font-medium text-quartz/60 hover:text-blue-600 dark:text-quartz-light/60 dark:hover:text-blue-400 transition-colors flex items-center gap-2"
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									><rect
-										width="20"
-										height="16"
-										x="2"
-										y="4"
-										rx="2"></rect><path
-										d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"
-									></path></svg
-								>
-								vleoneljunior@gmail.com
-							</a>
-							<a
-								href="https://github.com/vleonel-junior"
-								target="_blank"
-								class="text-sm font-medium text-quartz/60 hover:text-blue-600 dark:text-quartz-light/60 dark:hover:text-blue-400 transition-colors flex items-center gap-2"
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									><path
-										d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"
-									></path><path d="M9 18c-4.51 2-5-2-7-2"
-									></path></svg
-								>
-								GitHub
-							</a>
-						</div>
-					</div>
-				</div>
+			<div class="mt-12 space-y-4 text-[1.0625rem] leading-relaxed text-fg-muted [&_strong]:font-medium [&_strong]:text-fg">
+				<p set:html={t("home.bio.1")} />
+				<p set:html={t("home.bio.2")} />
+				<p set:html={t("home.bio.3")} />
 			</div>
 		</section>
 
-		<!-- 1b. Writing & Reading Notes -->
-		<section id="writing" class="mb-16 scroll-mt-24">
+		<!-- Writing -->
+		<section id="writing" class="scroll-mt-20 border-t border-border py-14">
 			<SectionTitle title={t("home.writing")} />
 
 			{
 				featuredDossiers.map((d) => (
 					<a
-						href={`${base}blog/dossier/${d.slug}/`}
-						class="group flex flex-col sm:flex-row gap-6 bg-quartz/5 dark:bg-white/5 rounded-2xl p-6 mb-8 border border-quartz/10 dark:border-white/10 hover:-translate-y-1 transition-transform"
+						href={localizePath(`blog/dossier/${d.slug}/`, lang)}
+						class="card group mb-4 flex gap-5 p-5"
 					>
 						{d.cover && (
 							<img
 								src={withBase(d.cover)}
-								alt={d.title}
-								class="w-28 sm:w-32 aspect-[3/4] object-cover rounded-lg shadow-md flex-shrink-0"
+								alt=""
+								width="72"
+								height="96"
+								class="h-24 w-[4.5rem] flex-shrink-0 rounded-md border border-border object-cover"
 								loading="lazy"
 							/>
 						)}
-						<div class="flex-1 min-w-0">
-							<span class="text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-400">
-								{t("home.series")} · {d.published}/{d.totalChapters} {t("home.chapters")} · {t(`lang.${d.lang}`)}
-							</span>
-							<h3 class="text-xl md:text-2xl font-serif font-bold text-quartz dark:text-quartz-light mt-2 mb-2 group-hover:underline">
+						<div class="min-w-0">
+							<p class="eyebrow">
+								{t("home.series")} · {d.published}/{d.totalChapters} {t("home.chapters")}
+							</p>
+							<h3 class="mt-1.5 text-base font-semibold text-fg group-hover:text-accent">
 								{d.title}
 							</h3>
-							<p
-								lang={d.lang}
-								class="text-quartz/70 dark:text-quartz-light/70 leading-relaxed mb-3"
-							>
-								{d.description}
+							<p class="mt-1 line-clamp-2 text-sm leading-relaxed text-fg-muted">
+								{tr(d.description, lang)}
 							</p>
-							<div class="flex flex-wrap gap-2">
-								{d.tags.map((tag) => (
-									<span class="text-xs font-mono text-quartz/50 dark:text-quartz-light/50">
-										#{tag}
-									</span>
-								))}
+							<div
+								class="mt-3 h-1 w-full max-w-48 overflow-hidden rounded-full bg-muted"
+								aria-hidden="true"
+							>
+								<div
+									class="h-full rounded-full bg-accent"
+									style={`width: ${(d.published / d.totalChapters) * 100}%`}
+								/>
 							</div>
 						</div>
 					</a>
 				))
 			}
 
-			<div class="grid md:grid-cols-3 gap-6">
+			<ul class="divide-y divide-border">
 				{
 					latestPosts.map((post) => (
-						<a
-							href={`${base}blog/${post.slug}/`}
-							class="group flex flex-col bg-white dark:bg-gray-800 rounded-lg p-5 border border-quartz/10 dark:border-quartz-light/10 shadow-sm hover:shadow-md transition-shadow"
-						>
-							<div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-quartz/50 dark:text-quartz-light/50 mb-2">
-								<span>{post.data.category}</span>
-								<span>·</span>
-								<span title={t(`lang.writtenIn.${post.data.lang}`)}>
-									{t(`lang.${post.data.lang}`)}
-								</span>
-							</div>
-							<h3
-								lang={post.data.lang}
-								class="font-serif font-bold text-lg text-quartz dark:text-quartz-light mb-2 group-hover:underline"
+						<li>
+							<a
+								href={postUrl(post)}
+								class="group flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:gap-6"
 							>
-								{post.data.title}
-							</h3>
-							<p
-								lang={post.data.lang}
-								class="text-sm text-quartz/70 dark:text-quartz-light/70 leading-relaxed line-clamp-3"
-							>
-								{post.data.description}
+								<time
+									datetime={post.data.pubDate.toISOString()}
+									class="w-28 flex-shrink-0 text-sm tabular-nums text-fg-subtle"
+								>
+									{formatDate(post.data.pubDate, lang, "short")}
+								</time>
+								<div class="min-w-0">
+									<h3
+										lang={post.data.lang}
+										class="text-base font-medium text-fg group-hover:text-accent"
+									>
+										{post.data.title}
+										{post.data.lang !== lang && (
+											<span class="tag ml-2 align-middle" title={t(`lang.writtenIn.${post.data.lang}`)}>
+												{t(`lang.${post.data.lang}`)}
+											</span>
+										)}
+									</h3>
+									<p lang={post.data.lang} class="mt-1 line-clamp-2 text-sm leading-relaxed text-fg-muted">
+										{post.data.description}
+									</p>
+								</div>
+							</a>
+						</li>
+					))
+				}
+			</ul>
+
+			<a href={localizePath("blog", lang)} class="link mt-4 inline-block text-sm">
+				{t("home.allArticles")}
+			</a>
+		</section>
+
+		<!-- Experience -->
+		<section class="border-t border-border py-14">
+			<SectionTitle title={t("home.experience")} />
+			<ol class="space-y-8">
+				{
+					experienceData.map((exp) => (
+						<li class="grid gap-1 sm:grid-cols-[7rem_1fr] sm:gap-6">
+							<p class="text-sm tabular-nums text-fg-subtle">
+								{period(exp.startDate, exp.endDate, lang)}
 							</p>
+							<div>
+								<h3 class="text-base font-semibold text-fg">{tr(exp.role, lang)}</h3>
+								<p class="text-sm text-fg-subtle">{tr(exp.company, lang)}</p>
+								<p class="mt-2 text-[0.9375rem] leading-relaxed text-fg-muted">
+									{tr(exp.description, lang)}
+								</p>
+								<div class="mt-3 flex flex-wrap gap-1.5">
+									{exp.technologies.map((tech) => (
+										<span class="tag">{tag(tech, lang)}</span>
+									))}
+								</div>
+							</div>
+						</li>
+					))
+				}
+			</ol>
+		</section>
+
+		<!-- Projects -->
+		<section id="projects" class="scroll-mt-20 border-t border-border py-14">
+			<SectionTitle title={t("home.projects")} />
+			<div class="grid gap-4 sm:grid-cols-2">
+				{
+					projects.map((project) => (
+						<a
+							href={project.githubUrl ?? project.liveUrl ?? localizePath("projects", lang)}
+							target={project.githubUrl || project.liveUrl ? "_blank" : undefined}
+							rel="noopener"
+							class="card group flex flex-col p-5"
+						>
+							<div class="flex items-baseline justify-between gap-3">
+								<h3 class="text-base font-semibold text-fg group-hover:text-accent">
+									{tr(project.title, lang)}
+								</h3>
+								{project.year && (
+									<span class="text-sm tabular-nums text-fg-subtle">{project.year}</span>
+								)}
+							</div>
+							<p class="mt-2 line-clamp-4 flex-grow text-sm leading-relaxed text-fg-muted">
+								{tr(project.description, lang)}
+							</p>
+							<div class="mt-4 flex flex-wrap gap-1.5">
+								{project.technologies.map((tech) => (
+									<span class="tag">{tag(tech, lang)}</span>
+								))}
+							</div>
 						</a>
 					))
 				}
 			</div>
-
-			<div class="mt-6 text-right">
-				<a
-					href={localizePath("blog", lang)}
-					class="text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
-					>{t("home.allArticles")}</a
-				>
-			</div>
+			<a href={localizePath("projects", lang)} class="link mt-6 inline-block text-sm">
+				{t("home.allProjects")} →
+			</a>
 		</section>
 
-		<!-- 2. Education -->
-		<section class="mb-16">
+		<!-- Education -->
+		<section class="border-t border-border py-14">
 			<SectionTitle title={t("home.education")} />
-			<div class="space-y-4">
+			<ol class="space-y-6">
 				{
 					educationData.map((edu) => (
-						<div class="flex flex-col sm:flex-row justify-between sm:items-baseline border-b border-gray-100 dark:border-gray-800 pb-4 last:border-0">
+						<li class="grid gap-1 sm:grid-cols-[7rem_1fr] sm:gap-6">
+							<p class="text-sm tabular-nums text-fg-subtle">{edu.year}</p>
 							<div>
-								<h4 class="font-bold text-quartz dark:text-quartz-light text-lg">
-									{tr(edu.degree, lang)}
-								</h4>
-								<div class="text-quartz/70 dark:text-quartz-light/70">
-									{tr(edu.institution, lang)}
-								</div>
+								<h3 class="text-base font-semibold text-fg">{tr(edu.degree, lang)}</h3>
+								<p class="text-sm text-fg-subtle">{tr(edu.institution, lang)}</p>
 								{edu.description && (
-									<p class="text-sm text-quartz/60 dark:text-quartz-light/60 mt-1">
+									<p class="mt-1.5 text-[0.9375rem] leading-relaxed text-fg-muted">
 										{tr(edu.description, lang)}
 									</p>
-								)}
-							</div>
-							<div class="text-sm font-mono text-quartz/50 dark:text-quartz-light/50 mt-1 sm:mt-0">
-								{edu.year}
-							</div>
-						</div>
-					))
-				}
-			</div>
-		</section>
-
-		<!-- 3. Publications (hidden while empty) -->
-		{publicationsData.length > 0 && (
-		<section class="mb-16">
-			<SectionTitle title={t("home.publications")} />
-			<ul class="space-y-4">
-				{
-					publicationsData.map((pub) => (
-						<li class="flex flex-col sm:flex-row gap-2 sm:items-baseline">
-							<span class="text-quartz/50 dark:text-quartz-light/50 font-mono text-sm min-w-[4rem]">
-								{pub.year}
-							</span>
-							<div>
-								<span class="font-bold text-quartz dark:text-quartz-light">
-									{pub.title}
-								</span>
-								{pub.journal && (
-									<>
-										.
-										<span class="italic text-quartz/80 dark:text-quartz-light/80">
-											{" "}
-											{pub.journal}
-										</span>
-									</>
-								)}
-								{pub.authors && (
-									<>
-										.
-										<span class="text-quartz/60 dark:text-quartz-light/60">
-											{" "}
-											{pub.authors}
-										</span>
-									</>
-								)}
-								{pub.url && (
-									<a
-										href={pub.url}
-										target="_blank"
-										class="ml-2 text-blue-600 dark:text-blue-400 hover:underline text-sm"
-									>
-										[Link]
-									</a>
 								)}
 							</div>
 						</li>
 					))
 				}
-			</ul>
-		</section>
-		)}
-
-		<!-- 4. Experience -->
-		<section class="mb-16">
-			<SectionTitle title={t("home.experience")} />
-
-			<div class="grid gap-6">
-				{
-					experienceData.map((exp) => (
-						<div class="flex flex-col sm:flex-row gap-4 sm:gap-8 hover:bg-gray-50 dark:hover:bg-white/5 p-4 rounded-lg transition-colors -mx-4">
-							<div class="sm:w-32 flex-shrink-0 text-sm text-quartz/60 dark:text-quartz-light/60 font-mono pt-1">
-								{period(exp.startDate, exp.endDate, lang)}
-							</div>
-							<div>
-								<h4 class="font-bold text-quartz dark:text-quartz-light">
-									{tr(exp.role, lang)}
-								</h4>
-								<div class="text-sm font-medium text-quartz/70 dark:text-quartz-light/70 mb-2">
-									{tr(exp.company, lang)}
-								</div>
-								<p class="text-sm text-quartz/80 dark:text-quartz-light/80 leading-relaxed mb-2">
-									{tr(exp.description, lang)}
-								</p>
-								<div class="flex flex-wrap gap-2">
-									{exp.technologies.map((tech) => (
-										<span class="text-[10px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-											{tag(tech, lang)}
-										</span>
-									))}
-								</div>
-							</div>
-						</div>
-					))
-				}
-			</div>
-			<div class="mt-6 text-right">
-				<a
-					href={localizePath("experience", lang)}
-					class="text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
-					>{t("home.fullExperience")}</a
-				>
-			</div>
+			</ol>
 		</section>
 
-		<!-- 5. Recent Projects -->
-		<section id="projects" class="mb-16">
-			<SectionTitle title={t("home.projects")} />
-
-			<div class="space-y-12">
-				<!-- Academic Projects -->
-				<div>
-					<h3
-						class="flex items-center text-lg font-bold mb-6 text-purple-700 dark:text-purple-400"
-					>
-						<span class="mr-2">▶</span> {t("home.academic")}
-					</h3>
-					<div class="flex flex-col gap-6">
-						{
-							academicProjects.map((project) => (
-								<div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-quartz/10 dark:border-quartz-light/10 shadow-sm hover:shadow-md transition-shadow">
-									<div class="flex flex-col sm:flex-row justify-between items-start sm:items-baseline mb-4">
-										<h4 class="text-xl font-bold text-quartz dark:text-quartz-light">
-											{tr(project.title, lang)}
-										</h4>
-										{project.year && (
-											<span class="text-sm font-mono text-quartz/50 dark:text-quartz-light/50 mt-1 sm:mt-0">
-												{project.year}
-											</span>
-										)}
-									</div>
-									<p class="text-quartz/70 dark:text-quartz-light/70 mb-6 leading-relaxed">
-										{tr(project.description, lang)}
-									</p>
-									<div class="flex flex-wrap justify-between items-end gap-4">
-										<div class="text-sm italic text-quartz/60 dark:text-quartz-light/60">
-											{t("home.technologies")}{lang === "fr" ? " :" : ":"}{" "}
-											{project.technologies.map((tech) => tag(tech, lang)).join(", ")}
-										</div>
-										{project.githubUrl && (
-											<a
-												href={project.githubUrl}
-												target="_blank"
-												class="text-blue-600 dark:text-blue-400 font-bold hover:underline text-sm flex items-center gap-1"
-											>
-												{t("home.viewGithub")}
-											</a>
-										)}
-									</div>
-								</div>
-							))
-						}
-					</div>
-				</div>
-
-				<!-- Personal Projects (hidden while empty) -->
-				{personalProjects.length > 0 && (
-					<div>
-						<h3 class="flex items-center text-lg font-bold mb-6 text-green-700 dark:text-green-400">
-							<span class="mr-2">▶</span> {t("home.personal")}
-						</h3>
-						<div class="flex flex-col gap-6">
-							{personalProjects.map((project) => (
-								<div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-quartz/10 dark:border-quartz-light/10 shadow-sm hover:shadow-md transition-shadow">
-									<div class="flex flex-col sm:flex-row justify-between items-start sm:items-baseline mb-4">
-										<h4 class="text-xl font-bold text-quartz dark:text-quartz-light">
-											{tr(project.title, lang)}
-										</h4>
-										{project.year && (
-											<span class="text-sm font-mono text-quartz/50 dark:text-quartz-light/50 mt-1 sm:mt-0">
-												{project.year}
-											</span>
-										)}
-									</div>
-									<p class="text-quartz/70 dark:text-quartz-light/70 mb-4">
-										{tr(project.description, lang)}
+		<!-- Publications (hidden while empty) -->
+		{
+			publicationsData.length > 0 && (
+				<section class="border-t border-border py-14">
+					<SectionTitle title={t("home.publications")} />
+					<ul class="space-y-4">
+						{publicationsData.map((pub) => (
+							<li class="grid gap-1 sm:grid-cols-[7rem_1fr] sm:gap-6">
+								<p class="text-sm tabular-nums text-fg-subtle">{pub.year}</p>
+								<div>
+									{pub.url ? (
+										<a href={pub.url} target="_blank" class="font-medium text-fg hover:text-accent">
+											{pub.title}
+										</a>
+									) : (
+										<span class="font-medium text-fg">{pub.title}</span>
+									)}
+									<p class="text-sm text-fg-subtle">
+										{[pub.authors, pub.journal].filter(Boolean).join(" · ")}
 									</p>
 								</div>
-							))}
-						</div>
-					</div>
-				)}
-			</div>
+							</li>
+						))}
+					</ul>
+				</section>
+			)
+		}
 
-			<div class="mt-8 text-center">
-				<a
-					href={localizePath("projects", lang)}
-					class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline font-medium"
-				>
-					{t("home.allProjects")} <svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="lucide lucide-arrow-right"
-						><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"
-						></path></svg
-					>
-				</a>
-			</div>
-		</section>
-
-		<!-- 6. Certifications -->
-		<section class="mb-16">
+		<!-- Certifications -->
+		<section class="border-t border-border py-14">
 			<SectionTitle title={t("home.certifications")} />
-
-			<div class="grid sm:grid-cols-2 gap-6">
+			<div class="grid gap-4 sm:grid-cols-2">
 				{
-					certificationsData.map((cert) => (
-						<a
-							href={
-								cert.url ||
-								(cert.image && cert.image.startsWith("/")
-									? `${import.meta.env.BASE_URL}${cert.image.slice(1)}`
-									: cert.image) ||
-								"#"
-							}
-							target={cert.url || cert.image ? "_blank" : "_self"}
-							class={`block h-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-quartz/10 dark:border-quartz-light/10 hover:border-orange-400 dark:hover:border-orange-400 transition-all shadow-sm hover:shadow-md group ${!cert.url && !cert.image ? "cursor-default" : ""}`}
-						>
-							{cert.image && (
-								<div class="w-full h-48 overflow-hidden bg-gray-100 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
-									<img
-										src={
-											cert.image.startsWith("/")
-												? `${import.meta.env.BASE_URL}${cert.image.slice(1)}`
-												: cert.image
-										}
-										alt={tr(cert.title, lang)}
-										class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-									/>
-								</div>
-							)}
-							<div class="p-6">
-								<h4 class="font-bold text-lg text-quartz dark:text-quartz-light group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors mb-2">
-									{tr(cert.title, lang)}
-								</h4>
-								<div class="flex flex-col gap-2">
-									<span class="text-sm font-medium text-quartz/70 dark:text-quartz-light/70">
-										{cert.issuer}
-									</span>
-									<span class="font-mono text-xs text-quartz/40 dark:text-quartz-light/40">
-										{cert.date}
-									</span>
-								</div>
-								{cert.description && (
-									<p class="text-sm text-quartz/60 dark:text-quartz-light/60 mt-4 leading-relaxed">
-										{tr(cert.description, lang)}
-									</p>
+					certificationsData.map((cert) => {
+						const href = cert.url || (cert.image ? withBase(cert.image) : undefined);
+						const Tag = href ? "a" : "div";
+						return (
+							<Tag
+								href={href}
+								target={href ? "_blank" : undefined}
+								class="card group flex flex-col overflow-hidden"
+							>
+								{cert.image && (
+									<div class="aspect-[16/9] overflow-hidden border-b border-border bg-muted">
+										<img
+											src={withBase(cert.image)}
+											alt={tr(cert.title, lang)}
+											class="h-full w-full object-cover object-top"
+											loading="lazy"
+										/>
+									</div>
 								)}
-							</div>
-						</a>
-					))
+								<div class="flex flex-grow flex-col p-5">
+									<div class="flex items-baseline justify-between gap-3">
+										<h3 class="text-base font-semibold text-fg group-hover:text-accent">
+											{tr(cert.title, lang)}
+										</h3>
+										<span class="text-sm tabular-nums text-fg-subtle">{cert.date}</span>
+									</div>
+									<p class="text-sm text-fg-subtle">{cert.issuer}</p>
+									{cert.description && (
+										<p class="mt-2 text-sm leading-relaxed text-fg-muted">
+											{tr(cert.description, lang)}
+										</p>
+									)}
+								</div>
+							</Tag>
+						);
+					})
 				}
 			</div>
 		</section>
 
-		<!-- 7. Volunteering / Teaching -->
-		<section class="mb-16">
+		<!-- Volunteering / Teaching -->
+		<section class="border-t border-border py-14">
 			<SectionTitle title={t("home.volunteering")} />
-
-			<div class="grid gap-6">
+			<ol class="space-y-6">
 				{
 					volunteeringData.map((vol) => (
-						<div class="flex flex-col sm:flex-row gap-4 sm:gap-8 hover:bg-gray-50 dark:hover:bg-white/5 p-4 rounded-lg transition-colors -mx-4">
-							<div class="sm:w-32 flex-shrink-0 text-sm text-quartz/60 dark:text-quartz-light/60 font-mono pt-1">
-								{vol.period}
-							</div>
+						<li class="grid gap-1 sm:grid-cols-[7rem_1fr] sm:gap-6">
+							<p class="text-sm tabular-nums text-fg-subtle">{vol.period}</p>
 							<div>
-								<h4 class="font-bold text-quartz dark:text-quartz-light">
-									{tr(vol.role, lang)}
-								</h4>
-								<div class="text-sm font-medium text-quartz/70 dark:text-quartz-light/70 mb-2">
-									{tr(vol.organization, lang)}
-								</div>
-								<p class="text-sm text-quartz/80 dark:text-quartz-light/80 leading-relaxed">
+								<h3 class="text-base font-semibold text-fg">{tr(vol.role, lang)}</h3>
+								<p class="text-sm text-fg-subtle">{tr(vol.organization, lang)}</p>
+								<p class="mt-1.5 text-[0.9375rem] leading-relaxed text-fg-muted">
 									{tr(vol.description, lang)}
 								</p>
 							</div>
-						</div>
+						</li>
 					))
 				}
-			</div>
+			</ol>
 		</section>
-	</main>
+	</div>
 </Layout>

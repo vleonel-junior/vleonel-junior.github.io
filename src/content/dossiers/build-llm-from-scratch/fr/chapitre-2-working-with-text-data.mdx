@@ -4,13 +4,14 @@ description: "Chapitre 2 : Tokenisation, encodage BPE, et préparation des donn�
 pubDate: 2026-06-27
 author: "Léonel VODOUNOU"
 dossier: "build-llm-from-scratch"
+lang: "fr"
 chapter: 2
 order: 2
 tags: ["Tokenization", "BPE", "NLP", "Text Processing"]
 draft: false
 ---
 
-## Introduction : Pipeline de préparation des données
+## Introduction : le pipeline de préparation des données
 
 Avant même de songer à l'architecture ou à l'entraînement d'un LLM, l'étape la plus cruciale est la préparation des données d'entraînement. C'est l'objectif de la toute première étape de la phase 1 du développement d'un modèle de langage.
 
@@ -60,7 +61,7 @@ Cependant, les LLM modernes ne s'appuient pas sur Word2Vec. Ils utilisent leur p
 
 Enfin, la **dimensionnalité** de ces vecteurs est clé : un espace à deux dimensions est utile pour enseigner et visualiser (comme la figure 2.3), mais dans un modèle réel, le nombre de dimensions chiffre très vite pour capturer toute l'expressivité et la nuance de la langue. Plus il y a de dimensions, plus la précision augmente, au détriment de l'efficacité calculatoire. Un petit GPT-2 utilise 768 dimensions pour un seul mot, alors que l'immense GPT-3 en requiert 12 288 !
 
-## La tokenization du texte (Tokenizing text)
+## Tokeniser le texte
 
 La tokenization (ou segmentation en lexèmes) est une étape de prétraitement indispensable avant la création d'embeddings pour un LLM. Elle consiste à diviser le texte d'entrée en *tokens* individuels, qui peuvent être des mots isolés ou des caractères spéciaux, y compris la ponctuation.
 
@@ -101,7 +102,7 @@ enough--so it was no
 
 Bien que l'entraînement de vrais LLMs implique souvent des millions d'articles (des gigaoctets de texte), nous utiliserons cet échantillon de 20 479 caractères à des fins éducatives pour pouvoir exécuter le code en temps raisonnable sur du matériel grand public.
 
-## Création d'un tokenizer de base avec Python
+### Un tokenizer simple avec les expressions régulières
 
 Afin de diviser le texte et d'obtenir une liste de tokens, nous faisons une courte incursion dans la bibliothèque d'expressions régulières de Python (`re`).
 
@@ -191,7 +192,7 @@ print(preprocessed[:30])
 ```
 
 
-## Convertir les tokens en identifiants (Token IDs)
+## Convertir les tokens en identifiants
 
 Une fois le texte divisé en tokens (chaînes de caractères), l'étape suivante consiste à les convertir en nombres entiers (*Token IDs*). C'est une étape intermédiaire obligatoire avant de générer les vecteurs d'embeddings.
 
@@ -248,7 +249,7 @@ for i, item in enumerate(vocab.items()):
 </figure>
 
 
-## Implémentation d'une classe Tokenizer
+### Implémenter une classe Tokenizer
 
 Pour automatiser ce processus, nous allons implémenter une classe Python `SimpleTokenizerV1`. Elle comprendra :
 - Une méthode `encode()` pour diviser un texte en tokens et le transformer en IDs.
@@ -322,7 +323,7 @@ KeyError: 'Hello'
 
 **Problème :** Le mot "Hello" n'apparaît pas dans la nouvelle *"The Verdict"*, il est donc absent de notre vocabulaire. Cela démontre pourquoi les LLMs doivent être entraînés sur de gigantesques ensembles de données diversifiés pour étendre leur vocabulaire (et pourquoi nous aurons besoin de tokens spéciaux pour gérer les mots inconnus).
 
-## Ajouter des tokens de contexte spéciaux (Adding special context tokens)
+## Ajouter des tokens de contexte spéciaux
 
 Il est indispensable de modifier le tokenizer pour gérer les mots inconnus. De plus, l'ajout de tokens de contexte spéciaux permet d'améliorer la compréhension du modèle, par exemple pour marquer la fin ou le début d'un document. Nous allons ajouter deux nouveaux tokens : `<|unk|>` pour les mots inconnus, et `<|endoftext|>` pour séparer des documents textuels indépendants.
 
@@ -457,11 +458,11 @@ Selon le LLM, certains chercheurs considèrent également d'autres tokens spéci
 >
 > Enfin, ce tokenizer n'utilise pas de token `<|unk|>` pour les mots hors-vocabulaire (*out-of-vocabulary*). Il utilise plutôt un algorithme appelé encodage par paire d'octets (*Byte Pair Encoding* ou `BPE`), qui décompose les mots inconnus en sous-mots (*subword units*), comme nous le verrons dans la section suivante.
 
-## L'Encodage par paire d'octets (Byte Pair Encoding - BPE)
+## L'encodage par paire d'octets (BPE)
 
-Examinons un schéma de tokenisation plus sophistiqué basé sur un concept appelé encodage par paire d'octets (Byte Pair Encoding - BPE). Le tokenizer BPE a été utilisé pour entraîner des LLMs tels que GPT-2, GPT-3 et le modèle original utilisé dans ChatGPT.
+Examinons un schéma de tokenisation plus sophistiqué basé sur un concept appelé encodage par paire d'octets (Byte Pair Encoding, BPE). Le tokenizer BPE a été utilisé pour entraîner des LLMs tels que GPT-2, GPT-3 et le modèle original utilisé dans ChatGPT.
 
-Ici, nous allons utiliser une bibliothèque open-source Python existante appelée `tiktoken` (https://github.com/openai/tiktoken), qui implémente l'algorithme BPE de manière très. De même que pour d'autres bibliothèques Python, nous pouvons installer la bibliothèque `tiktoken` via l'installateur de paquets `pip` depuis le terminal :
+Ici, nous allons utiliser une bibliothèque open-source Python existante appelée `tiktoken` (https://github.com/openai/tiktoken), qui implémente l'algorithme BPE de manière très efficace. De même que pour d'autres bibliothèques Python, nous pouvons installer la bibliothèque `tiktoken` via l'installateur de paquets `pip` depuis le terminal :
 
 ```bash
 pip install tiktoken
@@ -535,7 +536,7 @@ La force du BPE réside dans sa capacité à **fractionner** un mot totalement i
 
 </div>
 
-Cette capacité de décomposer les mots inconnus en caractères individuels garantit que le tokenizer, et par conséquent le LLM, peut traiter n'importe quel texte, même s'il contient des mots absents de ses données d'entraînement
+Cette capacité de décomposer les mots inconnus en caractères individuels garantit que le tokenizer, et par conséquent le LLM, peut traiter n'importe quel texte, même s'il contient des mots absents de ses données d'entraînement.
 
 ### Exercice 2.1 : Encodage par paire d'octets de mots inconnus
 
@@ -573,7 +574,7 @@ Akwirw ier
 
 En bref, le BPE construit son vocabulaire de manière progressive, en partant de la plus petite unité. Il initialise d'abord son vocabulaire avec tous les caractères individuels (par exemple "a", "b", etc.). Ensuite, il repère les caractères qui apparaissent le plus souvent côte à côte pour les fusionner en sous-mots. Par exemple, si "d" et "e" sont très souvent adjacents, ils sont fusionnés pour créer le sous-mot "de" (très courant dans des mots comme "define" ou "made"). Ce mécanisme se répète itérativement, fusionnant les sous-mots les plus fréquents en mots entiers, uniquement sur la base de leur fréquence d'apparition.
 
-## Échantillonnage des données avec une fenêtre glissante (Sliding window)
+## Échantillonner les données avec une fenêtre glissante
 
 Pour entraîner un LLM, on génère des paires entrée-cible (input-target pairs). La tâche du modèle étant de prédire le mot suivant, la séquence cible (`y`) correspond exactement à la séquence d'entrée (`x`), mais décalée d'une position vers la droite.
 
@@ -679,7 +680,7 @@ def create_dataloader_v1(txt, batch_size=4, max_length=256, stride=128, shuffle=
 > Essayez le data loader avec d'autres paramètres comme `max_length=2` et `stride=2`, ou encore `max_length=8` et `stride=2` pour développer votre intuition de la mécanique de la fenêtre glissante.
 
 
-## Création des embeddings de tokens (Token embeddings)
+## Créer les embeddings de tokens
 
 La dernière étape de la préparation des données consiste à convertir les identifiants de tokens (token IDs) en vecteurs d'intégration continus (embedding vectors). Cette représentation vectorielle est requise car les LLMs sont des réseaux de neurones profonds entraînés par l'algorithme de rétropropagation (backpropagation).
 
@@ -693,7 +694,7 @@ Les poids de la matrice d'embeddings sont initialisés avec de petites valeurs a
 
 </div>
 
-## Fonctionnement d'une couche d'embedding avec PyTorch
+### Fonctionnement d'une couche d'embedding
 
 On instancie une telle couche avec `torch.nn.Embedding`. Ses dimensions dépendent de deux paramètres :
 - `vocab_size` : La taille du vocabulaire (le nombre de lignes).
@@ -724,7 +725,7 @@ tensor([[ 1.2753, -0.2010, -0.1606],   # Ligne d'index 2
 > **Note sur le One-hot encoding :**
 > Utiliser une couche d'embedding est mathématiquement et fondamentalement équivalent à appliquer un encodage "one-hot" suivi d'une multiplication matricielle (couche fully connected). La couche d'embedding est cependant une implémentation beaucoup plus efficace en termes de calculs, tout en restant un composant différentiable pour la rétropropagation.
 
-## Encodage de la position des mots
+## Encoder la position des mots
 
 Les embeddings de tokens présentent un défaut structurel majeur : peu importe qu'un mot apparaisse en début, au milieu ou en fin de phrase, son vecteur d'embedding reste rigoureusement identique. Pire, le mécanisme de *self-attention* des LLMs (abordé au chapitre 3) est, par construction, **invariant à l'ordre** : il traite la séquence d'entrée comme un simple ensemble non ordonné de tokens, sans aucune notion de précédence ou de proximité.
 
@@ -746,12 +747,12 @@ Il existe deux grandes familles d'encodages positionnels :
 
 <div style="margin-top: 20px;"></div>
 
-> ⚠️ **Limite à l'inférence :** La couche `pos_embedding_layer` est une matrice de poids de dimensions `(context_length, output_dim)`. Avec `context_length = 1024`, cette matrice possède exactement 1 024 lignes — une par position, de l'indice 0 à l'indice 1 023. Si, à l'inférence, on soumet une séquence de 1 500 tokens, le modèle tente d'accéder aux lignes 1 024 à 1 499, qui **n'existent pas**. PyTorch lève immédiatement une erreur : `IndexError: index out of range in self`. Le modèle ne se dégrade pas progressivement : il **plante**. C'est pourquoi toute séquence dépassant `context_length` doit être tronquée avant d'être soumise au modèle.
+> ⚠️ **Limite à l'inférence :** La couche `pos_embedding_layer` est une matrice de poids de dimensions `(context_length, output_dim)`. Avec `context_length = 1024`, cette matrice possède exactement 1 024 lignes, une par position, de l'indice 0 à l'indice 1 023. Si, à l'inférence, on soumet une séquence de 1 500 tokens, le modèle tente d'accéder aux lignes 1 024 à 1 499, qui **n'existent pas**. PyTorch lève immédiatement une erreur : `IndexError: index out of range in self`. Le modèle ne se dégrade pas progressivement : il **plante**. C'est pourquoi toute séquence dépassant `context_length` doit être tronquée avant d'être soumise au modèle.
 
 
-* **Encodages de position relative :** Plutôt que d'encoder la position absolue de chaque token, ce type d'encodage modélise la **distance** entre deux tokens — c'est-à-dire leur écart relatif dans la séquence. Concrètement, au lieu d'injecter un vecteur de position dans l'embedding d'entrée, l'information positionnelle est intégrée directement au sein du **calcul du score d'attention** entre deux tokens $i$ et $j$ : ce score dépend alors de $(i - j)$ plutôt que de $i$ et $j$ séparément.
+* **Encodages de position relative :** Plutôt que d'encoder la position absolue de chaque token, ce type d'encodage modélise la **distance** entre deux tokens, c'est-à-dire leur écart relatif dans la séquence. Concrètement, au lieu d'injecter un vecteur de position dans l'embedding d'entrée, l'information positionnelle est intégrée directement au sein du **calcul du score d'attention** entre deux tokens $i$ et $j$ : ce score dépend alors de $(i - j)$ plutôt que de $i$ et $j$ séparément.
 
-L'avantage principal est une **meilleure généralisation hors-distribution** : le modèle n'a jamais mémorisé de vecteur fixe par position absolue — il a appris à raisonner en termes d'*écarts entre tokens*, qui restent valables quelle que soit la longueur totale de la séquence.
+L'avantage principal est une **meilleure généralisation hors-distribution** : le modèle n'a jamais mémorisé de vecteur fixe par position absolue : il a appris à raisonner en termes d'*écarts entre tokens*, qui restent valables quelle que soit la longueur totale de la séquence.
 
 <figure class="my-8 flex flex-col items-center gap-3">
 
@@ -771,9 +772,9 @@ Dans l'approche GPT (position absolue), on crée deux couches `torch.nn.Embeddin
 1. Une couche pour encoder le **sens** des tokens (indexée sur le vocabulaire).
 2. Une couche pour encoder la **position** des tokens dans la séquence.
 
-Nous travaillons ici avec une dimension d'embedding de 256 — inférieure aux 12 288 dimension de GPT-3, mais suffisante pour l'expérimentation — et le tokenizer BPE introduit précédemment, qui couvre un vocabulaire de 50 257 tokens.
+Nous travaillons ici avec une dimension d'embedding de 256 (inférieure aux 12 288 dimensions de GPT-3, mais suffisante pour l'expérimentation) et le tokenizer BPE introduit précédemment, qui couvre un vocabulaire de 50 257 tokens.
 
-#### Étape 1 — Créer la couche d'embedding des tokens
+#### Étape 1. Créer la couche d'embedding des tokens
 
 ```python
 vocab_size = 50257
@@ -782,7 +783,7 @@ output_dim = 256
 token_embedding_layer = torch.nn.Embedding(vocab_size, output_dim)
 ```
 
-#### Étape 2 — Charger un batch depuis le DataLoader
+#### Étape 2. Charger un batch depuis le DataLoader
 
 Instancions d'abord le DataLoader (voir section 2.6) pour récupérer un batch d'exemples :
 
@@ -816,7 +817,7 @@ Inputs shape:
 
 Le tenseur `inputs` est de dimension `(8, 4)` : 8 exemples textuels, chacun composé de 4 tokens.
 
-#### Étape 3 — Appliquer l'embedding des tokens
+#### Étape 3. Appliquer l'embedding des tokens
 
 ```python
 token_embeddings = token_embedding_layer(inputs)
@@ -829,7 +830,7 @@ torch.Size([8, 4, 256])
 
 Chaque `token_id` est désormais représenté par un vecteur de 256 dimensions.
 
-#### Étape 4 — Créer la couche d'embedding des positions
+#### Étape 4. Créer la couche d'embedding des positions
 
 ```python
 context_length = max_length  # Longueur maximale de la séquence d'entrée
@@ -845,9 +846,9 @@ torch.Size([4, 256])
 
 > `torch.arange(context_length)` génère simplement `[0, 1, 2, ..., context_length - 1]`.
 
-C'est la liste de tous les indices de position, passée à la couche pour en récupérer **toutes les lignes d'un coup** — le vecteur de la position 0, puis celui de la position 1, etc.
+C'est la liste de tous les indices de position, passée à la couche pour en récupérer **toutes les lignes d'un coup** : le vecteur de la position 0, puis celui de la position 1, etc.
 
-#### Étape 5 — Additionner pour former l'entrée finale
+#### Étape 5. Additionner pour former l'entrée finale
 
 ```python
 input_embeddings = token_embeddings + pos_embeddings
@@ -858,7 +859,7 @@ print(input_embeddings.shape)
 torch.Size([8, 4, 256])
 ```
 
-Grâce au mécanisme de *broadcasting* de PyTorch, le tenseur `pos_embeddings` de dimensions `(4, 256)` — identique pour chaque exemple du batch — s'additionne automatiquement à chacun des 8 exemples dans `token_embeddings` de dimensions `(8, 4, 256)`. C'est ce tenseur final `input_embeddings` qui est transmis aux couches profondes du modèle.
+Grâce au mécanisme de *broadcasting* de PyTorch, le tenseur `pos_embeddings` de dimensions `(4, 256)`, identique pour chaque exemple du batch, s'additionne automatiquement à chacun des 8 exemples dans `token_embeddings` de dimensions `(8, 4, 256)`. C'est ce tenseur final `input_embeddings` qui est transmis aux couches profondes du modèle.
 
 
 <figure class="my-8 flex flex-col items-center gap-3">
@@ -871,7 +872,7 @@ Grâce au mécanisme de *broadcasting* de PyTorch, le tenseur `pos_embeddings` d
 
 ---
 
-### Ce qu'il faut retenir de ce chapitre
+## Résumé
 
 * **Les LLMs ne traitent pas le texte brut :** Le texte doit d'abord être segmenté en *tokens* (mots ou sous-mots), puis transformé en entiers appelés `token_ids`.
 
@@ -881,8 +882,8 @@ Grâce au mécanisme de *broadcasting* de PyTorch, le tenseur `pos_embeddings` d
 
 * **Échantillonnage par fenêtre glissante (*sliding window*) :** Lors de l'entraînement, les cibles (*labels*) sont extraites par un simple décalage de +1, pour apprendre au modèle à prédire systématiquement le token suivant.
 
-* **La couche `Embedding` en PyTorch :** Elle se comporte comme une table de correspondance (*lookup table*) : étant donné un `token_id` entier, elle retourne instantanément le vecteur correspondant. Mathématiquement, c'est équivalent à encoder le token en vecteur *one-hot* puis à le multiplier par une matrice de projection linéaire — mais l'implémentation directe est drastiquement plus efficace.
+* **La couche `Embedding` en PyTorch :** Elle se comporte comme une table de correspondance (*lookup table*) : étant donné un `token_id` entier, elle retourne instantanément le vecteur correspondant. Mathématiquement, c'est équivalent à encoder le token en vecteur *one-hot* puis à le multiplier par une matrice de projection linéaire, mais l'implémentation directe est drastiquement plus efficace.
 
 * **Plongement sémantique :** Transformer un token abstrait en vecteur continu permet de disposer les mots dans un espace vectoriel de grande dimension, au sein duquel les relations sémantiques peuvent être optimisées numériquement.
 
-* **Encodage de position :** Le mécanisme de `self-attention` lit une séquence comme un ensemble non ordonné de tokens. Pour lui restituer la notion d'ordre, GPT additionne à chaque embedding de token un vecteur de position absolue appris — un vecteur par indice de la séquence, stocké dans une matrice de taille `(context_length, output_dim)`. Cette matrice impose une **contrainte dure** : toute séquence dépassant `context_length` tokens doit être tronquée, sous peine d'une erreur d'indice à l'inférence. Les architectures plus récentes préfèrent des encodages relatifs, intégrés dans le calcul des scores d'attention plutôt qu'additionnés aux embeddings, ce qui s'affranchit de cette limite de longueur.
+* **Encodage de position :** Le mécanisme de `self-attention` lit une séquence comme un ensemble non ordonné de tokens. Pour lui restituer la notion d'ordre, GPT additionne à chaque embedding de token un vecteur de position absolue appris (un vecteur par indice de la séquence), stocké dans une matrice de taille `(context_length, output_dim)`. Cette matrice impose une **contrainte dure** : toute séquence dépassant `context_length` tokens doit être tronquée, sous peine d'une erreur d'indice à l'inférence. Les architectures plus récentes préfèrent des encodages relatifs, intégrés dans le calcul des scores d'attention plutôt qu'additionnés aux embeddings, ce qui s'affranchit de cette limite de longueur.

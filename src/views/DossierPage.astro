@@ -1,0 +1,124 @@
+---
+import Layout from "../layouts/Layout.astro";
+import type { DossierMeta } from "../data/dossiers";
+import { chaptersFor, chapterUrl } from "../i18n/content";
+import {
+	localizePath,
+	tr,
+	useTranslations,
+	withBase,
+	type Lang,
+} from "../i18n/utils";
+
+interface Props {
+	dossier: DossierMeta;
+	lang: Lang;
+}
+
+const { dossier, lang } = Astro.props;
+const t = useTranslations(lang);
+
+// Published chapters, in this language when translated
+const processedChapters = (await chaptersFor(dossier.slug, lang)).map((chapter) => {
+	const words = chapter.body.split(/\s+/).length;
+	const readingTime = chapter.data.readTime || Math.ceil(words / 200);
+	return { ...chapter, readingTime };
+});
+
+const title = `${dossier.title} - ${t("blog.readingNotes")}`;
+const description = tr(dossier.description, lang);
+---
+
+<Layout
+	title={title}
+	description={description}
+	image={dossier.cover}
+	lang={lang}
+>
+	<div class="mx-auto w-full max-w-3xl px-4 pb-8 pt-10 sm:px-6 sm:pt-16">
+		<a
+			href={localizePath("blog", lang)}
+			class="mb-8 inline-flex items-center gap-1.5 text-sm text-fg-subtle transition-colors hover:text-fg"
+		>
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M19 12H5M12 19l-7-7 7-7" />
+			</svg>
+			{t("post.backToBlog")}
+		</a>
+
+		<header class="flex flex-col gap-6 border-b border-border pb-10 sm:flex-row sm:items-start">
+			{
+				dossier.cover && (
+					<img
+						src={withBase(dossier.cover)}
+						alt={dossier.title}
+						width="144"
+						height="192"
+						class="h-48 w-36 flex-shrink-0 rounded-lg border border-border object-cover shadow-sm"
+					/>
+				)
+			}
+			<div>
+				<p class="eyebrow text-accent">{t("post.readingSeries")}</p>
+				<h1 class="mt-2 text-3xl font-bold tracking-tight text-fg">{dossier.title}</h1>
+				<p class="mt-1 text-fg-subtle">{t("blog.by")} {dossier.bookAuthor}</p>
+				<p class="mt-4 leading-relaxed text-fg-muted">{description}</p>
+				<div class="mt-4 flex flex-wrap gap-1.5">
+					{dossier.tags.map((tagName) => <span class="tag">{tagName}</span>)}
+				</div>
+			</div>
+		</header>
+
+		<section class="mt-10">
+			<h2 class="flex items-baseline gap-2 text-sm font-semibold uppercase tracking-wider text-fg-subtle">
+				{t("post.chapters")}
+				<span class="tabular-nums normal-case tracking-normal">
+					{processedChapters.length}/{dossier.totalChapters}
+				</span>
+			</h2>
+
+			<ol class="mt-4 divide-y divide-border border-y border-border">
+				{
+					dossier.chapters.map((chapterObj) => {
+						const entry = processedChapters.find((c) => c.data.chapter === chapterObj.number);
+						return entry ? (
+							<li>
+								<a href={chapterUrl(entry)} hreflang={entry.data.lang} class="group flex gap-4 py-5">
+									<span class="w-7 flex-shrink-0 pt-0.5 text-sm tabular-nums text-fg-subtle">
+										{String(chapterObj.number).padStart(2, "0")}
+									</span>
+									<div class="min-w-0">
+										<h3 class="font-semibold text-fg group-hover:text-accent">
+											{tr(chapterObj.title, lang)}
+										</h3>
+										<p class="mt-1 line-clamp-2 text-sm leading-relaxed text-fg-muted">
+											{entry.data.description}
+										</p>
+										<p class="mt-2 flex items-center gap-2 text-xs text-fg-subtle">
+											<span>{entry.readingTime} {t("blog.minRead")}</span>
+											{entry.data.lang !== lang && (
+												<span class="tag" title={t(`lang.writtenIn.${entry.data.lang}`)}>
+													{t(`lang.${entry.data.lang}`)}
+												</span>
+											)}
+										</p>
+									</div>
+								</a>
+							</li>
+						) : (
+							<li class="flex gap-4 py-5 opacity-60">
+								<span class="w-7 flex-shrink-0 pt-0.5 text-sm tabular-nums text-fg-subtle">
+									{String(chapterObj.number).padStart(2, "0")}
+								</span>
+								<div>
+									<h3 class="font-medium text-fg-muted">{tr(chapterObj.title, lang)}</h3>
+									<p class="mt-1 text-xs text-fg-subtle">{t("post.comingSoon")}</p>
+								</div>
+							</li>
+						);
+					})
+				}
+			</ol>
+		</section>
+	</div>
+</Layout>

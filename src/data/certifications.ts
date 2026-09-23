@@ -26,8 +26,8 @@ export const certificationsData: CertificationItem[] = [
         date: "2026",
         image: "/images/certifications/isheero-datacamp.png",
         description: {
-            en: "12-month program combining online training, applied projects, and a final hackathon — covering Machine Learning Engineering with DataCamp.",
-            fr: "Programme de 12 mois associant formation en ligne, projets appliqués et hackathon final — consacré au Machine Learning Engineering avec DataCamp.",
+            en: "12-month program combining online training, applied projects, and a final hackathon, covering Machine Learning Engineering with DataCamp.",
+            fr: "Programme de 12 mois associant formation en ligne, projets appliqués et hackathon final, consacré au Machine Learning Engineering avec DataCamp.",
         },
     },
 ];

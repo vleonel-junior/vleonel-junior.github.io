@@ -12,7 +12,8 @@ const blog = defineCollection({
         category: z.string(),
         readTime: z.number().optional(),
         draft: z.boolean().default(false),
-        // Language the article is written in (drives the page chrome)
+        // Language of this version of the article. Translations of the same
+        // article share a file name, under blog/en/ and blog/fr/.
         lang: z.enum(['en', 'fr']),
     }),
 });
@@ -31,6 +32,8 @@ const dossiers = defineCollection({
         readTime: z.number().optional(),
         draft: z.boolean().default(false),
         showToc: z.boolean().default(true),
+        // Language of this version of the chapter
+        lang: z.enum(['en', 'fr']),
     }),
 });
 

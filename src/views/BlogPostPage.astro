@@ -1,0 +1,43 @@
+---
+import ArticleShell from "../components/ArticleShell.astro";
+import type { Post } from "../i18n/content";
+import {
+    formatDate,
+    localizePath,
+    useTranslations,
+    type Lang,
+} from "../i18n/utils";
+
+interface Props {
+    post: Post;
+    /** URL of this article in each language (see i18n/content.ts) */
+    langPaths: Record<Lang, string>;
+    translated: boolean;
+}
+
+const { post, langPaths, translated } = Astro.props;
+const { Content, headings } = await post.render();
+
+const lang = post.data.lang;
+const t = useTranslations(lang);
+
+const words = post.body.split(/\s+/).length;
+const readingTime = post.data.readTime ?? Math.ceil(words / 200);
+---
+
+<ArticleShell
+    lang={lang}
+    title={post.data.title}
+    description={post.data.description}
+    image={post.data.image}
+    langPaths={langPaths}
+    translated={translated}
+    headings={headings}
+    eyebrow={post.data.category}
+    back={{ href: localizePath("blog", lang), label: t("post.backToBlog") }}
+    author={post.data.author}
+    date={formatDate(post.data.pubDate, lang)}
+    readingTime={`${readingTime} ${t("blog.minRead")}`}
+>
+    <Content />
+</ArticleShell>

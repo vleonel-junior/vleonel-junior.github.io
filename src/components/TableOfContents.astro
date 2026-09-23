@@ -1,592 +1,325 @@
 ---
+// Reading map in the style of Substack: one short line per heading, pinned to
+// the left edge. Hovering or clicking it opens the table of contents, and the
+// line of the section being read is highlighted as you scroll. On narrow
+// screens it becomes a small floating "Contents" button.
 import type { MarkdownHeading } from "astro";
 import { useTranslations, type Lang } from "../i18n/utils";
 
 interface Props {
     headings: MarkdownHeading[];
-    mode?: "sidebar" | "mobile";
     lang: Lang;
 }
 
-const { headings, mode = "sidebar", lang } = Astro.props;
+const { headings, lang } = Astro.props;
 const t = useTranslations(lang);
 
-// Check if there are any h2 headings
-const hasH2 = headings.some((h) => h.depth === 2);
-
-// If h2 present: show h2 and h3
-const filteredHeadings = hasH2
-    ? headings.filter((h) => h.depth === 2 || h.depth === 3)
-    : headings.filter((h) => h.depth === 3);
-
-// Build numbered structure
-let h2Counter = 0;
-let h3Counter = 0;
-
-const unnumberedKeywords = ["introduction", "liens utiles", "conclusion", "résumé", "resume"];
-
-const isUnnumbered = (text: string) => {
-    const lowerText = text.toLowerCase().trim();
-    return unnumberedKeywords.some(keyword => lowerText.includes(keyword));
-};
-
-const numberedHeadings = filteredHeadings.map((heading) => {
-    const unnumbered = isUnnumbered(heading.text);
-
-    if (!hasH2) {
-        // All headings are h3 — treat as top-level
-        if (!unnumbered) h2Counter++;
-        return { ...heading, number: unnumbered ? "" : `${h2Counter}`, isTop: true };
-    }
-
-    // Normal h2/h3 logic
-    if (heading.depth === 2) {
-        if (!unnumbered) {
-            h2Counter++;
-            h3Counter = 0;
-        }
-        return { ...heading, number: unnumbered ? "" : `${h2Counter}`, isTop: true };
-    } else {
-        if (!unnumbered) h3Counter++;
-        const num = unnumbered ? "" : (h2Counter === 0 ? `${h3Counter}` : `${h2Counter}.${h3Counter}`);
-        return { ...heading, number: num, isTop: false };
-    }
-});
+// Top level is the shallowest heading used (usually h2)
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+const top = Math.min(...items.map((h) => h.depth));
+// Space between lines: 12px like Substack, tighter for long articles so the
+// whole map stays within about 70% of the screen height
+const gap = Math.max(3, Math.min(12, Math.floor(520 / items.length) - 2));
 ---
 
-{mode === "sidebar" && (
-    <!-- Desktop sidebar TOC -->
-    <nav class="toc-container" aria-label={t("toc.title")}>
-        <h2 class="toc-header">{t("toc.title").toUpperCase()}</h2>
-        <ul class="toc-list">
-            {numberedHeadings.map((heading) => (
-                <li
-                    class={`toc-item ${!heading.isTop ? "toc-item--sub" : "toc-item--main"}`}
-                >
-                    <a
-                        href={`#${heading.slug}`}
-                        class="toc-link"
-                        data-toc-link
-                        data-depth={heading.depth}
-                    >
-                        <span class="toc-number">{heading.number}</span>
-                        <span class="toc-text">{heading.text}</span>
-                    </a>
-                </li>
-            ))}
-        </ul>
-    </nav>
-)}
+{
+    items.length > 1 && (
+        <div class="reading-map" data-reading-map>
+            <button
+                type="button"
+                class="reading-map-trigger"
+                aria-label={t("toc.title")}
+                aria-expanded="false"
+                aria-controls="reading-map-panel"
+                style={`--gap: ${gap}px`}
+            >
+                {items.map((h) => (
+                    <span class={`reading-map-line indent-${h.depth - top}`} data-line={h.slug} />
+                ))}
+            </button>
 
-{mode === "mobile" && (
-    <!-- Mobile: Floating TOC button + overlay -->
-    <div class="toc-mobile-wrapper" id="toc-mobile">
-        <button class="toc-mobile-trigger" id="toc-mobile-trigger" aria-label={t("toc.title")}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="15" y2="12"></line>
-                <line x1="3" y1="18" x2="9" y2="18"></line>
-            </svg>
-            <span class="toc-mobile-trigger-text">{t("toc.title")}</span>
-        </button>
+            <button
+                type="button"
+                class="reading-map-fab"
+                aria-label={t("toc.title")}
+                aria-expanded="false"
+                aria-controls="reading-map-panel"
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <path d="M4 6h16M4 12h10M4 18h6" />
+                </svg>
+                {t("toc.title")}
+            </button>
 
-        <div class="toc-mobile-overlay" id="toc-mobile-overlay">
-            <div class="toc-mobile-panel" id="toc-mobile-panel">
-                <div class="toc-mobile-panel-header">
-                    <span class="toc-mobile-panel-title">{t("toc.title")}</span>
-                    <button class="toc-mobile-close" id="toc-mobile-close" aria-label={t("toc.close")}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-                <ul class="toc-mobile-list">
-                    {numberedHeadings.map((heading) => (
-                        <li class={`toc-mobile-item ${!heading.isTop ? 'toc-mobile-item--sub' : ''}`}>
+            <nav id="reading-map-panel" class="reading-map-panel" aria-label={t("toc.title")}>
+                <p class="reading-map-title">{t("toc.title")}</p>
+                <ul>
+                    {items.map((h) => (
+                        <li>
                             <a
-                                href={`#${heading.slug}`}
-                                class="toc-mobile-link"
-                                data-toc-link
-                                data-depth={heading.depth}
+                                href={`#${h.slug}`}
+                                class={`reading-map-link indent-${h.depth - top}`}
+                                data-link={h.slug}
+                                title={h.text}
                             >
-                                <span class="toc-mobile-number">{heading.number}</span>
-                                <span class="toc-mobile-text">{heading.text}</span>
+                                {h.text}
                             </a>
                         </li>
                     ))}
                 </ul>
-            </div>
+            </nav>
         </div>
-    </div>
-
-    <!-- Reading progress bar -->
-    <div class="reading-progress" id="reading-progress"></div>
-)}
+    )
+}
 
 <script>
-    function initTOC() {
-        const tocLinks = document.querySelectorAll("[data-toc-link]");
-        const headings = document.querySelectorAll("article h2, article h3");
-        const progressBar = document.getElementById("reading-progress");
+    function initReadingMap() {
+        const root = document.querySelector<HTMLElement>("[data-reading-map]");
+        if (!root) return;
+        const triggers = root.querySelectorAll<HTMLButtonElement>(".reading-map-trigger, .reading-map-fab");
+        const panel = root.querySelector<HTMLElement>(".reading-map-panel");
+        const lines = root.querySelectorAll<HTMLElement>("[data-line]");
+        const links = root.querySelectorAll<HTMLAnchorElement>("[data-link]");
+        const headings = [...lines]
+            .map((l) => document.getElementById(l.dataset.line!))
+            .filter((h): h is HTMLElement => !!h);
 
-        if (!tocLinks.length || !headings.length) return;
+        // --- Open / close ---
+        let pinned = false;
+        let closeTimer: number | undefined;
+        const setOpen = (open: boolean) => {
+            root.classList.toggle("is-open", open);
+            triggers.forEach((b) => b.setAttribute("aria-expanded", String(open)));
+            // Long contents lists open on the section being read
+            const active = panel?.querySelector<HTMLElement>(".is-active");
+            if (open && panel && active) {
+                panel.scrollTop = active.offsetTop - panel.clientHeight / 2 + active.offsetHeight / 2;
+            }
+        };
+        const hoverCapable = window.matchMedia("(hover: hover)").matches;
 
-        // --- Scroll spy ---
-        function setActive(id: string | null) {
-            if (!id) return;
-            tocLinks.forEach((link) => {
-                link.classList.remove("toc-link--active");
+        triggers.forEach((b) =>
+            b.addEventListener("click", () => {
+                pinned = !root.classList.contains("is-open") || !pinned;
+                setOpen(pinned);
+            }),
+        );
+        if (hoverCapable) {
+            root.addEventListener("mouseenter", () => {
+                clearTimeout(closeTimer);
+                setOpen(true);
             });
-            document.querySelectorAll(`a[data-toc-link][href="#${id}"]`).forEach((target) => {
-                target.classList.add("toc-link--active");
+            root.addEventListener("mouseleave", () => {
+                if (pinned) return;
+                closeTimer = window.setTimeout(() => setOpen(false), 150);
             });
         }
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const visibleEntries = entries
-                    .filter((entry) => entry.isIntersecting)
-                    .sort(
-                        (a, b) =>
-                            a.boundingClientRect.top - b.boundingClientRect.top
-                    );
-
-                if (visibleEntries.length > 0) {
-                    const id = visibleEntries[0].target.getAttribute("id");
-                    setActive(id);
-                }
-            },
-            {
-                rootMargin: "-80px 0px -60% 0px",
-                threshold: [0, 0.5, 1],
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                pinned = false;
+                setOpen(false);
             }
+        });
+        document.addEventListener("click", (e) => {
+            if (!root.contains(e.target as Node)) {
+                pinned = false;
+                setOpen(false);
+            }
+        });
+        links.forEach((a) =>
+            a.addEventListener("click", () => {
+                pinned = false;
+                setOpen(false);
+            }),
         );
 
-        headings.forEach((heading) => {
-            observer.observe(heading);
-        });
-
-        if (headings.length > 0) {
-            const firstId = headings[0].getAttribute("id");
-            setActive(firstId);
-        }
-
-        // --- Reading progress ---
-        function updateProgress() {
-            if (!progressBar) return;
-            const article = document.querySelector("article");
-            if (!article) return;
-
-            const articleTop = article.getBoundingClientRect().top + window.scrollY;
-            const articleHeight = article.scrollHeight;
-            const windowHeight = window.innerHeight;
-            const scrolled = window.scrollY - articleTop;
-            const progress = Math.min(Math.max(scrolled / (articleHeight - windowHeight), 0), 1);
-            progressBar.style.setProperty("--progress", `${progress * 100}%`);
-        }
-
-        window.addEventListener("scroll", updateProgress, { passive: true });
-        updateProgress();
-
-        // --- Mobile TOC ---
-        const trigger = document.getElementById("toc-mobile-trigger");
-        const overlay = document.getElementById("toc-mobile-overlay");
-        const closeBtn = document.getElementById("toc-mobile-close");
-
-        function openMobileTOC() {
-            overlay?.classList.add("toc-mobile-overlay--open");
-            document.body.style.overflow = "hidden";
-        }
-
-        function closeMobileTOC() {
-            overlay?.classList.remove("toc-mobile-overlay--open");
-            document.body.style.overflow = "";
-        }
-
-        trigger?.addEventListener("click", openMobileTOC);
-        closeBtn?.addEventListener("click", closeMobileTOC);
-        overlay?.addEventListener("click", (e) => {
-            if (e.target === overlay) closeMobileTOC();
-        });
-
-        document.querySelectorAll(".toc-mobile-link").forEach((link) => {
-            link.addEventListener("click", () => {
-                closeMobileTOC();
-            });
-        });
-
-        // Hide/show mobile trigger on scroll
-        const mobileTrigger = document.getElementById("toc-mobile-trigger");
-
-        window.addEventListener("scroll", () => {
-            const currentScroll = window.scrollY;
-            if (!mobileTrigger) return;
-
-            if (currentScroll > 400) {
-                mobileTrigger.classList.add("toc-mobile-trigger--visible");
-            } else {
-                mobileTrigger.classList.remove("toc-mobile-trigger--visible");
+        // --- Current section ---
+        const setActive = (slug: string | null) => {
+            lines.forEach((l) => l.classList.toggle("is-active", l.dataset.line === slug));
+            links.forEach((a) => a.classList.toggle("is-active", a.dataset.link === slug));
+        };
+        const update = () => {
+            const offset = 120;
+            let current: HTMLElement | null = null;
+            for (const h of headings) {
+                if (h.getBoundingClientRect().top - offset <= 0) current = h;
+                else break;
             }
-        }, { passive: true });
+            setActive((current ?? headings[0])?.id ?? null);
+        };
+        let ticking = false;
+        window.addEventListener(
+            "scroll",
+            () => {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(() => {
+                    update();
+                    ticking = false;
+                });
+            },
+            { passive: true },
+        );
+        update();
+
+        panel?.addEventListener("mouseenter", () => clearTimeout(closeTimer));
     }
 
-    initTOC();
-    document.addEventListener("astro:after-swap", initTOC);
+    initReadingMap();
 </script>
 
 <style>
-    /* =========================================
-       READING PROGRESS BAR
-       ========================================= */
-    .reading-progress {
+    .reading-map-trigger {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: var(--progress, 0%);
-        height: 2px;
-        background: linear-gradient(90deg, #2563eb, #60a5fa);
-        z-index: 100;
-        transition: width 0.1s linear;
-    }
-
-    :global(.dark) .reading-progress {
-        background: linear-gradient(90deg, #60a5fa, #93c5fd);
-    }
-
-    /* =========================================
-       DESKTOP SIDEBAR TOC
-       ========================================= */
-    .toc-container {
-        max-height: calc(100vh - 10rem);
-        overflow-y: auto;
-        padding-right: 0.75rem;
-    }
-
-    .toc-header {
-        font-family: var(--font-sans), system-ui, sans-serif;
-        font-size: 0.65rem;
-        font-weight: 800;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--text-primary);
-        opacity: 0.5;
-        margin-bottom: 1.25rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border-primary);
-    }
-
-    .toc-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.125rem;
-    }
-
-    .toc-item {
-        margin: 0;
-        padding: 0;
-    }
-
-    .toc-link {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        padding: 0.375rem 0.5rem;
-        border-radius: 0.375rem;
-        border-left: 2px solid transparent;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        color: var(--text-primary);
-        opacity: 0.5;
-        font-size: 0.8rem;
-        line-height: 1.5;
-    }
-
-    .toc-item--sub .toc-link {
-        padding-left: 1.5rem;
-        font-size: 0.75rem;
-        opacity: 0.4;
-    }
-
-    .toc-link:hover {
-        opacity: 0.85;
-        background: var(--border-primary);
-    }
-
-    .toc-link--active {
-        opacity: 1 !important;
-        border-left-color: #2563eb;
-        background: rgba(37, 99, 235, 0.06);
-    }
-
-    :global(.dark) .toc-link--active {
-        border-left-color: #60a5fa;
-        background: rgba(96, 165, 250, 0.08);
-    }
-
-    .toc-number {
-        flex-shrink: 0;
-        font-family: var(--font-sans), system-ui, sans-serif;
-        font-weight: 700;
-        font-size: 0.7rem;
-        min-width: 1.25rem;
-        color: inherit;
-        opacity: 0.7;
-    }
-
-    .toc-item--sub .toc-number {
-        font-size: 0.65rem;
-    }
-
-    /* Full titles — no truncation */
-    .toc-text {
-        font-family: var(--font-sans), system-ui, sans-serif;
-        font-weight: 500;
-        white-space: normal;
-        word-break: break-word;
-    }
-
-    .toc-link--active .toc-number,
-    .toc-link--active .toc-text {
-        font-weight: 700;
-    }
-
-    /* Custom scrollbar */
-    .toc-container::-webkit-scrollbar {
-        width: 3px;
-    }
-    .toc-container::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .toc-container::-webkit-scrollbar-thumb {
-        background: rgba(156, 163, 175, 0.2);
-        border-radius: 2px;
-    }
-    .toc-container::-webkit-scrollbar-thumb:hover {
-        background: rgba(156, 163, 175, 0.4);
-    }
-
-    /* =========================================
-       MOBILE — Floating button + bottom sheet
-       ========================================= */
-    .toc-mobile-trigger {
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        z-index: 50;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.625rem 1rem;
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        border: 1px solid var(--border-primary);
-        border-radius: 2rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-        cursor: pointer;
-        font-family: var(--font-sans), system-ui, sans-serif;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-    }
-
-    :global(.dark) .toc-mobile-trigger {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .toc-mobile-trigger--visible {
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-    }
-
-    .toc-mobile-trigger--visible:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 28px rgba(0, 0, 0, 0.18);
-    }
-
-    .toc-mobile-trigger-text {
+        left: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 40;
         display: none;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: var(--gap, 12px);
+        padding: 0.75rem 0.5rem;
+        max-height: 70vh;
+        overflow: hidden;
+        background: none;
+        border: 0;
+        cursor: pointer;
     }
 
-    @media (min-width: 480px) {
-        .toc-mobile-trigger-text {
-            display: inline;
-        }
+    .reading-map-line {
+        display: block;
+        width: 12px;
+        height: 1.5px;
+        background: var(--fg-subtle);
+        opacity: 0.8;
+        transition: background-color 150ms, opacity 150ms;
+    }
+    .reading-map-line.indent-1 {
+        width: 10px;
+        opacity: 0.6;
+    }
+    .reading-map-line.indent-2 {
+        width: 8px;
+        opacity: 0.6;
+    }
+    .reading-map-line.is-active {
+        background: var(--fg);
+        opacity: 1;
     }
 
-    /* Hide mobile TOC on desktop */
-    @media (min-width: 1024px) {
-        .toc-mobile-wrapper {
-            display: none;
-        }
-    }
-
-    /* Overlay */
-    .toc-mobile-overlay {
+    .reading-map-panel {
         position: fixed;
-        inset: 0;
-        z-index: 60;
-        background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
+        left: 2.75rem;
+        top: 50%;
+        transform: translateY(-50%) scale(0.975);
+        transform-origin: left center;
+        z-index: 50;
+        width: 16.5rem;
+        max-height: min(80vh, 40rem);
+        overflow-y: auto;
+        padding: 0.5rem;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        box-shadow:
+            0 4px 6px -1px rgb(0 0 0 / 0.07),
+            0 10px 24px -6px rgb(0 0 0 / 0.12);
         opacity: 0;
         visibility: hidden;
-        transition: all 0.3s ease;
+        transition:
+            opacity 150ms ease,
+            transform 150ms ease,
+            visibility 150ms;
     }
-
-    :global(.dark) .toc-mobile-overlay {
-        background: rgba(0, 0, 0, 0.6);
-    }
-
-    .toc-mobile-overlay--open {
+    .reading-map.is-open .reading-map-panel {
         opacity: 1;
         visibility: visible;
+        transform: translateY(-50%) scale(1);
     }
 
-    /* Panel */
-    .toc-mobile-panel {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        max-height: 70vh;
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-primary);
-        border-radius: 1.25rem 1.25rem 0 0;
-        padding: 1.5rem;
-        overflow-y: auto;
-        transform: translateY(100%);
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .toc-mobile-overlay--open .toc-mobile-panel {
-        transform: translateY(0);
-    }
-
-    .toc-mobile-panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.25rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border-primary);
-    }
-
-    .toc-mobile-panel-title {
-        font-family: var(--font-sans), system-ui, sans-serif;
-        font-size: 0.7rem;
-        font-weight: 800;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--text-primary);
-        opacity: 0.5;
-    }
-
-    .toc-mobile-close {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: var(--text-primary);
-        opacity: 0.5;
-        padding: 0.25rem;
-        border-radius: 0.375rem;
-        transition: all 0.2s ease;
-    }
-
-    .toc-mobile-close:hover {
-        opacity: 1;
-        background: var(--border-primary);
-    }
-
-    .toc-mobile-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.125rem;
-    }
-
-    .toc-mobile-item {
-        margin: 0;
-        padding: 0;
-    }
-
-    .toc-mobile-link {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.375rem;
-        border-left: 2px solid transparent;
-        text-decoration: none;
-        color: var(--text-primary);
-        opacity: 0.6;
-        font-family: var(--font-sans), system-ui, sans-serif;
-        font-size: 0.85rem;
+    .reading-map-title {
+        padding: 0.25rem 0.5rem 0.5rem;
+        font-size: 0.6875rem;
         font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--fg);
+    }
+
+    .reading-map-panel ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .reading-map-link {
+        display: block;
+        padding: 0.3rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.9375rem;
         line-height: 1.4;
-        transition: all 0.2s ease;
+        color: var(--fg-subtle);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-decoration: none;
+    }
+    .reading-map-link.indent-1 {
+        padding-left: 1.25rem;
+    }
+    .reading-map-link.indent-2 {
+        padding-left: 2rem;
+    }
+    .reading-map-link:hover {
+        color: var(--fg);
+        background: var(--muted);
+    }
+    .reading-map-link.is-active {
+        color: var(--fg);
     }
 
-    .toc-mobile-item--sub .toc-mobile-link {
-        padding-left: 1.75rem;
-        font-size: 0.8rem;
-        opacity: 0.45;
+    /* Narrow screens: floating button + bottom sheet */
+    .reading-map-fab {
+        position: fixed;
+        right: 1rem;
+        bottom: 1rem;
+        z-index: 40;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--fg);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+        cursor: pointer;
     }
 
-    .toc-mobile-number {
-        flex-shrink: 0;
-        font-weight: 700;
-        font-size: 0.7rem;
-        min-width: 1.25rem;
-        opacity: 0.7;
-        font-family: var(--font-sans), system-ui, sans-serif;
+    @media (max-width: 1023px) {
+        .reading-map-panel {
+            left: 0.75rem;
+            right: 0.75rem;
+            top: auto;
+            bottom: 4rem;
+            width: auto;
+            max-height: 60vh;
+            transform: translateY(0.5rem);
+        }
+        .reading-map.is-open .reading-map-panel {
+            transform: translateY(0);
+        }
     }
 
-    .toc-mobile-item--sub .toc-mobile-number {
-        font-size: 0.65rem;
-    }
-
-    .toc-mobile-text {
-        white-space: normal;
-        word-break: break-word;
-    }
-
-    .toc-mobile-link:hover {
-        opacity: 0.9;
-        background: var(--border-primary);
-    }
-
-    .toc-mobile-link.toc-link--active {
-        opacity: 1;
-        border-left-color: #2563eb;
-        background: rgba(37, 99, 235, 0.06);
-        font-weight: 700;
-    }
-
-    :global(.dark) .toc-mobile-link.toc-link--active {
-        border-left-color: #60a5fa;
-        background: rgba(96, 165, 250, 0.08);
-    }
-
-    /* Panel scrollbar */
-    .toc-mobile-panel::-webkit-scrollbar {
-        width: 3px;
-    }
-    .toc-mobile-panel::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .toc-mobile-panel::-webkit-scrollbar-thumb {
-        background: rgba(156, 163, 175, 0.2);
-        border-radius: 2px;
+    @media (min-width: 1024px) {
+        .reading-map-trigger {
+            display: flex;
+        }
+        .reading-map-fab {
+            display: none;
+        }
     }
 </style>

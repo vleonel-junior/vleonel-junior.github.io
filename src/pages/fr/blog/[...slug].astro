@@ -1,9 +1,9 @@
 ---
-import BlogPostPage from "../../views/BlogPostPage.astro";
-import { postPaths } from "../../i18n/content";
+import BlogPostPage from "../../../views/BlogPostPage.astro";
+import { postPaths } from "../../../i18n/content";
 
 export async function getStaticPaths() {
-    return postPaths("en");
+    return postPaths("fr");
 }
 
 type Props = Awaited<ReturnType<typeof postPaths>>[number]["props"];

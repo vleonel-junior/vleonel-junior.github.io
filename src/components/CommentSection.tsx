@@ -548,9 +548,9 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
     const getReplies = (parentId: string) => comments.filter(c => c.parent_id === parentId);
 
     return (
-        <div class="font-sans text-quartz dark:text-quartz-light">
+        <div class="font-sans text-fg">
             {/* Interaction Bar (Substack Style) */}
-            <div class="border-y border-gray-100 dark:border-white/10 py-3 mb-10">
+            <div class="border-y border-border py-3 mb-10">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
                         <div class="relative">
@@ -558,23 +558,23 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                 {likerAvatars.length > 0 ? (
                                     likerAvatars.map((liker, i) => (
                                         liker.avatar ? (
-                                            <img key={i} class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 object-cover hover:scale-110 transition-transform" src={liker.avatar} alt={liker.name} title={liker.name} />
+                                            <img key={i} class="inline-block h-8 w-8 rounded-full ring-2 ring-bg object-cover hover:scale-110 transition-transform" src={liker.avatar} alt={liker.name} title={liker.name} />
                                         ) : (
-                                            <div key={i} class="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 text-white text-xs font-bold hover:scale-110 transition-transform" style={{ backgroundColor: emailToColor(liker.email) }} title={liker.name}>
+                                            <div key={i} class="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-bg text-white text-xs font-bold hover:scale-110 transition-transform" style={{ backgroundColor: emailToColor(liker.email) }} title={liker.name}>
                                                 {liker.name.charAt(0).toUpperCase()}
                                             </div>
                                         )
                                     ))
                                 ) : (
-                                    <div class="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
+                                    <div class="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center ring-2 ring-bg">
                                         <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
                                     </div>
                                 )}
                             </div>
                             {/* Liker Panel Popover */}
                             {showLikerPanel && likerAvatars.length > 0 && (
-                                <div class="absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-white/10 p-3 z-50 min-w-[200px] animate-in fade-in slide-in-from-top-1 duration-150">
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t.likedBy}</p>
+                                <div class="absolute top-full left-0 mt-2 bg-bg rounded-xl shadow-lg border border-border p-3 z-50 min-w-[200px] animate-in fade-in slide-in-from-top-1 duration-150">
+                                    <p class="text-[10px] font-bold text-fg-subtle uppercase tracking-wider mb-2">{t.likedBy}</p>
                                     <div class="space-y-2 max-h-[200px] overflow-y-auto">
                                         {likerAvatars.map((liker, i) => (
                                             <div key={i} class="flex items-center gap-2">
@@ -585,29 +585,29 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                                         {liker.name.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
-                                                <span class="text-xs font-medium text-quartz dark:text-quartz-light">{liker.name}</span>
+                                                <span class="text-xs font-medium text-fg">{liker.name}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
                         </div>
-                        <div class="text-sm font-medium text-gray-500">
-                            <span class="text-quartz dark:text-quartz-light">{postLikes.toLocaleString()}</span> {t.likes} • <span class="text-quartz dark:text-quartz-light">{comments.length}</span> {t.comments}
+                        <div class="text-sm font-medium text-fg-subtle">
+                            <span class="text-fg">{postLikes.toLocaleString()}</span> {t.likes} • <span class="text-fg">{comments.length}</span> {t.comments}
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
                         <button
                             onClick={handlePostLike}
-                            class={`flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all text-sm font-bold ${isPostLiked ? 'border-red-200 bg-red-50 text-red-600' : 'border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                            class={`flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all text-sm font-bold ${isPostLiked ? 'border-red-200 bg-red-50 text-red-600' : 'border-border hover:bg-muted'}`}
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill={isPostLiked ? "currentColor" : "none"} stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                             {isPostLiked ? t.liked : t.like}
                         </button>
                         <button
                             onClick={handleShare}
-                            class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-all text-sm font-bold"
+                            class="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border hover:bg-muted transition-all text-sm font-bold"
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                             {t.share}
@@ -619,7 +619,7 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
             <div class="flex items-center justify-between mb-8">
                 <h3 class="text-xl font-bold font-serif">
                     {t.discussion}
-                    <span class="ml-3 text-sm font-normal text-quartz/50 dark:text-quartz-light/50 bg-quartz/5 dark:bg-white/10 px-2 py-0.5 rounded-full">
+                    <span class="ml-3 text-sm font-normal text-fg-subtle bg-muted px-2 py-0.5 rounded-full">
                         {comments.length}
                     </span>
                 </h3>
@@ -628,15 +628,15 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
 
             {/* Input Area */}
             {!user ? (
-                <div class="bg-gray-50 dark:bg-white/5 rounded-lg p-6 border border-gray-100 dark:border-white/10 mb-10">
+                <div class="bg-surface rounded-lg p-6 border border-border mb-10">
                     {loginSent ? (
                         <div class="text-center py-4">
-                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-4">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent-soft text-accent mb-4">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             </div>
                             <h4 class="font-bold mb-1">{t.linkSent}</h4>
-                            <p class="text-sm text-gray-500">{t.linkSentTo} <span class="font-medium text-quartz dark:text-quartz-light">{email}</span>.</p>
-                            <button onClick={() => setLoginSent(false)} class="mt-4 text-xs font-bold text-quartz dark:text-quartz-light hover:underline">{t.otherEmail}</button>
+                            <p class="text-sm text-fg-subtle">{t.linkSentTo} <span class="font-medium text-fg">{email}</span>.</p>
+                            <button onClick={() => setLoginSent(false)} class="mt-4 text-xs font-bold text-fg hover:underline">{t.otherEmail}</button>
                         </div>
                     ) : (
                         <div>
@@ -648,17 +648,17 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                     placeholder={t.enterEmail}
                                     value={email}
                                     onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
-                                    class="flex-1 px-4 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:border-quartz outline-none transition shadow-sm"
+                                    class="flex-1 px-4 py-2 rounded border border-border bg-bg text-sm focus:border-accent outline-none transition shadow-sm"
                                 />
                                 <button
                                     type="submit"
                                     disabled={loginLoading || !email.trim()}
-                                    class="bg-quartz dark:bg-quartz-light text-white dark:text-quartz px-6 py-2 rounded font-bold text-sm hover:opacity-90 transition disabled:opacity-50"
+                                    class="bg-fg text-bg px-6 py-2 rounded font-bold text-sm hover:opacity-90 transition disabled:opacity-50"
                                 >
                                     {loginLoading ? t.sending : t.signIn}
                                 </button>
                             </form>
-                            <p class="mt-4 text-[10px] text-center text-gray-400">
+                            <p class="mt-4 text-[10px] text-center text-fg-subtle">
                                 A secure sign-in link will be sent to your email address.
                             </p>
                         </div>
@@ -677,11 +677,11 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                         onClick={() => setPreviewAvatar(user.user_metadata.avatar_url)}
                                     />
                                 ) : (
-                                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-sm font-bold">
+                                    <div class="w-10 h-10 rounded-full bg-accent-soft flex items-center justify-center text-accent text-sm font-bold">
                                         {user.email?.[0]?.toUpperCase() || '?'}
                                     </div>
                                 )}
-                                <label class="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:text-red-500 transition-colors">
+                                <label class="absolute -bottom-1 -right-1 bg-bg rounded-full p-1 shadow-sm border border-border cursor-pointer hover:text-accent transition-colors">
                                     <input type="file" accept="image/*" class="hidden" onChange={handleAvatarUpload} disabled={uploading} />
                                     {uploading ? (
                                         <svg class="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -696,35 +696,35 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                         <input
                                             value={displayName}
                                             onInput={(e) => setDisplayName((e.target as HTMLInputElement).value)}
-                                            class="text-xs border-b border-gray-300 dark:border-gray-600 bg-transparent outline-none focus:border-red-500"
+                                            class="text-xs border-b border-border bg-transparent outline-none focus:border-accent"
                                             placeholder={t.displayName}
                                         />
-                                        <button type="button" onClick={handleUpdateName} class="text-[10px] font-bold text-red-600">{t.save}</button>
-                                        <button type="button" onClick={() => setIsEditingName(false)} class="text-[10px] text-gray-400">{t.cancel}</button>
+                                        <button type="button" onClick={handleUpdateName} class="text-[10px] font-bold text-accent">{t.save}</button>
+                                        <button type="button" onClick={() => setIsEditingName(false)} class="text-[10px] text-fg-subtle">{t.cancel}</button>
                                     </div>
                                 ) : (
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="text-xs font-bold">{displayName || t.setName}</span>
                                         {user.email === AUTHOR_EMAIL && (
-                                            <span class="text-[10px] font-bold bg-quartz/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-quartz/60 dark:text-quartz-light/60">
+                                            <span class="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-fg-subtle">
                                                 {t.author}
                                             </span>
                                         )}
-                                        <button type="button" onClick={() => setIsEditingName(true)} class="text-[10px] text-gray-400 hover:text-red-500 transition">{t.editProfile}</button>
+                                        <button type="button" onClick={() => setIsEditingName(true)} class="text-[10px] text-fg-subtle hover:text-accent transition">{t.editProfile}</button>
                                     </div>
                                 )}
                                 <textarea
                                     value={newComment}
                                     onInput={(e) => setNewComment((e.target as HTMLTextAreaElement).value)}
                                     placeholder={t.writeComment}
-                                    class="w-full bg-transparent border-2 border-gray-300/40 dark:border-gray-600/40 focus:border-red-500 focus:ring-2 focus:ring-red-500/10 rounded-lg p-3 outline-none min-h-[80px] resize-y text-sm transition-all"
+                                    class="w-full bg-transparent border-2 border-border focus:border-accent focus:ring-2 focus:ring-accent/20 rounded-lg p-3 outline-none min-h-[80px] resize-y text-sm transition-all"
                                 />
                                 <div class="flex justify-between items-center mt-2">
-                                    <button type="button" onClick={handleLogout} class="text-xs text-gray-400 hover:text-gray-600">{t.signOut}</button>
+                                    <button type="button" onClick={handleLogout} class="text-xs text-fg-subtle hover:text-fg-muted">{t.signOut}</button>
                                     <button
                                         type="submit"
                                         disabled={!newComment.trim()}
-                                        class="bg-red-600 text-white px-6 py-2 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700 transition shadow-sm"
+                                        class="bg-fg text-bg px-6 py-2 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition shadow-sm"
                                     >
                                         {t.postComment}
                                     </button>
@@ -738,9 +738,9 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
             {/* List */}
             <div class="space-y-8">
                 {loading ? (
-                    <p class="text-center text-sm text-gray-400 animate-pulse">{t.loading}</p>
+                    <p class="text-center text-sm text-fg-subtle animate-pulse">{t.loading}</p>
                 ) : rootComments.length === 0 ? (
-                    <p class="text-center text-sm text-gray-400 italic">{t.empty}</p>
+                    <p class="text-center text-sm text-fg-subtle italic">{t.empty}</p>
                 ) : (
                     rootComments.map(comment => (
                         <div key={comment.id} class="group">
@@ -763,14 +763,14 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                 <div class="flex-1">
                                     <div class="flex items-baseline justify-between mb-1">
                                         <div class="flex items-center gap-2">
-                                            <h4 class="text-sm font-bold text-quartz dark:text-quartz-light">{comment.author_name}</h4>
+                                            <h4 class="text-sm font-bold text-fg">{comment.author_name}</h4>
                                             {comment.author_email === AUTHOR_EMAIL && (
-                                                <span class="text-[10px] font-bold bg-quartz/5 dark:bg-white/10 px-1.5 py-0.5 rounded text-quartz/60 dark:text-quartz-light/60">
+                                                <span class="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-fg-subtle">
                                                     {t.author}
                                                 </span>
                                             )}
                                         </div>
-                                        <span class="text-xs text-gray-400">{timeAgo(comment.created_at, lang)}</span>
+                                        <span class="text-xs text-fg-subtle">{timeAgo(comment.created_at, lang)}</span>
                                     </div>
                                     {authorLikes[comment.id] && (
                                         <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-red-100 bg-red-50 text-red-600 text-[10px] font-bold mb-2">
@@ -784,7 +784,7 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                     <div class="flex items-center gap-4">
                                         <button
                                             onClick={() => handleLike(comment.id)}
-                                            class={`text-xs font-medium flex items-center gap-1 transition ${userCommentLikes[comment.id] ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-quartz dark:hover:text-white'}`}
+                                            class={`text-xs font-medium flex items-center gap-1 transition ${userCommentLikes[comment.id] ? 'text-red-500 hover:text-red-600' : 'text-fg-subtle hover:text-fg'}`}
                                         >
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill={userCommentLikes[comment.id] ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                             Like {comment.likes > 0 && `(${comment.likes})`}
@@ -794,20 +794,20 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                                 <div class="flex -space-x-1.5 items-center cursor-pointer" onClick={() => setShowCommentLikerPanel(showCommentLikerPanel === comment.id ? null : comment.id)} title={commentLikerMap[comment.id].map(l => l.name).join(', ')}>
                                                     {commentLikerMap[comment.id].slice(0, 3).map((liker, i) => (
                                                         liker.avatar ? (
-                                                            <img key={i} class="w-5 h-5 rounded-full ring-1 ring-white dark:ring-gray-900 object-cover hover:scale-110 transition-transform" src={liker.avatar} alt={liker.name} />
+                                                            <img key={i} class="w-5 h-5 rounded-full ring-1 ring-bg object-cover hover:scale-110 transition-transform" src={liker.avatar} alt={liker.name} />
                                                         ) : (
-                                                            <div key={i} class="w-5 h-5 rounded-full ring-1 ring-white dark:ring-gray-900 flex items-center justify-center text-white text-[8px] font-bold hover:scale-110 transition-transform" style={{ backgroundColor: emailToColor(liker.email) }}>
+                                                            <div key={i} class="w-5 h-5 rounded-full ring-1 ring-bg flex items-center justify-center text-white text-[8px] font-bold hover:scale-110 transition-transform" style={{ backgroundColor: emailToColor(liker.email) }}>
                                                                 {liker.name.charAt(0).toUpperCase()}
                                                             </div>
                                                         )
                                                     ))}
                                                     {commentLikerMap[comment.id].length > 3 && (
-                                                        <span class="text-[10px] text-gray-400 ml-1">+{commentLikerMap[comment.id].length - 3}</span>
+                                                        <span class="text-[10px] text-fg-subtle ml-1">+{commentLikerMap[comment.id].length - 3}</span>
                                                     )}
                                                 </div>
                                                 {showCommentLikerPanel === comment.id && (
-                                                    <div class="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-white/10 p-3 z-50 min-w-[180px]">
-                                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t.likedBy}</p>
+                                                    <div class="absolute bottom-full left-0 mb-2 bg-bg rounded-xl shadow-lg border border-border p-3 z-50 min-w-[180px]">
+                                                        <p class="text-[10px] font-bold text-fg-subtle uppercase tracking-wider mb-2">{t.likedBy}</p>
                                                         <div class="space-y-2 max-h-[160px] overflow-y-auto">
                                                             {commentLikerMap[comment.id].map((liker, i) => (
                                                                 <div key={i} class="flex items-center gap-2">
@@ -818,7 +818,7 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                                                             {liker.name.charAt(0).toUpperCase()}
                                                                         </div>
                                                                     )}
-                                                                    <span class="text-[11px] font-medium text-quartz dark:text-quartz-light">{liker.name}</span>
+                                                                    <span class="text-[11px] font-medium text-fg">{liker.name}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -828,7 +828,7 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                         )}
                                         <button
                                             onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
-                                            class="text-xs font-medium text-gray-400 hover:text-quartz dark:hover:text-white flex items-center gap-1 transition"
+                                            class="text-xs font-medium text-fg-subtle hover:text-fg flex items-center gap-1 transition"
                                         >
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
                                             {t.reply}
@@ -858,14 +858,14 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                         <div class="flex-1">
                                             <div class="flex items-baseline justify-between mb-1">
                                                 <div class="flex items-center gap-2">
-                                                    <h4 class="text-xs font-bold text-quartz dark:text-quartz-light">{reply.author_name}</h4>
+                                                    <h4 class="text-xs font-bold text-fg">{reply.author_name}</h4>
                                                     {reply.author_email === AUTHOR_EMAIL && (
-                                                        <span class="text-[9px] font-bold bg-quartz/5 dark:bg-white/10 px-1 py-0.5 rounded text-quartz/60 dark:text-quartz-light/60">
+                                                        <span class="text-[9px] font-bold bg-muted px-1 py-0.5 rounded text-fg-subtle">
                                                             {t.author}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <span class="text-[10px] text-gray-400">{timeAgo(reply.created_at, lang)}</span>
+                                                <span class="text-[10px] text-fg-subtle">{timeAgo(reply.created_at, lang)}</span>
                                             </div>
                                             {authorLikes[reply.id] && (
                                                 <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-red-100 bg-red-50 text-red-600 text-[10px] font-bold mb-2">
@@ -879,7 +879,7 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                             <div class="flex items-center gap-4">
                                                 <button
                                                     onClick={() => handleLike(reply.id)}
-                                                    class={`text-[11px] font-medium flex items-center gap-1 transition ${userCommentLikes[reply.id] ? 'text-red-500 hover:text-red-600' : 'text-gray-400 hover:text-quartz dark:hover:text-white'}`}
+                                                    class={`text-[11px] font-medium flex items-center gap-1 transition ${userCommentLikes[reply.id] ? 'text-red-500 hover:text-red-600' : 'text-fg-subtle hover:text-fg'}`}
                                                 >
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill={userCommentLikes[reply.id] ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                                     Like {reply.likes > 0 && `(${reply.likes})`}
@@ -889,20 +889,20 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                                         <div class="flex -space-x-1 items-center cursor-pointer" onClick={() => setShowCommentLikerPanel(showCommentLikerPanel === reply.id ? null : reply.id)} title={commentLikerMap[reply.id].map(l => l.name).join(', ')}>
                                                             {commentLikerMap[reply.id].slice(0, 3).map((liker, i) => (
                                                                 liker.avatar ? (
-                                                                    <img key={i} class="w-4 h-4 rounded-full ring-1 ring-white dark:ring-gray-900 object-cover hover:scale-110 transition-transform" src={liker.avatar} alt={liker.name} />
+                                                                    <img key={i} class="w-4 h-4 rounded-full ring-1 ring-bg object-cover hover:scale-110 transition-transform" src={liker.avatar} alt={liker.name} />
                                                                 ) : (
-                                                                    <div key={i} class="w-4 h-4 rounded-full ring-1 ring-white dark:ring-gray-900 flex items-center justify-center text-white text-[7px] font-bold hover:scale-110 transition-transform" style={{ backgroundColor: emailToColor(liker.email) }}>
+                                                                    <div key={i} class="w-4 h-4 rounded-full ring-1 ring-bg flex items-center justify-center text-white text-[7px] font-bold hover:scale-110 transition-transform" style={{ backgroundColor: emailToColor(liker.email) }}>
                                                                         {liker.name.charAt(0).toUpperCase()}
                                                                     </div>
                                                                 )
                                                             ))}
                                                             {commentLikerMap[reply.id].length > 3 && (
-                                                                <span class="text-[9px] text-gray-400 ml-1">+{commentLikerMap[reply.id].length - 3}</span>
+                                                                <span class="text-[9px] text-fg-subtle ml-1">+{commentLikerMap[reply.id].length - 3}</span>
                                                             )}
                                                         </div>
                                                         {showCommentLikerPanel === reply.id && (
-                                                            <div class="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-white/10 p-3 z-50 min-w-[160px]">
-                                                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t.likedBy}</p>
+                                                            <div class="absolute bottom-full left-0 mb-2 bg-bg rounded-xl shadow-lg border border-border p-3 z-50 min-w-[160px]">
+                                                                <p class="text-[10px] font-bold text-fg-subtle uppercase tracking-wider mb-2">{t.likedBy}</p>
                                                                 <div class="space-y-2 max-h-[140px] overflow-y-auto">
                                                                     {commentLikerMap[reply.id].map((liker, i) => (
                                                                         <div key={i} class="flex items-center gap-2">
@@ -913,7 +913,7 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                                                                     {liker.name.charAt(0).toUpperCase()}
                                                                                 </div>
                                                                             )}
-                                                                            <span class="text-[10px] font-medium text-quartz dark:text-quartz-light">{liker.name}</span>
+                                                                            <span class="text-[10px] font-medium text-fg">{liker.name}</span>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -926,7 +926,7 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                                         setReplyTo(replyTo === comment.id ? null : comment.id);
                                                         setNewComment(`@${reply.author_name} `);
                                                     }}
-                                                    class="text-[11px] font-medium text-gray-400 hover:text-quartz dark:hover:text-white flex items-center gap-1 transition"
+                                                    class="text-[11px] font-medium text-fg-subtle hover:text-fg flex items-center gap-1 transition"
                                                 >
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
                                                     {t.reply}
@@ -945,21 +945,21 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
                                             value={newComment}
                                             onInput={(e) => setNewComment((e.target as HTMLTextAreaElement).value)}
                                             placeholder={t.writeReply}
-                                            class="w-full bg-transparent border-2 border-gray-300/40 dark:border-gray-600/40 focus:border-red-500 focus:ring-2 focus:ring-red-500/10 rounded-lg p-2 outline-none min-h-[60px] resize-y text-sm transition-all"
+                                            class="w-full bg-transparent border-2 border-border focus:border-accent focus:ring-2 focus:ring-accent/20 rounded-lg p-2 outline-none min-h-[60px] resize-y text-sm transition-all"
                                             autoFocus
                                         />
                                         <div class="flex justify-end gap-2 mt-2">
                                             <button
                                                 type="button"
                                                 onClick={() => { setReplyTo(null); setNewComment(""); }}
-                                                class="text-xs text-gray-500 hover:text-gray-700 px-3 py-1"
+                                                class="text-xs text-fg-subtle hover:text-fg-muted px-3 py-1"
                                             >
                                                 {t.cancel}
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={!newComment.trim()}
-                                                class="bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700 transition"
+                                                class="bg-fg text-bg px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition"
                                             >
                                                 {t.reply}
                                             </button>

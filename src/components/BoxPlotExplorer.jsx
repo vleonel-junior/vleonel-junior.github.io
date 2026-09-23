@@ -1,9 +1,7 @@
 import { useState } from 'preact/hooks';
 
-export default function BoxPlotExplorer() {
-  const [step, setStep] = useState(0);
-
-  const steps = [
+const STEPS = {
+  fr: [
     {
       id: 'overview',
       title: "Aperçu",
@@ -49,7 +47,92 @@ export default function BoxPlotExplorer() {
       title: "Valeurs Aberrantes (Outliers)",
       desc: "Les points isolés flottant au-delà des moustaches sont les valeurs aberrantes (outliers). Leur statut mathématiquement exceptionnel exige qu'elles soient affichées et potentiellement analysées ou nettoyées séparément."
     }
-  ];
+  ],
+  en: [
+    {
+      id: 'overview',
+      title: "Overview",
+      desc: "This is an annotated box plot, a standard way to show how data is distributed through a five-number summary. Box plots are very useful for spotting outliers and comparing spread. They show the interquartile range (the box), the range (the whiskers) and the measures of central tendency."
+    },
+    {
+      id: 'q1',
+      title: "First Quartile and Box",
+      desc: "The left edge of the box marks the first quartile (Q1). This is the 25th percentile: 25% of the values in the sample lie below it. The box runs from Q1 to Q3 and so contains the middle half (50%) of the data."
+    },
+    {
+      id: 'median',
+      title: "Median",
+      desc: "The vertical line inside the box is the median (Q2), the 50th percentile. It is the pivot value that splits the sorted sample into two halves of equal size."
+    },
+    {
+      id: 'mean',
+      title: "Mean",
+      desc: "The cross (×) marks the arithmetic mean. Although a box plot is built on robust quartiles, the mean is often added to assess skewness: a mean that sits away from the median signals an asymmetric distribution."
+    },
+    {
+      id: 'q3',
+      title: "Third Quartile",
+      desc: "The right edge of the box marks the third quartile (Q3). This is the 75th percentile: the large majority (75%) of the data points fall below this threshold."
+    },
+    {
+      id: 'iqr',
+      title: "Interquartile Range (IQR)",
+      desc: "The whole box represents the interquartile range (IQR = Q3 - Q1), the region holding the 50% most central values. It is a particularly strong measure of spread because it ignores the influence of the extremes from the start."
+    },
+    {
+      id: 'whisker',
+      title: "Whiskers",
+      desc: "The horizontal segments, called whiskers, extend on each side of the box. They show the range of data considered regular and usually reach a conventional maximum distance of 1.5 times the IQR."
+    },
+    {
+      id: 'minmax',
+      title: "Minimum and Maximum",
+      desc: "The end caps of the whiskers mark the strict minimum and maximum of the non-outlier data. Any value within these bounds is considered statistically representative."
+    },
+    {
+      id: 'outlier',
+      title: "Outliers",
+      desc: "The isolated points beyond the whiskers are the outliers. Because they are mathematically exceptional, they are shown individually and may need to be analyzed or cleaned separately."
+    },
+  ],
+};
+
+const LABELS = {
+  fr: {
+    title: "Explorateur de boîte à moustaches",
+    intro: "Découvrez la construction d'une boîte à moustaches. Utilisez la navigation ci-dessous pour explorer chaque élément statistique.",
+    outliers1: "Valeurs",
+    outliers2: "Aberrantes",
+    whisker: "Moustache",
+    q1: "Premier Quartile",
+    median: "Médiane",
+    mean: "Moyenne",
+    q3: "Troisième Quartile",
+    iqr: "Écart Interquartile",
+    previous: "Étape précédente",
+    next: "Étape suivante",
+  },
+  en: {
+    title: "Box Plot Explorer",
+    intro: "See how a box plot is built. Use the navigation below to explore each statistical element.",
+    outliers1: "Outliers",
+    outliers2: "",
+    whisker: "Whisker",
+    q1: "First Quartile",
+    median: "Median",
+    mean: "Mean",
+    q3: "Third Quartile",
+    iqr: "Interquartile Range",
+    previous: "Previous step",
+    next: "Next step",
+  },
+};
+
+export default function BoxPlotExplorer({ lang = "fr" }) {
+  const [step, setStep] = useState(0);
+
+  const steps = STEPS[lang] ?? STEPS.fr;
+  const t = LABELS[lang] ?? LABELS.fr;
 
   const isStep = (ids) => {
     if (step === 0) return true;
@@ -89,11 +172,11 @@ export default function BoxPlotExplorer() {
   };
 
   return (
-    <div className="my-8 rounded-xl bg-[#0c0c0e] text-zinc-300 p-8 shadow-2xl border border-zinc-800/80 font-sans not-prose">
+    <div className="my-8 rounded-xl bg-[#0c0c0e] text-zinc-300 p-5 sm:p-8 shadow-2xl border border-zinc-800/80 font-sans not-prose">
       <div className="mb-6">
-        <h3 className="text-2xl font-bold mb-2 text-white">Explorateur Box Plot</h3>
+        <h3 className="text-2xl font-bold mb-2 text-white">{t.title}</h3>
         <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
-          Découvrez la construction d'une boîte à moustaches. Utilisez la navigation ci-dessous pour explorer chaque élément statistique.
+          {t.intro}
         </p>
       </div>
 
@@ -140,8 +223,8 @@ export default function BoxPlotExplorer() {
 
           {/* Typography */}
           <g className={`transition-all duration-300 ${getTextClass(['outlier', 'overview'])}`}>
-            <text x="70" y="55" fontSize="13" textAnchor="middle">Valeurs</text>
-            <text x="70" y="73" fontSize="12" textAnchor="middle" className="opacity-80">Aberrantes</text>
+            <text x="70" y="55" fontSize="13" textAnchor="middle">{t.outliers1}</text>
+            <text x="70" y="73" fontSize="12" textAnchor="middle" className="opacity-80">{t.outliers2}</text>
             <line x1="70" y1="85" x2="70" y2="135" className={`${getLineClass(['outlier', 'overview'], ['outlier'])} opacity-60`} strokeWidth="1.5" strokeDasharray="3,3" />
             <polygon points="67,132 73,132 70,138" className={isStep(['outlier', 'overview']) ? (isEmphasized(['outlier']) ? 'fill-[#38bdf8]' : 'fill-[#0ea5e9]') : 'fill-zinc-700/40'} />
           </g>
@@ -149,33 +232,33 @@ export default function BoxPlotExplorer() {
           <text x="150" y="205" fontSize="14" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['minmax', 'overview'])}`}>Minimum</text>
           <text x="680" y="205" fontSize="14" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['minmax', 'overview'])}`}>Maximum</text>
 
-          <text x="215" y="140" fontSize="13" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['whisker', 'overview'])}`}>Moustache</text>
-          <text x="630" y="140" fontSize="13" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['whisker', 'overview'])}`}>Moustache</text>
+          <text x="215" y="140" fontSize="13" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['whisker', 'overview'])}`}>{t.whisker}</text>
+          <text x="630" y="140" fontSize="13" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['whisker', 'overview'])}`}>{t.whisker}</text>
 
           <g className={`transition-all duration-300 ${getTextClass(['q1', 'overview'])}`}>
-            <text x="280" y="55" fontSize="13" textAnchor="middle">Premier Quartile</text>
+            <text x="280" y="55" fontSize="13" textAnchor="middle">{t.q1}</text>
             <text x="280" y="73" fontSize="12" textAnchor="middle" className="opacity-80">Q1</text>
           </g>
 
           <g className={`transition-all duration-300 ${getTextClass(['median', 'overview'])}`}>
-            <text x="440" y="55" fontSize="13" textAnchor="middle">Médiane</text>
+            <text x="440" y="55" fontSize="13" textAnchor="middle">{t.median}</text>
             <text x="440" y="73" fontSize="12" textAnchor="middle" className="opacity-80">Q2</text>
           </g>
 
           <g className={`transition-all duration-300 ${getTextClass(['mean', 'overview'])}`}>
-            <text x="385" y="73" fontSize="13" textAnchor="middle">Moyenne</text>
+            <text x="385" y="73" fontSize="13" textAnchor="middle">{t.mean}</text>
             <line x1="385" y1="85" x2="400" y2="135" className={`${getLineClass(['mean', 'overview'], ['mean'])} opacity-60`} strokeWidth="1.5" strokeDasharray="3,3" />
             <polygon points="398,131 404,133 401,139" className={isStep(['mean', 'overview']) ? (isEmphasized(['mean']) ? 'fill-[#38bdf8]' : 'fill-[#0ea5e9]') : 'fill-zinc-700/40'} />
           </g>
 
           <g className={`transition-all duration-300 ${getTextClass(['q3', 'overview'])}`}>
-            <text x="580" y="55" fontSize="13" textAnchor="middle">Troisième Quartile</text>
+            <text x="580" y="55" fontSize="13" textAnchor="middle">{t.q3}</text>
             <text x="580" y="73" fontSize="12" textAnchor="middle" className="opacity-80">Q3</text>
           </g>
 
           <g className={`transition-all duration-300 ${getTextClass(['iqr', 'overview'])}`}>
             <path d="M 280,215 Q 280,225 355,225 Q 430,225 430,235 Q 430,225 505,225 Q 580,225 580,215" fill="none" className={`${getLineClass(['iqr', 'overview'], ['iqr'])} transition-all duration-300`} strokeWidth="1.5" />
-            <text x="430" y="255" fontSize="14" textAnchor="middle">Écart Interquartile</text>
+            <text x="430" y="255" fontSize="14" textAnchor="middle">{t.iqr}</text>
             <text x="430" y="275" fontSize="13" textAnchor="middle" className="opacity-80">IQR</text>
           </g>
         </svg>
@@ -191,6 +274,7 @@ export default function BoxPlotExplorer() {
             <div className="flex items-center gap-2 bg-[#0c0c0e] px-2 py-1 rounded-lg border border-zinc-800 shadow-inner">
               <button 
                 onClick={() => setStep(s => Math.max(0, s - 1))}
+                aria-label={t.previous}
                 disabled={step === 0}
                 className="text-zinc-500 p-1.5 hover:text-white hover:bg-zinc-800 rounded-md transition-all disabled:opacity-30 disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
               >
@@ -201,6 +285,7 @@ export default function BoxPlotExplorer() {
               </span>
               <button 
                 onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))}
+                aria-label={t.next}
                 disabled={step === steps.length - 1}
                 className="text-zinc-500 p-1.5 hover:text-white hover:bg-zinc-800 rounded-md transition-all disabled:opacity-30 disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
               >

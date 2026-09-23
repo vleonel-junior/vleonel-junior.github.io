@@ -1,0 +1,393 @@
+---
+
+title: "Descriptive Statistics"
+description: "Before diving into machine learning algorithms, we need a solid grounding in descriptive statistics, the tools that let us summarize and understand data at a glance."
+pubDate: 2026-03-26
+author: "Léonel VODOUNOU"
+category: "Foundations"
+lang: "en"
+tags: ["Statistics", "Machine Learning", "Mathematics"]
+---
+
+import SkewnessExplorer from '../../../components/SkewnessExplorer.jsx';
+import KurtosisExplorer from '../../../components/KurtosisExplorer.jsx';
+import BoxPlotExplorer from '../../../components/BoxPlotExplorer.jsx';
+
+## Introduction
+
+To build models that perform well, you need an intimate understanding of the nature of your data. Descriptive statistics give us exactly the mathematical concepts we need to analyze and summarize any dataset.
+
+---
+
+## What Are Descriptive Statistics?
+
+Descriptive statistics are the tools we use to summarize and describe data. Instead of looking at thousands of numbers, we extract a few key indicators that tell the essential story.
+
+For example: "This app has a 4.2-star rating based on 10,000 reviews." That single number condenses thousands of individual opinions into one useful piece of information.
+
+In this guide, we will cover the fundamentals: the mean, the median and the mode (where is the "center" of your data?), as well as the variance and the standard deviation (how spread out is your data?).
+
+These concepts show up everywhere: from making sense of survey results to building machine learning models, by way of analyzing probability distributions.
+
+---
+
+## Measures of Central Tendency
+
+### The Mean
+
+The mean is the most widely used measure of central tendency. It represents the balance point of a dataset.
+
+#### Definition
+The arithmetic mean is the sum of all values divided by the number of values.
+
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i = \frac{x_1 + x_2 + \dots + x_n}{n}$$
+
+**Example: Stable temperatures**
+
+You measure the temperature of a server room over 5 days: 20°C, 21°C, 20°C, 22°C, 22°C.
+
+* **Mean:** $(20 + 21 + 20 + 22 + 22) / 5 = 21$ °C.
+
+Here, the mean describes the situation perfectly.
+
+---
+
+### The Median (Middle Value)
+
+The median is the value that splits the dataset into two equal groups: 50% of the values lie below it and 50% lie above it. It is favored for its **robustness**.
+
+#### Definition
+Once the data is sorted in ascending order:
+
+$$\text{Median} = \begin{cases} x_{\frac{n+1}{2}} & \text{if } n \text{ is odd} \\ \frac{x_{\frac{n}{2}} + x_{\frac{n}{2} + 1}}{2} & \text{if } n \text{ is even} \end{cases}$$
+
+**Example: The impact of an outlier**
+
+Consider the monthly incomes of 5 people.
+
+* **Case A (Homogeneous distribution):** €1,500, €1,600, **€1,700**, €1,800, €1,900
+    * **Mean:** €1,700
+    * **Median:** €1,700 (The two measures agree).
+
+* **Case B (With an extreme outlier):** €1,500, €1,600, **€1,700**, €1,800, **€100,000**
+    * **Median:** **€1,700** (It stays stable and still represents the group).
+    * **Mean:** **€21,320** (It explodes and no longer represents anyone in the group).
+
+---
+
+### The Mode (Most Frequent)
+
+The mode is the most frequent value. It is the only measure of central tendency that works for qualitative (categorical) data.
+
+#### Definition
+The mode is the value with the highest count. A distribution can be:
+
+* **Unimodal** (a single mode).
+* **Bimodal** (two modes, often a sign of two distinct subpopulations).
+* **Multimodal** (more than two modes).
+
+**Example: Industrial maintenance**
+
+We record the cause of each failure on a production line:
+*Electrical, Mechanical, Electrical, Electrical, Software, Mechanical, Electrical.*
+
+* **Mode:** Electrical (4 occurrences).
+
+That is the key piece of information for prioritizing repairs!
+
+---
+
+## Empirical Quantiles
+
+Empirical quantiles are values that divide the ordered sample into a given number of parts of equal size. They generalize the median.
+
+* With **2 parts**, we recover the empirical median: $\tilde{x}_n$.
+* With **4 parts**, we speak of **quartiles**, written $\tilde{q}_{n, 1/4}$, $\tilde{q}_{n, 1/2}$ and $\tilde{q}_{n, 3/4}$. Naturally, $\tilde{q}_{n, 1/2} = \tilde{x}_n$.
+* With **10 parts**, we speak of **deciles**, written $\tilde{q}_{n, 1/10}, \dots, \tilde{q}_{n, 9/10}$.
+* With **100 parts**, we speak of **percentiles**, written $\tilde{q}_{n, 1/100}, \dots, \tilde{q}_{n, 99/100}$.
+
+### Mathematical Definition
+
+For a sample of size $n$, the empirical quantile of order $p$ (where $p \in ]0, 1[$) is computed from the data sorted in ascending order, written $(x^*_1, x^*_2, \dots, x^*_n)$.
+
+It is defined as follows:
+
+$$\tilde{q}_{n,p} = \begin{cases} \frac{1}{2}(x^*_{np} + x^*_{np+1}) & \text{if } np \text{ is an integer} \\ x^*_{\lfloor np \rfloor + 1} & \text{otherwise} \end{cases}$$
+
+> **Note:** $\lfloor np \rfloor$ is the integer part of $n \times p$. For example, if $n=10$ and we are looking for the first quartile ($p=0.25$), then $np = 2.5$. Since $2.5$ is not an integer, the quantile is the value of rank $\lfloor 2.5 \rfloor + 1 = 3$, that is, the third value of the sorted sample.
+
+---
+
+### Why Is It Useful?
+
+Quantile analysis is fundamental to understanding the structure of data. For example, comparing the **9th decile** ($D_9$) with the **1st decile** ($D_1$) is a standard way to measure income inequality in a population, where a simple mean would hide the real gaps.
+
+---
+
+## Measures of Shape
+
+### Skewness
+
+So far, we have studied three ways of finding the center of your data: the mean, the median and the mode. But here is a question: what if the mean and the median give different results? This happens when your data is not symmetric.
+
+Skewness describes the shape of your data's distribution.
+
+#### Refresher: what is a distribution?
+
+Imagine you work in Human Resources and are in charge of a survey on how pay is structured across your company.
+
+To represent this data, you use a horizontal axis divided into salary bands. For each employee, you stack one unit (an elementary brick) in the matching column.
+
+Together, these columns form what is called a **histogram**. The curve that follows the top of the columns defines the **distribution** of your data. In statistics, this distribution is the complete picture of how the observations are spread across the variable being studied. It lets you see at once where observations are dense and which values are most frequent.
+
+![Salary distribution](/images/descriptive-statistics/distribution-salaires.png)
+
+---
+
+Is the distribution **balanced on both sides**, or does it have a **long tail stretching in one direction**?
+
+* **Symmetric**: Skewness ≈ 0 (Mean ≈ Median ≈ Mode)
+* **Right-skewed (positive)**: Skewness > 0 (The tail stretches to the right. Mode < Median < Mean)
+* **Left-skewed (negative)**: Skewness < 0 (The tail stretches to the left. Mean < Median < Mode)
+
+For a sample of $n$ values, the skewness coefficient is:
+
+$$S = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{s^3}$$
+
+Where:
+* $x_i$ is each value in your sample.
+* $\bar{x}$ is the arithmetic **mean**.
+* $s$ is the **standard deviation**.
+* $n$ is the sample size.
+
+#### Reading the formula: why the power of 3?
+
+This is where the whole statistical trick lies. Let's look at the numerator, called the **third moment**: $\sum (x_i - \bar{x})^3$.
+
+1.  **Distance from the mean:** We first compute the distance between each value and the mean, $(x_i - \bar{x})$.
+2.  **Cubing:**
+    * Unlike the variance (where we square, which makes everything positive), **cubing keeps the sign**.
+    * If a value is far above the mean (on the right), the deviation is positive and its cube is **strongly positive**.
+    * If a value is far below the mean (on the left), the deviation is negative and its cube is **strongly negative**.
+3.  **Amplifying the extremes:** Cubing gives disproportionate "weight" to values far from the center. A single value far out in the tail will dominate the whole sum.
+
+#### Normalizing by the standard deviation (s³)
+
+We divide the result by $s^3$ to get a **unitless** (dimensionless) coefficient. This lets us compare the skewness of two different distributions, say salaries in euros and ages in years, because the result no longer depends on the scale of the data.
+
+#### Interpreting the result
+
+* **$S \approx 0$:** Positive and negative cubed deviations roughly cancel out. The distribution is **symmetric**.
+* **$S > 0$:** Large positive deviations win. The tail stretches to the **right** (positive skew).
+* **$S < 0$:** Large negative deviations dominate. The tail stretches to the **left** (negative skew).
+
+
+
+<SkewnessExplorer client:load lang="en" />
+
+> **ML tip:** Many machine learning models perform worse on skewed data. If your data is heavily skewed (like house prices, where a few luxury homes distort the mean), we often apply mathematical tricks to make it more symmetric before training.
+
+---
+
+### Kurtosis
+
+Skewness tells us about the symmetry of our data; kurtosis tells us about the tails of the distribution. More precisely: how likely are extreme values (outliers) compared with a normal distribution?
+
+#### Definition
+
+Kurtosis measures how heavy the extremities (tails) of a distribution are. It tells you whether your data has heavy tails (more outliers) or light tails (fewer outliers) compared with a normal distribution.
+
+$$K = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^4}{s^4}$$
+
+The fourth power amplifies extreme deviations, which makes kurtosis very sensitive to outliers.
+
+* **Platykurtic** (kurtosis < 3): flatter peak, thinner tails. Fewer extreme values than the normal distribution.
+* **Mesokurtic** (kurtosis = 3): normal distribution. The baseline for comparison.
+* **Leptokurtic** (kurtosis > 3): sharper peak, fatter tails. More extreme values than the normal distribution.
+
+<KurtosisExplorer client:load lang="en" />
+
+If the value 3 puzzles you, it is simply the kurtosis of a standard normal distribution, used as a reference point to assess other distributions.
+
+The density function of the standard normal distribution ($\mu = 0, \sigma = 1$) is:
+
+$$f(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}$$
+
+Kurtosis is defined as the expectation of the variable to the fourth power, $E[X^4]$. Mathematically, this means computing the following integral:
+
+$$I = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx$$
+
+Since the function is even, we can restrict the study to $[0, +\infty[$ and multiply the result by 2:
+
+$$I = \frac{2}{\sqrt{2\pi}} \int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx$$
+
+#### First Integration by Parts
+
+We split the term $x^4 e^{-\frac{x^2}{2}}$ into two parts to bring out the derivative of the exponent:
+
+* Let $u = x^3 \implies du = 3x^2 \, dx$
+* Let $dv = x e^{-\frac{x^2}{2}} \, dx \implies v = -e^{-\frac{x^2}{2}}$
+
+The integration by parts formula ($\int u \, dv = [uv] - \int v \, du$) gives:
+
+$$\int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x^3 e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -3x^2 e^{-\frac{x^2}{2}} \, dx$$
+
+The first term vanishes because the exponential dominates the power at $+\infty$. We are left with:
+
+$$3 \int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx$$
+
+#### Second Integration by Parts
+
+We repeat the process on the remaining integral $\int x^2 e^{-\frac{x^2}{2}} \, dx$:
+
+* Let $u = x \implies du = dx$
+* Let $dv = x e^{-\frac{x^2}{2}} \, dx \implies v = -e^{-\frac{x^2}{2}}$
+
+Integration by parts gives:
+
+$$\int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -e^{-\frac{x^2}{2}} \, dx$$
+
+We are then left with:
+
+$$\int_{0}^{+\infty} e^{-\frac{x^2}{2}} \, dx$$
+
+This is the classic Gaussian integral. We know that $\int_{-\infty}^{+\infty} e^{-\frac{x^2}{2}} \, dx = \sqrt{2\pi}$. By symmetry, over $[0, +\infty[$ it equals $\frac{\sqrt{2\pi}}{2}$.
+
+#### Putting it together
+
+Let's walk back up the chain of calculations:
+
+1.  The second integration by parts gave us $\frac{\sqrt{2\pi}}{2}$.
+2.  The first one multiplied that result by $3$, giving $3 \times \frac{\sqrt{2\pi}}{2}$.
+3.  Finally, we must not forget the initial factor $\frac{2}{\sqrt{2\pi}}$ in front of the whole integral.
+
+The final computation is therefore:
+
+$$I = \frac{2}{\sqrt{2\pi}} \times \left( 3 \times \frac{\sqrt{2\pi}}{2} \right)$$
+
+Simplifying by $2$ and by $\sqrt{2\pi}$, we get:
+
+$$\boxed{I = 3}$$
+
+This shows that for a normal distribution, the ratio between the spread of the extremes (fourth moment) and the squared variance is exactly the constant **3**.
+
+---
+
+## Measures of Dispersion
+
+We have studied the center (mean, median) and the shape (skewness). But one essential piece of the puzzle is still missing: **dispersion**.
+
+Imagine two companies, A and B, with exactly the same average salary of **\$100,000**.
+
+* At **Company A**, pay is perfectly equal: everyone earns \$100,000.
+* At **Company B**, things are different: the CEO earns \$460,000 and the four other employees earn \$10,000 each.
+
+The mean is identical (\$100k), but the dispersion tells a completely different story. So we need a tool to measure how far, on average, the data points lie from the center.
+
+---
+
+### Variance and Standard Deviation
+
+These are the most widely used measures of dispersion in statistics and data science. They quantify how far each data point lies from the mean.
+
+#### Variance (σ²)
+
+The variance is the mean of the squared deviations from the mean. The higher the variance, the more spread out the data.
+
+$$\sigma^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2$$
+
+#### Standard Deviation (σ)
+
+The standard deviation is the square root of the variance. Its main advantage is that it is expressed in the **same unit** as the original data (hours or dollars, for example), which makes it easier to interpret.
+
+$$\sigma = \sqrt{\sigma^2} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2}$$
+
+#### Worked example: Light bulb lifetimes
+
+You test 5 light bulbs with the following lifetimes: 980, 1000, 1010, 1020 and 1040 hours.
+
+1.  **Computing the mean ($\bar{x}$)**:
+$$\bar{x} = \frac{980 + 1000 + 1010 + 1020 + 1040}{5} = 1010 \text{ hours}$$
+
+2.  **Computing the deviations from the mean ($x_i - \bar{x}$)**:
+    * $980 - 1010 = -30$
+    * $1000 - 1010 = -10$
+    * $1010 - 1010 = 0$
+    * $1020 - 1010 = +10$
+    * $1040 - 1010 = +30$
+
+3.  **Squaring the deviations**:
+$$(-30)^2 = 900 \quad | \quad (-10)^2 = 100 \quad | \quad (0)^2 = 0 \quad | \quad (10)^2 = 100 \quad | \quad (30)^2 = 900$$
+
+4.  **Computing the variance ($\sigma^2$)**:
+$$\sigma^2 = \frac{900 + 100 + 0 + 100 + 900}{5} = 400 \text{ hours}^2$$
+
+5.  **Computing the standard deviation ($\sigma$)**:
+$$\sigma = \sqrt{400} = 20 \text{ hours}$$
+
+#### Why square the deviations?
+
+There are two fundamental reasons for this mathematical choice:
+1.  **Neutralizing signs**: If we simply added up the raw deviations, positive and negative values would always cancel out. Squaring makes every distance positive.
+2.  **Penalizing extreme values**: Squaring gives disproportionate weight to large deviations. This makes the variance and the standard deviation very sensitive to outliers.
+
+---
+
+### Range and Interquartile Range (IQR)
+
+#### Range
+
+This is the simplest measure of dispersion. It is the difference between the maximum and the minimum value of a dataset.
+
+$$\text{Range} = \text{Max} - \text{Min}$$
+
+* **Weakness:** It is extremely sensitive to outliers.
+
+#### Interquartile Range (IQR)
+
+The interquartile range focuses on the spread of the **middle 50%** of the data. It is the difference between the third quartile ($Q_3$) and the first quartile ($Q_1$).
+
+$$\text{IQR} = Q_3 - Q_1$$
+
+* **Components:**
+    * **$Q_1$ (25th percentile):** The value below which 25% of the data lies.
+    * **$Q_3$ (75th percentile):** The value below which 75% of the data lies.
+
+* **Strength:** It is **robust** to outliers.
+
+---
+
+## Detecting Outliers
+
+A widely accepted rule flags as an **outlier** any data point that falls outside the "fences" computed from the interquartile range (IQR).
+
+### The 1.5 × IQR Rule
+
+We define two critical thresholds to identify these anomalies:
+
+* **Lower fence:** Any value below $Q_1 - 1.5 \times \text{IQR}$.
+* **Upper fence:** Any value above $Q_3 + 1.5 \times \text{IQR}$.
+
+This is the rule used to draw the whiskers of **box plots**.
+
+<BoxPlotExplorer client:load lang="en" />
+
+### Origin and Rationale: Why 1.5?
+
+The **1.5** coefficient was popularized by the statistician **John Tukey**. It is not an absolute mathematical law but a **heuristic** (a rule of thumb) based on a statistical compromise tied to the normal distribution. The idea was to strike a balance between flagging outliers too eagerly and letting them slip through.
+
+---
+
+## Formula Reference
+
+| Metric | Formula | When to use it |
+|---|---|---|
+| **Mean** | $\bar{x} = \frac{1}{n}\sum x_i$ | Data is symmetric, with no extreme outliers |
+| **Median** | Middle value of the sorted data | Data is skewed or contains outliers |
+| **Mode** | Most frequent value | Categorical data or finding peaks |
+| **Variance** | $\sigma^2 = \frac{1}{n}\sum(x_i - \bar{x})^2$ | Measuring spread (squared units) |
+| **Standard deviation** | $\sigma = \sqrt{\sigma^2}$ | Measuring spread (original units) |
+| **Skewness** | $S = \frac{\frac{1}{n}\sum(x_i-\bar{x})^3}{s^3}$ | Checking the symmetry of the distribution |
+| **Kurtosis** | $K = \frac{\frac{1}{n}\sum(x_i-\bar{x})^4}{s^4}$ | Checking how heavy the tails are |
+| **Range** | $\text{Max} - \text{Min}$ | Quick estimate of the spread |
+| **IQR** | $Q_3 - Q_1$ | Robust spread, outlier detection |

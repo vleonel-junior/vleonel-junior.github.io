@@ -1,7 +1,7 @@
 ---
 
 title: "Statistiques Descriptives"
-description: "Avant de plonger dans les algorithmes de machine learning, nous avons besoin d'une base solide en statistiques descriptives — les outils qui nous permettent de résumer et de comprendre les données en un coup d'œil."
+description: "Avant de plonger dans les algorithmes de machine learning, nous avons besoin d'une base solide en statistiques descriptives, c'est-à-dire les outils qui nous permettent de résumer et de comprendre les données en un coup d'œil."
 pubDate: 2026-03-26
 author: "Léonel VODOUNOU"
 category: "Fondamentaux"
@@ -9,9 +9,9 @@ lang: "fr"
 tags: ["Statistiques", "Machine Learning", "Mathématiques"]
 ---
 
-import SkewnessExplorer from '../../components/SkewnessExplorer.jsx';
-import KurtosisExplorer from '../../components/KurtosisExplorer.jsx';
-import BoxPlotExplorer from '../../components/BoxPlotExplorer.jsx';
+import SkewnessExplorer from '../../../components/SkewnessExplorer.jsx';
+import KurtosisExplorer from '../../../components/KurtosisExplorer.jsx';
+import BoxPlotExplorer from '../../../components/BoxPlotExplorer.jsx';
 
 ## Introduction
 
@@ -171,7 +171,7 @@ C'est ici que réside toute l'astuce statistique. Analysons le numérateur, que 
     * Si une donnée est très inférieure à la moyenne (à gauche), l'écart est négatif et son cube est **très négatif**.
 3.  **L'accentuation des extrêmes :** En élevant au cube, on donne un "poids" disproportionné aux valeurs situées loin du centre. Une seule valeur très éloignée dans la traîne va dominer toute la somme.
 
-#### La normalisation par l'écart-type ($s^3$)
+#### La normalisation par l'écart-type (s³)
 
 On divise le résultat par $s^3$ pour obtenir un coefficient **sans unité** (adimensionnel). Cela permet de comparer l'asymétrie de deux distributions différentes, par exemple des salaires en euros et des âges en années, car le résultat ne dépend plus de l'échelle des données.
 
@@ -183,7 +183,7 @@ On divise le résultat par $s^3$ pour obtenir un coefficient **sans unité** (ad
 
 
 
-<SkewnessExplorer client:load />
+<SkewnessExplorer client:load lang="fr" />
 
 > **Astuce ML :** De nombreux modèles de machine learning sont moins performants sur des données asymétriques. Si vos données sont fortement asymétriques (comme le prix des maisons, où quelques luxueuses demeures faussent la moyenne), nous appliquons souvent des astuces mathématiques pour les rendre plus symétriques avant l'entraînement.
 
@@ -201,11 +201,11 @@ $$K = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^4}{s^4}$$
 
 La puissance quatrième amplifie les écarts extrêmes, ce qui rend le kurtosis très sensible aux valeurs aberrantes.
 
-* **Platykurtique** — Kurtosis < 3 : Pic plus plat, queues plus fines. Moins de valeurs extrêmes que la normale.
-* **Mésokurtique** — Kurtosis = 3 : Distribution normale. La base de comparaison.
-* **Leptokurtique** — Kurtosis > 3 : Pic plus pointu, queues plus épaisses. Plus de valeurs extrêmes que la normale.
+* **Platykurtique** (kurtosis < 3) : pic plus plat, queues plus fines. Moins de valeurs extrêmes que la normale.
+* **Mésokurtique** (kurtosis = 3) : distribution normale. La base de comparaison.
+* **Leptokurtique** (kurtosis > 3) : pic plus pointu, queues plus épaisses. Plus de valeurs extrêmes que la normale.
 
-<KurtosisExplorer client:load />
+<KurtosisExplorer client:load lang="fr" />
 
 Si la valeur 3 vous intrigue, sachez qu'elle correspond simplement à la kurtosis d'une distribution normale standard, utilisée comme point de référence pour évaluer les autres distributions.
 
@@ -290,13 +290,13 @@ La moyenne est identique (100k\$), mais la dispersion raconte une tout autre his
 
 Ce sont les mesures de dispersion les plus utilisées en statistiques et en science des données. Elles permettent de quantifier l'écart de chaque point de donnée par rapport à la moyenne.
 
-#### La Variance ($\sigma^2$)
+#### La Variance (σ²)
 
 La variance est la moyenne des carrés des écarts à la moyenne. Plus la variance est élevée, plus les données sont dispersées.
 
 $$\sigma^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2$$
 
-#### L'Écart-Type ($\sigma$)
+#### L'Écart-Type (σ)
 
 L'écart-type est la racine carrée de la variance. Son avantage majeur est qu'il s'exprime dans la **même unité** que les données d'origine (par exemple en heures ou en dollars), ce qui facilite l'interprétation.
 
@@ -370,7 +370,7 @@ On définit deux seuils critiques pour identifier ces anomalies :
 
 C'est selon cette règle que sont tracées les « moustaches » (*whiskers*) des boîtes à moustaches (**box plots**).
 
-<BoxPlotExplorer client:load />
+<BoxPlotExplorer client:load lang="fr" />
 
 ### Origine et Logique : Pourquoi 1.5 ?
 

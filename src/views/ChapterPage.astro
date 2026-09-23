@@ -1,0 +1,97 @@
+---
+import ArticleShell from "../components/ArticleShell.astro";
+import { getDossierBySlug } from "../data/dossiers";
+import { chaptersFor, chapterUrl, type Chapter } from "../i18n/content";
+import {
+	formatDate,
+	localizePath,
+	tr,
+	useTranslations,
+	type Lang,
+} from "../i18n/utils";
+
+interface Props {
+	chapter: Chapter;
+	/** URL of this chapter in each language (see i18n/content.ts) */
+	langPaths: Record<Lang, string>;
+	translated: boolean;
+}
+
+const { chapter, langPaths, translated } = Astro.props;
+const dossierMeta = getDossierBySlug(chapter.data.dossier);
+const { Content, headings } = await chapter.render();
+
+const lang = chapter.data.lang;
+const t = useTranslations(lang);
+
+const words = chapter.body.split(/\s+/).length;
+const readingTime = chapter.data.readTime ?? Math.ceil(words / 200);
+
+// Previous / next chapters, in this language when translated
+const series = await chaptersFor(chapter.data.dossier, lang);
+const index = series.findIndex((c) => c.data.chapter === chapter.data.chapter);
+const neighbour = (c?: Chapter) => {
+	if (!c) return null;
+	const meta = dossierMeta?.chapters.find((m) => m.number === c.data.chapter);
+	return {
+		url: chapterUrl(c),
+		number: c.data.chapter,
+		title: meta ? tr(meta.title, lang) : c.data.title,
+	};
+};
+const prevChapter = neighbour(series[index - 1]);
+const nextChapter = neighbour(series[index + 1]);
+---
+
+<ArticleShell
+	lang={lang}
+	title={chapter.data.title}
+	description={chapter.data.description}
+	langPaths={langPaths}
+	translated={translated}
+	headings={headings}
+	showToc={chapter.data.showToc !== false}
+	eyebrow={`${dossierMeta?.title ?? ""} · ${t("post.chapter")} ${chapter.data.chapter}`}
+	back={{
+		href: localizePath(`blog/dossier/${chapter.data.dossier}/`, lang),
+		label: t("post.chapters"),
+	}}
+	author={chapter.data.author}
+	date={formatDate(chapter.data.pubDate, lang)}
+	readingTime={`${readingTime} ${t("blog.minRead")}`}
+>
+	<Content />
+
+	<nav
+		slot="after"
+		aria-label={t("post.chapters")}
+		class="mt-16 grid gap-3 sm:grid-cols-2"
+	>
+		{
+			prevChapter ? (
+				<a href={prevChapter.url} class="card group p-4">
+					<span class="text-xs text-fg-subtle">
+						← {t("post.chapter")} {prevChapter.number}
+					</span>
+					<span class="mt-1 block font-medium text-fg group-hover:text-accent">
+						{prevChapter.title}
+					</span>
+				</a>
+			) : (
+				<span />
+			)
+		}
+		{
+			nextChapter && (
+				<a href={nextChapter.url} class="card group p-4 text-right">
+					<span class="text-xs text-fg-subtle">
+						{t("post.chapter")} {nextChapter.number} →
+					</span>
+					<span class="mt-1 block font-medium text-fg group-hover:text-accent">
+						{nextChapter.title}
+					</span>
+				</a>
+			)
+		}
+	</nav>
+</ArticleShell>

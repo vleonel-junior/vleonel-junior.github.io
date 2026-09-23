@@ -29,67 +29,53 @@ const isActive = (section: string) =>
 ---
 
 <header
-  class="fixed top-0 w-full z-50 bg-quartz/80 backdrop-blur-md border-b border-border-primary transition-colors duration-300"
+  class="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70"
 >
-  <div class="container-custom h-16 flex items-center justify-between">
-    <!-- Logo - Image only on mobile, full name on desktop -->
-    <a href={localizePath("", lang)} class="flex items-center gap-2 sm:gap-3">
+  <div class="container-custom flex h-14 items-center justify-between gap-4">
+    <a
+      href={localizePath("", lang)}
+      class="flex items-center gap-2.5 text-sm font-semibold tracking-tight text-fg"
+    >
       <img
         src={`${import.meta.env.BASE_URL}logo.jpg`}
-        alt="Logo"
-        class="h-10 w-10 object-cover rounded-full flex-shrink-0"
+        alt=""
+        width="28"
+        height="28"
+        class="h-7 w-7 rounded-full object-cover"
       />
-      <div class="flex flex-col sm:flex-row leading-[1.1] sm:leading-normal">
-        <span
-          class="text-[13px] sm:text-lg font-serif font-bold tracking-tight text-white"
-          >Léonel</span
-        >
-        <span
-          class="text-[13px] sm:text-lg font-serif font-bold tracking-tight text-white sm:ml-1.5"
-          >VODOUNOU</span
-        >
-      </div>
+      <span>Léonel Vodounou</span>
     </a>
 
-    <!-- Desktop Navigation -->
-    <nav class="hidden md:flex items-center gap-6">
-      {
-        navItems.map((item) => {
-          const active = isActive(item.section);
-          return (
+    <div class="flex items-center gap-1">
+      <nav class="mr-2 hidden items-center gap-1 sm:flex">
+        {
+          navItems.map((item) => (
             <a
               href={item.href}
+              aria-current={isActive(item.section) ? "page" : undefined}
               class:list={[
-                "text-sm font-medium transition-colors",
-                active
-                  ? "text-white font-bold"
-                  : "text-quartz-light/60 hover:text-white",
+                "rounded-md px-3 py-1.5 text-sm transition-colors",
+                isActive(item.section)
+                  ? "font-medium text-fg"
+                  : "text-fg-muted hover:text-fg",
               ]}
             >
               {item.name}
             </a>
-          );
-        })
-      }
-    </nav>
+          ))
+        }
+      </nav>
 
-    <div
-      id="header-actions"
-      class="flex items-center gap-1 transition-transform duration-300 relative z-[70]"
-    >
-      <!-- Language Switch: links to this same page in the other language -->
+      <!-- Language switch: links to this same page in the other language -->
       <nav
         id="lang-switch"
         aria-label={t("nav.language")}
-        class="flex items-center transition-opacity duration-300 rounded-full border border-white/15 text-xs font-bold mr-1"
+        class="flex items-center rounded-md border border-border p-0.5 text-xs font-medium"
       >
         {
           (Object.keys(languages) as Lang[]).map((l) =>
             l === lang ? (
-              <span
-                aria-current="true"
-                class="px-2.5 py-1 rounded-full bg-white/15 text-white"
-              >
+              <span aria-current="true" class="rounded bg-muted px-2 py-1 text-fg">
                 {t(`lang.${l}`)}
               </span>
             ) : (
@@ -98,7 +84,7 @@ const isActive = (section: string) =>
                 hreflang={l}
                 lang={l}
                 title={languages[l]}
-                class="px-2.5 py-1 rounded-full text-quartz-light/60 hover:text-white transition-colors"
+                class="rounded px-2 py-1 text-fg-subtle hover:text-fg"
               >
                 {t(`lang.${l}`)}
               </a>
@@ -107,195 +93,73 @@ const isActive = (section: string) =>
         }
       </nav>
 
-      <!-- Theme Toggle -->
       <button
         id="theme-toggle"
-        class="p-2 rounded-full hover:bg-white/10 transition-colors"
+        type="button"
+        class="ml-1 rounded-md p-2 text-fg-muted transition-colors hover:bg-muted hover:text-fg"
         aria-label={t("nav.theme")}
       >
-        <svg
-          id="theme-toggle-light-icon"
-          class="hidden w-5 h-5 text-quartz-light"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-          ></path>
+        <svg class="h-4 w-4 dark:hidden" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"></path>
         </svg>
-        <svg
-          id="theme-toggle-dark-icon"
-          class="hidden w-5 h-5 text-quartz-light"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
-          ></path>
+        <svg class="hidden h-4 w-4 dark:block" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"></path>
         </svg>
       </button>
 
-      <!-- Mobile Menu Button -->
       <button
         id="mobile-menu-btn"
-        class="md:hidden text-quartz-light p-2"
-        aria-label="Menu"
+        type="button"
+        class="rounded-md p-2 text-fg-muted hover:bg-muted hover:text-fg sm:hidden"
+        aria-label={t("nav.menu")}
+        aria-expanded="false"
+        aria-controls="mobile-menu"
       >
-        <svg
-          id="menu-open-icon"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-6 h-6"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path>
-        </svg>
-        <svg
-          id="menu-close-icon"
-          class="hidden w-6 h-6"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M6 18L18 6M6 6l12 12"></path>
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5h16.5M3.75 12h16.5m-16.5 4.5h16.5"></path>
         </svg>
       </button>
     </div>
   </div>
+
+  <nav id="mobile-menu" class="hidden border-t border-border sm:hidden">
+    <div class="container-custom flex flex-col py-2">
+      {
+        navItems.map((item) => (
+          <a
+            href={item.href}
+            aria-current={isActive(item.section) ? "page" : undefined}
+            class:list={[
+              "mobile-menu-link rounded-md px-2 py-2.5 text-base",
+              isActive(item.section) ? "font-medium text-fg" : "text-fg-muted",
+            ]}
+          >
+            {item.name}
+          </a>
+        ))
+      }
+    </div>
+  </nav>
 </header>
 
-<!-- Mobile Menu Overlay - Outside Header for Stacking Context -->
-<div id="mobile-menu" class="fixed inset-0 z-[60] pointer-events-none">
-  <!-- Backdrop -->
-  <div
-    id="mobile-menu-backdrop"
-    class="absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300"
-  >
-  </div>
-
-  <!-- Menu Panel -->
-  <div
-    id="mobile-menu-panel"
-    class="absolute top-0 right-0 h-full w-[120px] bg-quartz transform translate-x-full transition-transform duration-300 shadow-2xl border-l border-white/10 flex flex-col"
-  >
-    <div class="py-10 pb-4 border-b border-white/5 text-center">
-      <span
-        class="text-white/30 uppercase tracking-[0.2em] text-xs font-bold font-sans"
-        >{t("nav.menu")}</span
-      >
-    </div>
-    <nav class="flex flex-col p-2 pt-4 gap-1 transform">
-      {
-        navItems.map((item) => {
-          const active = isActive(item.section);
-          return (
-            <a
-              href={item.href}
-              class:list={[
-                "mobile-menu-link py-4 px-2 rounded-xl text-lg font-medium transition-all duration-200 text-center",
-                active
-                  ? "text-white font-bold"
-                  : "text-quartz-light/60 hover:text-white",
-              ]}
-            >
-              {item.name}
-            </a>
-          );
-        })
-      }
-    </nav>
-  </div>
-</div>
-
 <script>
-  // Desktop theme toggle
-  const themeToggleBtn = document.getElementById("theme-toggle");
-  const lightIcon = document.getElementById("theme-toggle-light-icon");
-  const darkIcon = document.getElementById("theme-toggle-dark-icon");
-
-  if (document.documentElement.classList.contains("dark")) {
-    darkIcon?.classList.remove("hidden");
-  } else {
-    lightIcon?.classList.remove("hidden");
-  }
-
-  function toggleTheme() {
-    lightIcon?.classList.toggle("hidden");
-    darkIcon?.classList.toggle("hidden");
-
-    if (document.documentElement.classList.contains("dark")) {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    }
-  }
-
-  themeToggleBtn?.addEventListener("click", toggleTheme);
-
-  // Mobile menu
-  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
-  const mobileMenuBackdrop = document.getElementById("mobile-menu-backdrop");
-  const mobileMenuPanel = document.getElementById("mobile-menu-panel");
-  const menuOpenIcon = document.getElementById("menu-open-icon");
-  const menuCloseIcon = document.getElementById("menu-close-icon");
-
-  const headerActions = document.getElementById("header-actions");
-  // Hidden while the menu is open: the actions slide left over the logo
-  const langSwitch = document.getElementById("lang-switch");
-
-  function openMobileMenu() {
-    mobileMenu?.classList.remove("pointer-events-none");
-    mobileMenuBackdrop?.classList.remove("opacity-0");
-    mobileMenuPanel?.classList.remove("translate-x-full");
-    menuOpenIcon?.classList.add("hidden");
-    menuCloseIcon?.classList.remove("hidden");
-    headerActions?.classList.add("-translate-x-[120px]");
-    langSwitch?.classList.add("opacity-0", "pointer-events-none");
-  }
-
-  function closeMobileMenu() {
-    mobileMenu?.classList.add("pointer-events-none");
-    mobileMenuBackdrop?.classList.add("opacity-0");
-    mobileMenuPanel?.classList.add("translate-x-full");
-    menuOpenIcon?.classList.remove("hidden");
-    menuCloseIcon?.classList.add("hidden");
-    headerActions?.classList.remove("-translate-x-[120px]");
-    langSwitch?.classList.remove("opacity-0", "pointer-events-none");
-  }
-
-  mobileMenuBtn?.addEventListener("click", () => {
-    if (mobileMenuPanel?.classList.contains("translate-x-full")) {
-      openMobileMenu();
-    } else {
-      closeMobileMenu();
-    }
+  document.getElementById("theme-toggle")?.addEventListener("click", () => {
+    const dark = document.documentElement.classList.toggle("dark");
+    try {
+      localStorage.setItem("theme", dark ? "dark" : "light");
+    } catch {}
   });
 
-  mobileMenuBackdrop?.addEventListener("click", closeMobileMenu);
-
-  // Close menu when clicking a link
-  document.querySelectorAll(".mobile-menu-link").forEach((link) => {
-    link.addEventListener("click", closeMobileMenu);
+  const menuBtn = document.getElementById("mobile-menu-btn");
+  const menu = document.getElementById("mobile-menu");
+  menuBtn?.addEventListener("click", () => {
+    const open = menu?.classList.toggle("hidden") === false;
+    menuBtn.setAttribute("aria-expanded", String(open));
   });
+  document.querySelectorAll(".mobile-menu-link").forEach((link) =>
+    link.addEventListener("click", () => {
+      menu?.classList.add("hidden");
+      menuBtn?.setAttribute("aria-expanded", "false");
+    }),
+  );
 </script>

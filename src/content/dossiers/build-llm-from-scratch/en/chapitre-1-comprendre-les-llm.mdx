@@ -1,0 +1,170 @@
+---
+title: "Understanding large language models"
+description: "Reading notes on Chapter 1: an introduction to LLMs, the transformer architecture, and the pretraining and fine-tuning process."
+pubDate: 2026-04-05
+author: "Léonel VODOUNOU"
+dossier: "build-llm-from-scratch"
+lang: "en"
+chapter: 1
+order: 1
+tags: ["LLM", "Transformers", "Deep Learning", "Generative AI"]
+draft: false
+---
+
+## What Is an LLM?
+
+An LLM (Large Language Model) is a deep neural network designed to understand, generate and respond to text in a human-like way. The word "large" refers both to the size of the model (tens or even hundreds of billions of parameters, the adjustable weights optimized during training) and to the huge body of text it is trained on, which sometimes covers a large share of all the text publicly available on the Internet.
+
+The core of how an LLM learns is next-word prediction. Although this task looks very simple, it exploits the sequential nature of language to train models to understand context, structure and relationships in text, which produces remarkably capable models.
+
+To do this, LLMs rely on an architecture called the "transformer", which includes a selective attention mechanism that lets them focus on different parts of the input when making predictions. This makes them particularly good at handling the nuance and complexity of human language.
+
+Since LLMs can generate text, they are often considered a form of generative artificial intelligence (Generative AI, or GenAI). They are a specific application of *deep learning* techniques, which is itself a subfield of *machine learning*, both belonging to the broad field of Artificial Intelligence (AI). AI covers the creation of machines able to perform tasks that require human intelligence.
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.1](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_1.png)
+
+</div>
+*Figure 1.1: As this hierarchical view of how the fields relate suggests, LLMs are a specific application of deep learning techniques, using their ability to process and generate human-like text. Deep learning is a specialized branch of machine learning built on multi-layer neural networks. Machine learning and deep learning both aim to implement algorithms that let computers learn from data and carry out tasks that usually require human intelligence.*
+
+\
+The fundamental difference between traditional *machine learning* and *deep learning* lies in feature extraction. *Machine learning* is about developing algorithms that can learn from data without being explicitly programmed, but it requires features to be extracted by hand. In a classic spam filter, for example, human experts have to identify the relevant features manually (such as how often the word "free" appears, or whether there are suspicious links).
+
+*Deep learning*, by contrast, uses neural networks with three or more layers (deep neural networks) to model complex patterns and abstractions directly from the data, with no manual feature extraction by human experts. (Note that in a supervised learning setting such as a spam filter, both approaches still require collecting initial labels.)
+
+## Applications of LLMs
+Thanks to their ability to analyze unstructured text, LLMs are useful in a wide range of areas, from machine translation to text summarization and sentiment analysis. Today they are actively used to create original content such as fiction, blog posts or computer code.
+
+Beyond plain generation, LLMs power sophisticated virtual assistants and chatbots (such as ChatGPT or Gemini). These tools are changing the way we interact with technology, making systems more conversational and significantly improving how we interact with traditional search engines.
+
+In highly specialized fields such as medicine or law, LLMs are very effective at retrieving information from large volumes of documents. They can sort and summarize long texts and answer very technical questions accurately. In short, they are essential for automating any task centered on analyzing and generating text.
+
+The book's end goal is precisely to demystify how these complex assistants work inside, by programming, step by step, an LLM that can generate text and respond to different kinds of requests.
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.2](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_2.png)
+
+</div>
+*Figure 1.2: LLM interfaces let users and AI systems communicate in natural language. This screenshot shows ChatGPT writing a poem following a user's instructions.*
+
+## Stages of Building and Using LLMs
+Building your own LLM from scratch gives you a deep understanding of how it works and where its limits are, and the skills needed to adapt open-source models to specific needs (usually with the PyTorch library). General-purpose LLMs like ChatGPT are very versatile, but custom models focused on a specific domain (such as finance or medicine) can often outperform them.
+
+Developing custom models brings major advantages for companies: full protection of data privacy (no sharing with third parties), lower costs and latency (notably by deploying small models locally), and complete autonomy over control and updates.
+
+Creating an LLM follows a fundamental two-stage process: pretraining followed by fine-tuning.
+
+The first stage, **pretraining**, runs on a huge corpus of "raw" (unlabeled) text. This phase uses self-supervised learning, in which the model creates its own labels simply by learning to predict the next word. The result is an initial model called a "base model" or "foundation model" (such as GPT-3), with a general understanding of language, able to complete text and to take on new tasks from very few examples (*few-shot learning*).
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.3](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_3.png)
+
+</div>
+*Figure 1.3: Pretraining an LLM means predicting the next word on large text datasets. A pretrained LLM can then be fine-tuned on a smaller labeled dataset.*
+
+\
+The second stage, **fine-tuning**, specializes this base model. It is additional training on a smaller dataset that, this time, is specifically labeled. Fine-tuning usually comes in two very popular forms:
+- *Instruction fine-tuning*: the model is trained on instruction-answer pairs (for example, a translation request and the corresponding translated text).
+- *Classification fine-tuning*: the model learns to associate texts with specific labels (for example, sorting emails into "spam" or "not spam").
+
+## Introducing the Transformer Architecture
+Most of today's LLMs are built on the **transformer** architecture, introduced in 2017. The original transformer, designed for machine translation, has two main modules:
+- An **encoder** that analyzes the input text and turns it into numerical representations (vectors) that capture context.
+- A **decoder** that uses these vectors to generate the output text step by step.
+
+At the heart of this system is the **self-attention** mechanism, which lets the model assess and weigh the importance of each word in a sequence relative to the others, efficiently capturing global context and long-range dependencies.
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.4](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_4.png)
+
+</div>
+*Figure 1.4: A simplified view of the original transformer architecture, a deep learning model for machine translation.*
+
+Two major families of models grew out of the original architecture, each suited to different tasks:
+- **BERT**: This model uses only the **encoder** submodule. It is trained by predicting masked words, which makes it particularly strong at text classification tasks (sentiment analysis, document categorization, toxicity detection).
+- **GPT**: This model focuses on the **decoder** submodule. Geared toward text generation (next-word prediction), it is very versatile. In particular, it can solve tasks it was never explicitly trained for, with few or no prior examples (*few-shot* or *zero-shot learning*).
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.5](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_5.png)
+
+</div>
+*Figure 1.5: The transformer's encoder and decoder submodules. On the left, BERT (encoder, for classification). On the right, GPT (decoder, for generation).*
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.6](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_6.png)
+
+</div>
+*Figure 1.6: Beyond text completion, GPT-style LLMs can solve a variety of tasks depending on their input, with no retraining (few-shot or zero-shot setting).*
+
+\
+*(Note: In this book, "LLM" conventionally refers to transformer-based models, although other architectures have existed historically.)*
+
+## Using Large Datasets
+The remarkable capabilities of LLMs come from training on colossal text corpora containing billions of "tokens". A token is a unit of text processed by the model (often a word or a punctuation mark).
+
+For example, the GPT-3 base model was trained on about 300 billion tokens, drawn from a gigantic filtered dataset (CommonCrawl, books, Wikipedia). It is the size and diversity of this training data that allow the model to acquire broad general knowledge and a very fine grasp of semantics and syntax.
+
+These huge networks are called "base models" (or *foundation models*). Their initial **pretraining**, however, is extremely expensive in computing resources (estimated at around \$4.6 million for GPT-3).
+
+Fortunately, many base models are released as open source, so their pretrained parameters (the "weights") can be downloaded. The key takeaway is that a developer can skip the costly pretraining stage by reusing these open-source models and go straight to fine-tuning them for their own tasks, a computation that remains within reach of consumer hardware.
+
+## A Closer Look at the GPT Architecture
+GPT (Generative Pre-trained Transformer) models were designed by OpenAI. ChatGPT, for example, comes from fine-tuning a very large base version (GPT-3) on an instruction dataset. Despite their versatility (correction, classification, translation), the fundamental training of these models rests on a surprisingly simple task: predicting the next word.
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.7](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_7.png)
+
+</div>
+*Figure 1.7: In the next-word prediction pretraining task for GPT models, the system learns to predict the upcoming word in a sentence by looking at the words that come before it.*
+
+\
+Next-word prediction is a form of self-supervised learning. The text itself provides the answer (the label), which removes the need for very costly manual annotation by humans and makes it possible to use huge unlabeled text datasets.
+
+Unlike the original transformer (which combined an encoder and a decoder), the GPT architecture is simpler: it uses only the **decoder** part. The model generates text iteratively, one word at a time from left to right, feeding its own previous outputs back in as inputs. This is called an **autoregressive** model. Although its basic structure is simplified, this architecture is pushed to an enormous scale (GPT-3 has 96 layers and 175 billion parameters).
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.8](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_8.png)
+
+</div>
+*Figure 1.8: The GPT architecture uses only the decoder part of the original transformer. It is built for one-directional, left-to-right processing, which makes it well suited to text generation and next-word prediction, producing text iteratively, one word at a time.*
+
+\
+One of the most fascinating aspects of these models is the appearance of **emergent behavior**. Although they are trained only to predict the next word, exposure to such vast and diverse data lets GPT models "understand" and solve complex tasks (such as translation) that they were never explicitly programmed for.
+
+## Building a Large Language Model
+Building an LLM from the ground up, the overall goal of this book, is organized around three main stages:
+
+1. **Preparation and architecture (Stage 1)**: Learn the basics of data preprocessing and code the attention mechanism, the core of the LLM.
+2. **Pretraining (Stage 2)**: Code and train a GPT-style LLM on a small dataset (for educational purposes, since real pretraining on large volumes is extremely expensive). This stage also covers loading weights from existing open-source models.
+3. **Fine-tuning (Stage 3)**: Take the pretrained LLM and adapt it to follow specific instructions (a personal assistant) or to classify texts.
+
+<div class="flex justify-center w-full my-6 [&>p]:flex [&>p]:justify-center [&>p]:w-full">
+
+![Figure 1.9](/images/dossiers/build-llm-from-scratch/chapitre-1/figure_1_9.png)
+
+</div>
+*Figure 1.9: The three main stages of coding an LLM: implementing the LLM architecture and the data preparation process (stage 1), pretraining an LLM to create a base model (stage 2), and fine-tuning that base model into a personal assistant or a text classifier (stage 3).*
+
+## Summary
+
+In conclusion, LLMs mark a major step forward in language processing, built on deep learning and the transformer architecture (specifically the attention mechanism). They follow a two-step design: massive self-supervised pretraining (producing a base model with emergent properties), followed by targeted fine-tuning that lets them outperform general-purpose models on specific business tasks. Generative models like GPT (and virtual assistants such as ChatGPT) use only the decoder module, predicting words iteratively and autoregressively.
+
+---
+
+> **💡 Reflection note: "Zero-Shot" Learning vs. Emergent Behavior**
+> 
+> Although these two concepts are closely linked in the LLM literature, they refer to distinct aspects of artificial intelligence:
+> 
+> * **Emergent behavior (the intrinsic phenomenon):** This is a fundamental property of the model itself, arising directly from scaling it up (what are known as *scaling laws*). When a neural network reaches a critical size (billions of parameters) and is exposed to a colossal and varied volume of data, it develops complex cognitive or syntactic abilities (such as translation, logical deduction or code generation) that it was never explicitly trained for. The model's original objective was limited to predicting the next word. But to optimize that prediction on complex texts, the model is mathematically forced to absorb the underlying semantics and logic of language. The skill is therefore not programmed; it *emerges* on its own from the depth of the network and the richness of the data.
+> 
+> * **Zero-shot learning (the inference paradigm):** This refers instead to the way the model is used. It is the practical ability of the LLM to carry out a completely new request from a user, without the user having to provide a single example (zero examples) of the task in their "prompt".
+> 
+> **In short:** *Emergent behavior* explains the internal, structural mechanics of the LLM (the "why" behind a machine built to predict words suddenly being able to translate from English to French). *Zero-shot learning* is the operational manifestation of this phenomenon: it is precisely because these latent skills emerge that the model can successfully handle an instruction given "cold" by the user.

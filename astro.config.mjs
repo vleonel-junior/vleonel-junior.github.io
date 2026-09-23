@@ -26,7 +26,13 @@ export default defineConfig({
   },
   markdown: {
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex]
+    rehypePlugins: [rehypeKatex],
+    // Both themes are emitted as CSS variables; global.css picks the one
+    // matching the current light/dark mode.
+    shikiConfig: {
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false,
+    },
   },
   integrations: [mdx(), sitemap(), preact()]
 });

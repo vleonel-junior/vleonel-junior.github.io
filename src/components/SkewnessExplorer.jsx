@@ -1,6 +1,46 @@
 import { useState, useMemo } from 'preact/hooks';
 
-export default function SkewnessExplorer() {
+const STRINGS = {
+  fr: {
+    title: "Explorateur d'asymétrie",
+    intro: "Déplacez le curseur pour voir comment l'asymétrie affecte la forme de la distribution et la relation entre la Moyenne, la Médiane et le Mode.",
+    skewness: "Asymétrie",
+    symmetric: "Symétrique",
+    left: "Asymétrique à gauche (négatif)",
+    right: "Asymétrique à droite (positif)",
+    descSymmetric: "Dans des données symétriques, les mesures de centralité coïncident.",
+    descLeft: "Dans une asymétrie à gauche, la traîne attire la moyenne vers la gauche.",
+    descRight: "Dans une asymétrie à droite, la traîne attire la moyenne vers la droite.",
+    leftEnd: "Gauche",
+    rightEnd: "Droite",
+    mean: "Moyenne",
+    median: "Médiane",
+    mode: "Mode",
+    frequency: "Fréquence",
+    value: "Valeur",
+  },
+  en: {
+    title: "Skewness Explorer",
+    intro: "Move the slider to see how skewness changes the shape of the distribution and the relationship between the Mean, the Median and the Mode.",
+    skewness: "Skewness",
+    symmetric: "Symmetric",
+    left: "Left-skewed (negative)",
+    right: "Right-skewed (positive)",
+    descSymmetric: "In symmetric data, the measures of central tendency coincide.",
+    descLeft: "In a left-skewed distribution, the tail pulls the mean to the left.",
+    descRight: "In a right-skewed distribution, the tail pulls the mean to the right.",
+    leftEnd: "Left",
+    rightEnd: "Right",
+    mean: "Mean",
+    median: "Median",
+    mode: "Mode",
+    frequency: "Frequency",
+    value: "Value",
+  },
+};
+
+export default function SkewnessExplorer({ lang = "fr" }) {
+  const t = STRINGS[lang] ?? STRINGS.fr;
   const [skewValue, setSkewValue] = useState(50); // 0 to 100
 
   const p = skewValue / 100;
@@ -73,32 +113,32 @@ export default function SkewnessExplorer() {
   };
 
   let theme = {
-    category: "Symétrique",
+    category: t.symmetric,
     badgeBg: "bg-[#14532d]/40",
     badgeText: "text-[#22c55e]",
     badgeBorder: "border-[#22c55e]/30",
     barBg: "bg-[#22c55e]/30",
     barBorder: "border-[#22c55e]",
     sliderFill: "#22c55e",
-    relation: ["Moyenne", "≈", "Médiane", "≈", "Mode"],
-    desc: "Dans des données symétriques, les mesures de centralité coïncident.",
+    relation: ["mean", "≈", "median", "≈", "mode"],
+    desc: t.descSymmetric,
   };
   
   if (p < 0.45) {
     theme = {
-      category: "Asymétrique à Gauche (Négatif)",
+      category: t.left,
       badgeBg: "bg-[#1e3a8a]/40",
       badgeText: "text-[#3b82f6]",
       badgeBorder: "border-[#3b82f6]/30",
       barBg: "bg-[#3b82f6]/30",
       barBorder: "border-[#3b82f6]",
       sliderFill: "#3b82f6",
-      relation: ["Moyenne", "<", "Médiane", "<", "Mode"],
-      desc: "Dans une asymétrie à gauche, la traîne attire la moyenne vers la gauche.",
+      relation: ["mean", "<", "median", "<", "mode"],
+      desc: t.descLeft,
     };
   } else if (p > 0.55) {
     theme = {
-      category: "Asymétrique à Droite (Positif)",
+      category: t.right,
       badgeBg: "bg-[#78350f]/40",
       BadgeText: "text-[#f59e0b]",
       badgeText: "text-[#f59e0b]",
@@ -106,47 +146,47 @@ export default function SkewnessExplorer() {
       barBg: "bg-[#f59e0b]/30",
       barBorder: "border-[#f59e0b]",
       sliderFill: "#f59e0b",
-      relation: ["Mode", "<", "Médiane", "<", "Moyenne"],
-      desc: "Dans une asymétrie à droite, la traîne attire la moyenne vers la droite.",
+      relation: ["mode", "<", "median", "<", "mean"],
+      desc: t.descRight,
     };
   }
 
   const renderRelationString = () => {
     return theme.relation.map((word, i) => {
       let colorClass = "text-zinc-500";
-      if (word === "Moyenne") colorClass = "text-[#22c55e]";
-      if (word === "Médiane") colorClass = "text-[#06b6d4]";
-      if (word === "Mode") colorClass = "text-[#f59e0b]";
+      if (word === "mean") colorClass = "text-[#22c55e]";
+      if (word === "median") colorClass = "text-[#06b6d4]";
+      if (word === "mode") colorClass = "text-[#f59e0b]";
       
       return (
         <span key={i} className={`mx-1 font-bold ${colorClass}`}>
-          {word}
+          {t[word] ?? word}
         </span>
       );
     });
   };
 
   return (
-    <div className="my-8 rounded-xl bg-[#0c0c0e] text-zinc-300 p-8 shadow-2xl border border-zinc-800/80 font-sans not-prose">
+    <div className="my-8 rounded-xl bg-[#0c0c0e] text-zinc-300 p-5 sm:p-8 shadow-2xl border border-zinc-800/80 font-sans not-prose">
       {/* Header */}
       <div className="mb-8">
-        <h3 className="text-2xl font-bold mb-2 text-white">Skewness Explorer</h3>
+        <h3 className="text-2xl font-bold mb-2 text-white">{t.title}</h3>
         <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
-          Déplacez le curseur pour voir comment l'asymétrie affecte la forme de la distribution et la relation entre la Moyenne, la Médiane et le Mode.
+          {t.intro}
         </p>
       </div>
 
       {/* Slider Area */}
       <div className="flex flex-col mb-12">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-zinc-400">Asymétrie</span>
+          <span className="text-sm font-medium text-zinc-400">{t.skewness}</span>
           <span className={`px-4 py-1.5 rounded-md text-sm font-bold border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder} transition-colors duration-300 shadow-sm`}>
             {theme.category}
           </span>
         </div>
         
         <div className="flex items-center gap-4 relative">
-          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">Gauche</span>
+          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">{t.leftEnd}</span>
           <div className="relative flex-1 flex items-center h-2">
             <input 
               type="range" 
@@ -169,7 +209,7 @@ export default function SkewnessExplorer() {
               style={{ left: `${skewValue}%` }}
             ></div>
           </div>
-          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">Droite</span>
+          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">{t.rightEnd}</span>
         </div>
       </div>
 
@@ -177,15 +217,15 @@ export default function SkewnessExplorer() {
       <div className="flex justify-center gap-8 mb-10 text-sm font-semibold">
         <div className="flex items-center gap-2">
           <div className="w-3.5 h-3.5 rounded-full bg-[#22c55e]"></div>
-          <span className="text-zinc-300">Moyenne</span>
+          <span className="text-zinc-300">{t.mean}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3.5 h-3.5 rounded-full bg-[#06b6d4]"></div>
-          <span className="text-zinc-300">Médiane</span>
+          <span className="text-zinc-300">{t.median}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3.5 h-3.5 rounded-full bg-[#f59e0b]"></div>
-          <span className="text-zinc-300">Mode</span>
+          <span className="text-zinc-300">{t.mode}</span>
         </div>
       </div>
 
@@ -193,11 +233,11 @@ export default function SkewnessExplorer() {
       <div className="relative w-full h-[280px] mb-12 flex items-end pl-10 pb-8">
         {/* Y Axis Label */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
-          Fréquence
+          {t.frequency}
         </div>
         {/* X Axis Label */}
         <div className="absolute -bottom-6 left-1/2 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
-          Valeur
+          {t.value}
         </div>
 
         {/* Axes lines (L-shape) */}
@@ -224,7 +264,7 @@ export default function SkewnessExplorer() {
             style={{ left: `${median * 100}%`, height: `${getLineHeight(median)}%` }}
           >
             <div className="absolute -bottom-[5px] w-2.5 h-2.5 rounded-full bg-[#06b6d4]"></div>
-            <span className="absolute -bottom-[26px] text-xs text-[#06b6d4] font-bold">Médiane</span>
+            <span className="absolute -bottom-[26px] text-xs text-[#06b6d4] font-bold">{t.median}</span>
           </div>
 
           {/* Mean Line (Dashed Green, goes above bars, dot at top) */}
@@ -233,7 +273,7 @@ export default function SkewnessExplorer() {
             style={{ left: `${mean * 100}%`, height: `${Math.max(getLineHeight(mean) + 15, 40)}%` }}
           >
             <div className="absolute -top-[5px] w-2.5 h-2.5 rounded-full bg-[#22c55e]"></div>
-            <span className="absolute -top-[24px] text-xs text-[#22c55e] font-bold">Moyenne</span>
+            <span className="absolute -top-[24px] text-xs text-[#22c55e] font-bold">{t.mean}</span>
           </div>
 
           {/* Mode Line (Dotted Orange, stops exactly at peak with arrow) */}
@@ -243,7 +283,7 @@ export default function SkewnessExplorer() {
           >
             {/* Arrow Head */}
             <div className="absolute -top-1 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[6px] border-b-[#f59e0b]"></div>
-            <span className="absolute -top-[22px] text-xs text-[#f59e0b] font-bold">Mode</span>
+            <span className="absolute -top-[22px] text-xs text-[#f59e0b] font-bold">{t.mode}</span>
           </div>
           
         </div>

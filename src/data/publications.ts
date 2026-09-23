@@ -7,10 +7,5 @@ export interface PublicationItem {
     authors: string;
 }
 
-export const publicationsData: PublicationItem[] = [
-    {
-        title: "Coming soon 😎",
-        year: "2026",
-        authors: ""
-    }
-];
+// Section is hidden on the home page while this list is empty
+export const publicationsData: PublicationItem[] = [];

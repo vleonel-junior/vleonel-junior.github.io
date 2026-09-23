@@ -29,6 +29,23 @@ export const communityData: CommunityItem[] = [
         },
     },
     {
+        title: "Deep Learning Indaba 2026",
+        organization: {
+            en: "Pan-Atlantic University, Lagos (Nigeria) · Participant",
+            fr: "Pan-Atlantic University, Lagos (Nigeria) · Participant",
+        },
+        period: { en: "Aug 2026", fr: "Août 2026" },
+        description: {
+            en: "Took part in the annual Deep Learning Indaba (August 2 to 7, 2026), the flagship pan-African machine learning gathering, whose 2026 theme was sovereign intelligence: Africa building and understanding its own AI systems, data and research.",
+            fr: "Participation au Deep Learning Indaba annuel (du 2 au 7 août 2026), le grand rassemblement panafricain du machine learning, dont le thème 2026 était l'intelligence souveraine : une Afrique qui construit et comprend ses propres systèmes d'IA, ses données et sa recherche.",
+        },
+        // Certificate not issued yet: link to the official event page for now
+        proof: {
+            href: "https://deeplearningindaba.com/2026/",
+            label: { en: "Event website", fr: "Site de l'événement" },
+        },
+    },
+    {
         title: { en: "Cohere Labs community member", fr: "Membre de la communauté Cohere Labs" },
         organization: "Cohere Labs · Open Science Initiative",
         period: { en: "2026", fr: "2026" },

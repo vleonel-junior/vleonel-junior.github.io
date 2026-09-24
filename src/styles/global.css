@@ -56,18 +56,19 @@
 }
 
 .dark {
-    --bg: #09090b;
-    --surface: #111113;
-    --muted: #18181b;
-    --fg: #fafafa;
-    --fg-muted: #a1a1aa;
-    --fg-subtle: #8b8b94;
-    --border: #27272a;
+    /* Soft dark gray rather than black: easier on the eyes for long reads */
+    --bg: #18191b;
+    --surface: #1f2023;
+    --muted: #26272a;
+    --fg: #ececee;
+    --fg-muted: #a8a8b0;
+    --fg-subtle: #8e8e96;
+    --border: #303135;
     --accent: #34d399;
     --accent-strong: #6ee7b7;
     --accent-soft: rgba(52, 211, 153, 0.1);
-    --reading: #dcdcdf;
-    --caption: #8b8b94;
+    --reading: #d4d4d8;
+    --caption: #909097;
     color-scheme: dark;
 }
 

@@ -1,0 +1,123 @@
+---
+// Unit histogram of made-up salaries: one brick per employee, stacked by salary band.
+import type { Lang } from "../i18n/utils";
+
+interface Props {
+  lang: Lang;
+  figure?: number;
+}
+
+const { lang, figure = 1 } = Astro.props;
+
+const START = 20; // k€
+const WIDTH = 10; // k€ per band
+const COUNTS = [2, 7, 13, 12, 9, 6, 4, 3, 2, 1, 1];
+const total = COUNTS.reduce((a, b) => a + b, 0);
+
+const STRINGS = {
+  fr: {
+    x: "Salaire annuel brut (k€)",
+    y: "Nombre d'employés",
+    brick: "1 brique = 1 employé",
+    curve: "Distribution",
+    caption: `Figure ${figure} : Salaires annuels de ${total} employés d'une entreprise fictive, regroupés par tranches de 10 k€. Chaque brique représente un employé. La courbe qui passe par le sommet des colonnes donne l'allure de la distribution : un pic autour de 40 à 50 k€ et une longue queue vers les hauts salaires.`,
+  },
+  en: {
+    x: "Annual gross salary (k€)",
+    y: "Number of employees",
+    brick: "1 brick = 1 employee",
+    curve: "Distribution",
+    caption: `Figure ${figure}: Annual salaries of ${total} employees at a made-up company, grouped into bands of 10 k€. Each brick is one employee. The curve through the tops of the columns gives the shape of the distribution: a peak around 40 to 50 k€ and a long tail toward high salaries.`,
+  },
+}[lang];
+
+const W = 640, H = 330, L = 52, R = 12, T = 12, B = 50;
+const band = (W - L - R) / COUNTS.length;
+const unit = (H - T - B) / 14;
+const baseline = H - B;
+const sx = (salary: number) => L + ((salary - START) / WIDTH) * band;
+const sy = (count: number) => baseline - count * unit;
+
+const bricks = COUNTS.flatMap((count, i) =>
+  Array.from({ length: count }, (_, level) => ({
+    x: L + i * band + 4,
+    y: sy(level + 1) + 1.5,
+    w: band - 8,
+    h: unit - 3,
+  })),
+);
+
+// Smooth curve through the column tops (Catmull-Rom converted to cubic Bézier)
+const points: [number, number][] = [
+  [sx(START), baseline],
+  ...COUNTS.map((c, i): [number, number] => [sx(START + (i + 0.5) * WIDTH), sy(c)]),
+  [sx(START + COUNTS.length * WIDTH), baseline],
+];
+let curve = `M${points[0][0]},${points[0][1]}`;
+for (let i = 0; i < points.length - 1; i++) {
+  const p0 = points[Math.max(0, i - 1)];
+  const [p1, p2] = [points[i], points[i + 1]];
+  const p3 = points[Math.min(points.length - 1, i + 2)];
+  const c1 = [p1[0] + (p2[0] - p0[0]) / 6, Math.min(baseline, p1[1] + (p2[1] - p0[1]) / 6)];
+  const c2 = [p2[0] - (p3[0] - p1[0]) / 6, Math.min(baseline, p2[1] - (p3[1] - p1[1]) / 6)];
+  curve += `C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+}
+
+// The annotated brick: the top of the 60 to 70 k€ column
+const target = bricks.filter((b) => b.x === L + 4 * band + 4).at(-1)!;
+const ticks = Array.from({ length: COUNTS.length + 1 }, (_, i) => START + i * WIDTH);
+---
+
+<figure class="fig not-prose">
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={STRINGS.caption}>
+    {[5, 10].map((c) => <line class="grid" x1={L} x2={W - R} y1={sy(c)} y2={sy(c)} />)}
+    {
+      bricks.map((b) => (
+        <rect
+          x={b.x}
+          y={b.y}
+          width={b.w}
+          height={b.h}
+          rx="2"
+          fill="var(--fig-data)"
+          fill-opacity="0.22"
+          stroke="var(--fig-data)"
+          stroke-width="1"
+        />
+      ))
+    }
+    <path d={curve} fill="none" stroke="var(--fig-median)" stroke-width="2.5" />
+
+    <!-- Annotation -->
+    <path
+      d={`M${target.x + target.w + 4},${target.y + target.h / 2} L${sx(87)},${sy(9.6)}`}
+      stroke="var(--fg-muted)"
+      stroke-width="1"
+      fill="none"
+    />
+    <circle cx={target.x + target.w + 4} cy={target.y + target.h / 2} r="2.5" fill="var(--fg-muted)" />
+    <text class="fig-annot" x={sx(87) + 4} y={sy(9.6) - 4} font-size="14">{STRINGS.brick}</text>
+    <line x1={sx(87) + 4} x2={sx(87) + 26} y1={sy(8.3)} y2={sy(8.3)} stroke="var(--fig-median)" stroke-width="2.5" />
+    <text class="fig-annot" x={sx(87) + 32} y={sy(8.3) + 5} font-size="14">{STRINGS.curve}</text>
+
+    <!-- Axes -->
+    <line class="axis" x1={L} x2={W - R} y1={baseline} y2={baseline} />
+    <line class="axis" x1={L} x2={L} y1={T} y2={baseline} />
+    {
+      ticks.map((v) => (
+        <g>
+          <line class="axis" x1={sx(v)} x2={sx(v)} y1={baseline} y2={baseline + 5} />
+          <text x={sx(v)} y={baseline + 19} font-size="13" text-anchor="middle">{v}</text>
+        </g>
+      ))
+    }
+    {
+      [0, 5, 10].map((c) => (
+        <text x={L - 8} y={sy(c) + 4.5} font-size="13" text-anchor="end">{c}</text>
+      ))
+    }
+    <text x={(L + W - R) / 2} y={H - 4} font-size="13" text-anchor="middle">{STRINGS.x}</text>
+    <text x={-(T + baseline) / 2} y="16" font-size="13" text-anchor="middle" transform="rotate(-90)">{STRINGS.y}</text>
+  </svg>
+  <figcaption>{STRINGS.caption}</figcaption>
+</figure>

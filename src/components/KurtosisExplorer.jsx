@@ -1,279 +1,149 @@
 import { useState, useMemo } from 'preact/hooks';
+import { lgamma, gamma, normalPdf, linspace, tailMass, linePath, fmt } from './figures/math.js';
 
 const STRINGS = {
   fr: {
-    title: "Explorateur de kurtosis",
-    intro: "Déplacez le curseur pour voir comment le kurtosis affecte « l'épaisseur des queues » de la distribution. La ligne pointillée montre une distribution normale pour référence.",
-    platy: "Platykurtique",
-    meso: "Mésokurtique",
-    lepto: "Leptokurtique",
-    platyCategory: "Platykurtique (queues légères)",
-    mesoCategory: "Mésokurtique (normale)",
-    leptoCategory: "Leptokurtique (queues lourdes)",
-    platyDesc: " Pic plus plat et queues plus fines que la normale. Les données sont réparties plus uniformément, sans valeurs extrêmes. Exemple : distribution uniforme.",
-    mesoDesc: " Épaisseur des queues similaire à une distribution normale. C'est la référence (kurtosis = 3, ou excès de kurtosis = 0).",
-    leptoDesc: " Plus de données dans les queues et le pic qu'une distribution normale. Courant dans les rendements financiers où les événements extrêmes se produisent plus souvent.",
-    flat: "Plat",
-    peaked: "Pointu",
-    platyCard: "Pic plat, queues fines",
-    mesoCard: "Distribution normale",
-    leptoCard: "Pic pointu, queues épaisses",
-    heavyTail: "Queue épaisse",
-    frequency: "Fréquence",
-    value: "Valeur",
+    label: "Kurtosis",
+    presets: [["Platykurtique", 0], ["Normale", 0.5], ["Leptokurtique", 1]],
+    platy: "Platykurtique : pic aplati, queues légères. Les valeurs extrêmes sont plus rares que pour une loi normale.",
+    meso: "Mésokurtique : c'est la loi normale, la référence (K = 3).",
+    lepto: "Leptokurtique : pic pointu, queues lourdes. Les valeurs extrêmes sont plus fréquentes que pour une loi normale.",
+    curve: "Distribution étudiée",
+    normal: "Loi normale (référence)",
+    tails: (p2, p3) => `P(|X| > 2) = ${p2}   ·   P(|X| > 3) = ${p3}`,
+    normalTails: "Loi normale : 4,55 % et 0,27 %",
+    excess: "excès",
+    axis: "Valeur (variance = 1)",
+    caption: (n) =>
+      `Figure ${n} : Loi normale généralisée de variance 1. Toutes les courbes ont la même variance, seule la forme change. Les zones colorées au-delà de ±2 donnent la probabilité d'une valeur extrême, à comparer à la loi normale en pointillés.`,
   },
   en: {
-    title: "Kurtosis Explorer",
-    intro: "Move the slider to see how kurtosis changes the \"tail thickness\" of the distribution. The dotted line shows a normal distribution for reference.",
-    platy: "Platykurtic",
-    meso: "Mesokurtic",
-    lepto: "Leptokurtic",
-    platyCategory: "Platykurtic (light tails)",
-    mesoCategory: "Mesokurtic (normal)",
-    leptoCategory: "Leptokurtic (heavy tails)",
-    platyDesc: " Flatter peak and thinner tails than the normal distribution. The data is spread more evenly, with no extreme values. Example: the uniform distribution.",
-    mesoDesc: " Tail thickness similar to a normal distribution. This is the reference (kurtosis = 3, or excess kurtosis = 0).",
-    leptoDesc: " More data in the tails and in the peak than a normal distribution. Common in financial returns, where extreme events happen more often.",
-    flat: "Flat",
-    peaked: "Peaked",
-    platyCard: "Flat peak, thin tails",
-    mesoCard: "Normal distribution",
-    leptoCard: "Sharp peak, heavy tails",
-    heavyTail: "Heavy tail",
-    frequency: "Frequency",
-    value: "Value",
+    label: "Kurtosis",
+    presets: [["Platykurtic", 0], ["Normal", 0.5], ["Leptokurtic", 1]],
+    platy: "Platykurtic: flat peak, light tails. Extreme values are rarer than under a normal distribution.",
+    meso: "Mesokurtic: this is the normal distribution, the reference (K = 3).",
+    lepto: "Leptokurtic: sharp peak, heavy tails. Extreme values are more frequent than under a normal distribution.",
+    curve: "Distribution shown",
+    normal: "Normal distribution (reference)",
+    tails: (p2, p3) => `P(|X| > 2) = ${p2}   ·   P(|X| > 3) = ${p3}`,
+    normalTails: "Normal distribution: 4.55% and 0.27%",
+    excess: "excess",
+    axis: "Value (variance = 1)",
+    caption: (n) =>
+      `Figure ${n}: Generalized normal distribution with variance 1. Every curve has the same variance; only the shape changes. The shaded areas beyond ±2 give the probability of an extreme value, to compare with the dotted normal curve.`,
   },
 };
 
-export default function KurtosisExplorer({ lang = "fr" }) {
+const W = 600, H = 262, L = 16, R = 16, T = 14, B = 52;
+const X_MIN = -4, X_MAX = 4, Y_MAX = 0.75;
+const sx = (x) => L + ((x - X_MIN) / (X_MAX - X_MIN)) * (W - L - R);
+const sy = (y) => H - B - (Math.min(y, Y_MAX) / Y_MAX) * (H - T - B);
+
+// Slider position u in [0, 1] -> shape beta: 10 (almost flat) at 0, 2 (normal) at 0.5, 1 (Laplace) at 1
+function betaAt(u) {
+  return u <= 0.5 ? Math.exp(Math.log(10) + (u / 0.5) * Math.log(2 / 10)) : Math.exp(Math.log(2) + ((u - 0.5) / 0.5) * Math.log(1 / 2));
+}
+
+/** Generalized normal density with shape beta, rescaled to unit variance. */
+function density(x, beta) {
+  const alpha = Math.sqrt(Math.exp(lgamma(1 / beta) - lgamma(3 / beta)));
+  return (beta / (2 * alpha * gamma(1 / beta))) * Math.exp(-Math.pow(Math.abs(x) / alpha, beta));
+}
+
+const kurtosisOf = (beta) => Math.exp(lgamma(5 / beta) + lgamma(1 / beta) - 2 * lgamma(3 / beta));
+
+const pct = (p, lang) => (p < 0.00005 ? "≈ 0 %" : `${fmt(p * 100, lang)}${lang === "fr" ? " %" : "%"}`);
+
+export default function KurtosisExplorer({ lang = "fr", figure = 3 }) {
   const t = STRINGS[lang] ?? STRINGS.fr;
-  const [kurtValue, setKurtValue] = useState(50); // 0 to 100
+  const [u, setU] = useState(0.5);
+  const beta = betaAt(u);
+  const K = Math.abs(u - 0.5) < 1e-9 ? 3 : kurtosisOf(beta);
 
-  const p = kurtValue / 100;
-  
-  const NORMAL_BINS = [1, 2, 5, 10, 20, 35, 55, 75, 90, 100, 100, 90, 75, 55, 35, 20, 10, 5, 2, 1];
-  const PLATY_BINS =  [0, 0, 2, 10, 25, 45, 60, 58, 72, 68, 68, 72, 58, 60, 45, 25, 10, 2, 0, 0];
-  const LEPTO_BINS =  [25, 10, 5, 8, 2, 0, 15, 35, 70, 110, 110, 70, 35, 15, 0, 2, 8, 5, 10, 25];
-  
-  const numBins = 20;
-  const globalMax = 120; // scaled so max 110 doesn't overflow container
-
-  const interpolatedBins = useMemo(() => {
-    return Array.from({ length: numBins }).map((_, i) => {
-      if (p < 0.5) {
-        // Interpolate between PLATY and NORMAL
-        const weightNormal = p * 2;
-        return PLATY_BINS[i] * (1 - weightNormal) + NORMAL_BINS[i] * weightNormal;
-      } else {
-        // Interpolate between NORMAL and LEPTO
-        const weightLepto = (p - 0.5) * 2;
-        return NORMAL_BINS[i] * (1 - weightLepto) + LEPTO_BINS[i] * weightLepto;
-      }
-    });
-  }, [p]);
-
-  const bins = interpolatedBins.map((val, i) => ({
-    x: (i + 0.5) / numBins,
-    height: (val / globalMax) * 85
-  }));
-
-  const normalLinePoints = NORMAL_BINS.map((val, i) => {
-    const x = (i + 0.5) / numBins * 100;
-    const y = 100 - (val / globalMax) * 85;
-    return `${x},${y}`;
-  }).join(' ');
-
-  let state = 'Mésokurtique';
-  if (kurtValue < 33) state = 'Platykurtique';
-  else if (kurtValue > 66) state = 'Leptokurtique';
-
-  let theme = {};
-  if (state === 'Platykurtique') {
-    theme = {
-      category: t.platyCategory,
-      titleColor: "text-[#a855f7]",
-      badgeBg: "bg-[#581c87]/40",
-      badgeBorder: "border-[#a855f7]/30",
-      activeBg: "bg-[#1f162e]",
-      activeBorder: "border-[#a855f7]",
-      barBg: "bg-[#a855f7]/30",
-      barBorder: "border-[#a855f7]",
-      sliderFill: "#a855f7",
-      descHeading: `${t.platy}${lang === "fr" ? " :" : ":"}`,
-      desc: t.platyDesc,
+  const { curve, leftTail, rightTail, normal, p2, p3 } = useMemo(() => {
+    const xs = linspace(X_MIN, X_MAX, 321);
+    const ys = xs.map((x) => density(x, beta));
+    const tail = (a, b) => {
+      const pts = linspace(a, b, 60);
+      return `${linePath(pts, pts.map((x) => density(x, beta)), sx, sy)}L${sx(b)},${sy(0)}L${sx(a)},${sy(0)}Z`;
     };
-  } else if (state === 'Mésokurtique') {
-    theme = {
-      category: t.mesoCategory,
-      titleColor: "text-[#22c55e]",
-      badgeBg: "bg-[#14532d]/40",
-      badgeBorder: "border-[#22c55e]/30",
-      activeBg: "bg-[#14261d]",
-      activeBorder: "border-[#22c55e]",
-      barBg: "bg-[#22c55e]/30",
-      barBorder: "border-[#22c55e]",
-      sliderFill: "#22c55e",
-      descHeading: `${t.meso}${lang === "fr" ? " :" : ":"}`,
-      desc: t.mesoDesc,
+    const wide = linspace(-12, 12, 6001);
+    const wideYs = wide.map((x) => density(x, beta));
+    return {
+      curve: linePath(xs, ys, sx, sy),
+      leftTail: tail(X_MIN, -2),
+      rightTail: tail(2, X_MAX),
+      normal: linePath(xs, xs.map(normalPdf), sx, sy),
+      p2: tailMass(wide, wideYs, 2),
+      p3: tailMass(wide, wideYs, 3),
     };
-  } else {
-    theme = {
-      category: t.leptoCategory,
-      titleColor: "text-[#f43f5e]",
-      badgeBg: "bg-[#881337]/40",
-      badgeBorder: "border-[#f43f5e]/30",
-      activeBg: "bg-[#2d151c]",
-      activeBorder: "border-[#f43f5e]",
-      barBg: "bg-[#f43f5e]/30",
-      barBorder: "border-[#f43f5e]",
-      sliderFill: "#f43f5e",
-      descHeading: `${t.lepto}${lang === "fr" ? " :" : ":"}`,
-      desc: t.leptoDesc,
-    };
-  }
+  }, [beta]);
+
+  const state = K < 2.95 ? "platy" : K > 3.05 ? "lepto" : "meso";
 
   return (
-    <div className="my-8 rounded-xl bg-[#0c0c0e] text-zinc-300 p-5 sm:p-8 shadow-2xl border border-zinc-800/80 font-sans not-prose">
-      {/* Header */}
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold mb-2 text-white">{t.title}</h3>
-        <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
-          {t.intro}
-        </p>
-      </div>
-
-      {/* Slider Area */}
-      <div className="flex flex-col mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-zinc-400">Kurtosis</span>
-          <span className={`px-4 py-1.5 rounded-md text-sm font-bold border ${theme.badgeBg} ${theme.titleColor} ${theme.badgeBorder} transition-colors duration-300 shadow-sm`}>
-            {theme.category}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-4 relative">
-          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">{t.flat}</span>
-          <div className="relative flex-1 flex items-center h-2">
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={kurtValue} 
-              onInput={(e) => setKurtValue(e.currentTarget.valueAsNumber)}
-              className="absolute w-full h-full opacity-0 cursor-pointer z-20"
-            />
-            {/* Custom slider track */}
-            <div className="absolute top-0 left-0 w-full h-full bg-zinc-700/50 rounded-full z-0 overflow-hidden">
-              <div 
-                className="h-full transition-all duration-300 rounded-full" 
-                style={{ width: `${kurtValue}%`, backgroundColor: theme.sliderFill }}
-              ></div>
-            </div>
-            {/* Custom slider thumb */}
-            <div 
-              className="absolute w-5 h-5 bg-[#0c0c0e] border-[3px] border-zinc-300 rounded-full z-10 transition-all duration-75 pointer-events-none transform -translate-x-1/2"
-              style={{ left: `${kurtValue}%` }}
-            ></div>
-          </div>
-          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">{t.peaked}</span>
-        </div>
-      </div>
-
-      {/* State Cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
-        {/* Platykurtic Card */}
-        <div onClick={() => setKurtValue(0)} className={`min-w-0 rounded-lg p-2 sm:p-3 text-center border cursor-pointer transition-all duration-300 ${state === 'Platykurtique' ? `${theme.activeBg} ${theme.activeBorder}` : 'bg-zinc-800/30 border-zinc-700/50 hover:bg-zinc-800/50'}`}>
-          <div className="text-xs sm:text-sm font-bold text-[#a855f7] mb-0.5 break-words">{t.platy}</div>
-          <div className="text-xs text-zinc-400 mb-0.5">Kurtosis &lt; 3</div>
-          <div className="text-[10px] text-zinc-500">{t.platyCard}</div>
-        </div>
-        {/* Mesokurtic Card */}
-        <div onClick={() => setKurtValue(50)} className={`min-w-0 rounded-lg p-2 sm:p-3 text-center border cursor-pointer transition-all duration-300 ${state === 'Mésokurtique' ? `${theme.activeBg} ${theme.activeBorder}` : 'bg-zinc-800/30 border-zinc-700/50 hover:bg-zinc-800/50'}`}>
-          <div className="text-xs sm:text-sm font-bold text-[#22c55e] mb-0.5 break-words">{t.meso}</div>
-          <div className="text-xs text-zinc-400 mb-0.5">Kurtosis = 3</div>
-          <div className="text-[10px] text-zinc-500">{t.mesoCard}</div>
-        </div>
-        {/* Leptokurtic Card */}
-        <div onClick={() => setKurtValue(100)} className={`min-w-0 rounded-lg p-2 sm:p-3 text-center border cursor-pointer transition-all duration-300 ${state === 'Leptokurtique' ? `${theme.activeBg} ${theme.activeBorder}` : 'bg-zinc-800/30 border-zinc-700/50 hover:bg-zinc-800/50'}`}>
-          <div className="text-xs sm:text-sm font-bold text-[#f43f5e] mb-0.5 break-words">{t.lepto}</div>
-          <div className="text-xs text-zinc-400 mb-0.5">Kurtosis &gt; 3</div>
-          <div className="text-[10px] text-zinc-500">{t.leptoCard}</div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex justify-end mb-2 text-xs font-semibold mr-4 relative z-10">
-        <div className="flex items-center gap-2 border border-zinc-700/50 px-3 py-1.5 rounded-md bg-[#18191b]/80 shadow-sm">
-          <div className="w-4 border-t-2 border-dashed border-[#22c55e]"></div>
-          <span className="text-zinc-400">Normale (référence)</span>
-        </div>
-      </div>
-
-      {/* Chart Area */}
-      <div className="relative w-full h-[280px] mb-12 flex items-end pl-10 pb-8 mt-2">
-        {/* Labels & Annotations */}
-        {state === 'Leptokurtique' && (
-          <>
-            <div className="absolute top-[35%] left-[20%] text-[11px] font-bold text-[#f43f5e] uppercase tracking-wider animate-pulse">{t.heavyTail}</div>
-            <div className="absolute top-[35%] right-[20%] text-[11px] font-bold text-[#f43f5e] uppercase tracking-wider animate-pulse">{t.heavyTail}</div>
-          </>
-        )}
-
-        {/* Y Axis Label */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
-          {t.frequency}
-        </div>
-        {/* X Axis Label */}
-        <div className="absolute bottom-0 left-1/2 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
-          {t.value}
-        </div>
-
-        {/* Axes lines (L-shape) */}
-        <div className="absolute left-10 bottom-8 top-0 w-px bg-zinc-600/60 z-10"></div>
-        <div className="absolute left-10 bottom-8 right-0 h-px bg-zinc-600/60 z-10"></div>
-
-        {/* Chart content container */}
-        <div className="relative w-full h-full flex items-end px-1 ml-2">
-          
-          {/* Default Normal Dashed Line Overlay */}
-          <svg 
-            viewBox="0 0 100 100" 
-            preserveAspectRatio="none" 
-            className="absolute inset-x-1 bottom-0 h-full z-30 pointer-events-none"
-            style={{ width: 'calc(100% - 8px)' }}
-          >
-            <polyline
-              points={normalLinePoints}
-              fill="none"
-              stroke="#22c55e"
-              strokeWidth="2"
-              vectorEffect="non-scaling-stroke"
-              strokeDasharray="6,4"
-              className="opacity-70 gap-4"
-            />
-          </svg>
-
-          {/* Bins */}
-          <div className="absolute inset-x-1 bottom-0 h-full flex items-end z-20">
-            {bins.map((bin, i) => (
-              <div 
-                key={i} 
-                className={`flex-1 mx-[1px] border-t-2 border-r-[1px] border-l-[1px] opacity-90 transition-all duration-300 ${theme.barBg} ${theme.barBorder}`}
-                style={{ height: `${bin.height}%` }}
-              ></div>
+    <figure className="fig not-prose">
+      <div className="fig-panel">
+        <div className="fig-controls">
+          <span className="fig-label">{t.label}</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={u}
+            aria-label={t.label}
+            onInput={(e) => setU(e.currentTarget.valueAsNumber)}
+          />
+          <span className="fig-value">K = {fmt(K, lang)}</span>
+          <div className="fig-chips">
+            {t.presets.map(([name, value]) => (
+              <button type="button" className="fig-chip" aria-pressed={Math.abs(u - value) < 1e-9} onClick={() => setU(value)}>
+                {name}
+              </button>
             ))}
           </div>
-          
         </div>
-      </div>
 
-      {/* Summary Box */}
-      <div className="bg-[#18191b] rounded-xl p-5 border border-zinc-800/80">
-        <div className="text-sm text-zinc-300 tracking-wide">
-          <span className={`font-bold ${theme.titleColor}`}>{theme.descHeading}</span>
-          {theme.desc}
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${t.label} K = ${fmt(K, lang)}`}>
+          <path d={leftTail} fill="var(--fig-data)" fillOpacity="0.45" />
+          <path d={rightTail} fill="var(--fig-data)" fillOpacity="0.45" />
+          <path d={normal} fill="none" stroke="var(--fig-ref)" strokeWidth="1.5" strokeDasharray="3 4" />
+          <path d={curve} fill="none" stroke="var(--fig-data)" strokeWidth="2" />
+          <line className="axis" x1={L} x2={W - R} y1={sy(0)} y2={sy(0)} />
+          {[-3, -2, -1, 0, 1, 2, 3].map((v) => (
+            <g>
+              <line className="axis" x1={sx(v)} x2={sx(v)} y1={sy(0)} y2={sy(0) + 5} />
+              <text x={sx(v)} y={sy(0) + 19} fontSize="13" textAnchor="middle">
+                {v < 0 ? `−${-v}` : v}
+              </text>
+            </g>
+          ))}
+          <text x={W / 2} y={H - 2} fontSize="13" textAnchor="middle">{t.axis}</text>
+        </svg>
+
+        <div className="fig-legend">
+          <span style={{ color: "var(--fig-data)" }}>
+            <i />
+            <span style={{ color: "var(--fg-muted)" }}>
+              {t.curve} (K = {fmt(K, lang)}, {t.excess} {K - 3 >= 0 ? "+" : ""}{fmt(K - 3, lang)})
+            </span>
+          </span>
+          <span style={{ color: "var(--fig-ref)" }}>
+            <i style={{ borderTopStyle: "dotted" }} />
+            <span style={{ color: "var(--fg-muted)" }}>{t.normal}</span>
+          </span>
         </div>
+
+        <p className="fig-note">
+          {t[state]}
+          <br />
+          <strong style={{ whiteSpace: "pre-wrap" }}>{t.tails(pct(p2, lang), pct(p3, lang))}</strong>
+          <br />
+          <span>{t.normalTails}</span>
+        </p>
       </div>
-    </div>
+      <figcaption>{t.caption(figure)}</figcaption>
+    </figure>
   );
 }

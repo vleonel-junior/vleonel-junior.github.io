@@ -1,303 +1,216 @@
 import { useState } from 'preact/hooks';
+import { fmt } from './figures/math.js';
+
+// 20 server response times in milliseconds (made-up data), already sorted
+const DATA = [12, 18, 21, 23, 24, 26, 27, 28, 29, 30, 31, 32, 34, 35, 37, 39, 42, 45, 71, 84];
+
+/** Empirical quantile as defined in the article: average of two ranks when np is an integer. */
+function quantile(sorted, p) {
+  const np = sorted.length * p;
+  return Number.isInteger(np) ? (sorted[np - 1] + sorted[np]) / 2 : sorted[Math.floor(np)];
+}
+
+const n = DATA.length;
+const q1 = quantile(DATA, 0.25);
+const med = quantile(DATA, 0.5);
+const q3 = quantile(DATA, 0.75);
+const iqr = q3 - q1;
+const lowFence = q1 - 1.5 * iqr;
+const highFence = q3 + 1.5 * iqr;
+const inside = DATA.filter((x) => x >= lowFence && x <= highFence);
+const outliers = DATA.filter((x) => x < lowFence || x > highFence);
+const lo = inside[0];
+const hi = inside[inside.length - 1];
+const mean = DATA.reduce((a, b) => a + b, 0) / n;
 
 const STEPS = {
   fr: [
-    {
-      id: 'overview',
-      title: "Aperçu",
-      desc: "Cette visualisation est une boîte à moustaches (box plot) annotée, une méthode de référence pour afficher la distribution des données grâce à un résumé en cinq nombres. Les boîtes à moustaches sont très utiles pour identifier les valeurs aberrantes et comparer la dispersion. L'écart interquartile (la boîte), l'étendue (les moustaches) et les mesures de tendance centrale y sont représentés."
-    },
-    {
-      id: 'q1',
-      title: "Premier Quartile et Boîte",
-      desc: "Le bord gauche de la boîte marque le premier quartile (Q1). Cela correspond au 25ème centile : 25 % des valeurs de l'échantillon lui sont inférieures. La boîte s'étend de Q1 à Q3, encapsulant ainsi la moitié centrale (50 %) des données."
-    },
-    {
-      id: 'median',
-      title: "Médiane",
-      desc: "La ligne verticale à l'intérieur de la boîte représente la médiane (Q2), le 50ème centile. C'est la valeur charnière qui sépare exactement l'échantillon trié en deux moitiés de taille égale."
-    },
-    {
-      id: 'mean',
-      title: "Moyenne",
-      desc: "La croix (×) désigne la moyenne arithmétique. Bien que le box plot repose naturellement sur les quartiles robustes, la moyenne y est souvent insérée pour évaluer l'asymétrie : une moyenne excentrée par rapport à la médiane signale une distribution asymétrique (skewness)."
-    },
-    {
-      id: 'q3',
-      title: "Troisième Quartile",
-      desc: "Le bord droit de la boîte délimite le troisième quartile (Q3). C'est le 75ème centile, indiquant que la vaste majorité (75 %) des points de données sont accumulés sous ce seuil."
-    },
-    {
-      id: 'iqr',
-      title: "Écart Interquartile (IQR)",
-      desc: "La boîte entière incarne l'Écart Interquartile (IQR = Q3 - Q1), l'espace où résident les 50 % de valeurs les plus centrales. C'est un indicateur de dispersion particulièrement puissant car il ignore d'emblée l'impact des extrémités extrêmes."
-    },
-    {
-      id: 'whisker',
-      title: "Moustaches",
-      desc: "Les segments horizontaux, surnommés moustaches, s'étendent de part et d'autre de la boîte. Ils illustrent la portée des données considérées comme régulières et atteignent souvent une distance maximale conventionnelle de 1,5 fois l'IQR."
-    },
-    {
-      id: 'minmax',
-      title: "Minimum et Maximum",
-      desc: "Les traits d'arrêt marquant l'extrémité des moustaches définissent le minimum et le maximum stricts des données 'non-aberrantes'. Toute valeur respectant ces frontières est considérée comme statistiquement représentative."
-    },
-    {
-      id: 'outlier',
-      title: "Valeurs Aberrantes (Outliers)",
-      desc: "Les points isolés flottant au-delà des moustaches sont les valeurs aberrantes (outliers). Leur statut mathématiquement exceptionnel exige qu'elles soient affichées et potentiellement analysées ou nettoyées séparément."
-    }
+    ["overview", "Vue d'ensemble", `Chaque point en haut est une mesure (n = ${n}). La boîte à moustaches en dessous résume ces ${n} valeurs en cinq nombres, plus la moyenne et les valeurs aberrantes.`],
+    ["q1", "Premier quartile", `Le bord gauche de la boîte est Q1 = ${fmt(q1, "fr", 0)} ms : 25 % des mesures sont inférieures ou égales à cette valeur.`],
+    ["median", "Médiane", `Le trait à l'intérieur de la boîte est la médiane Q2 = ${fmt(med, "fr", 1)} ms. Elle coupe l'échantillon trié en deux moitiés de même taille.`],
+    ["q3", "Troisième quartile", `Le bord droit de la boîte est Q3 = ${fmt(q3, "fr", 0)} ms : 75 % des mesures sont inférieures ou égales à cette valeur.`],
+    ["iqr", "Écart interquartile", `La largeur de la boîte est l'IQR = Q3 − Q1 = ${fmt(iqr, "fr", 0)} ms. Elle contient les 50 % de mesures les plus centrales et ne dépend pas des valeurs extrêmes.`],
+    ["fences", "Barrières de Tukey", `Les barrières sont placées à Q1 − 1,5 × IQR = ${fmt(lowFence, "fr", 1)} ms et Q3 + 1,5 × IQR = ${fmt(highFence, "fr", 1)} ms. Elles ne sont pas dessinées sur une boîte à moustaches classique, mais elles décident de tout ce qui suit.`],
+    ["whisker", "Moustaches", `Chaque moustache s'arrête sur la mesure la plus éloignée qui reste à l'intérieur des barrières : ${fmt(lo, "fr", 0)} ms à gauche, ${fmt(hi, "fr", 0)} ms à droite. Elle ne mesure donc pas forcément 1,5 × IQR.`],
+    ["outlier", "Valeurs aberrantes", `Les mesures au-delà des barrières (${outliers.map((x) => `${x} ms`).join(" et ")}) sont dessinées une à une. Ce sont les candidates à examiner : erreur de mesure, ou vrai comportement rare ?`],
+    ["mean", "Moyenne", `Le losange indique la moyenne, ${fmt(mean, "fr", 1)} ms. Elle est tirée vers la droite par les deux valeurs aberrantes et dépasse la médiane : c'est le signe d'une asymétrie positive.`],
   ],
   en: [
-    {
-      id: 'overview',
-      title: "Overview",
-      desc: "This is an annotated box plot, a standard way to show how data is distributed through a five-number summary. Box plots are very useful for spotting outliers and comparing spread. They show the interquartile range (the box), the range (the whiskers) and the measures of central tendency."
-    },
-    {
-      id: 'q1',
-      title: "First Quartile and Box",
-      desc: "The left edge of the box marks the first quartile (Q1). This is the 25th percentile: 25% of the values in the sample lie below it. The box runs from Q1 to Q3 and so contains the middle half (50%) of the data."
-    },
-    {
-      id: 'median',
-      title: "Median",
-      desc: "The vertical line inside the box is the median (Q2), the 50th percentile. It is the pivot value that splits the sorted sample into two halves of equal size."
-    },
-    {
-      id: 'mean',
-      title: "Mean",
-      desc: "The cross (×) marks the arithmetic mean. Although a box plot is built on robust quartiles, the mean is often added to assess skewness: a mean that sits away from the median signals an asymmetric distribution."
-    },
-    {
-      id: 'q3',
-      title: "Third Quartile",
-      desc: "The right edge of the box marks the third quartile (Q3). This is the 75th percentile: the large majority (75%) of the data points fall below this threshold."
-    },
-    {
-      id: 'iqr',
-      title: "Interquartile Range (IQR)",
-      desc: "The whole box represents the interquartile range (IQR = Q3 - Q1), the region holding the 50% most central values. It is a particularly strong measure of spread because it ignores the influence of the extremes from the start."
-    },
-    {
-      id: 'whisker',
-      title: "Whiskers",
-      desc: "The horizontal segments, called whiskers, extend on each side of the box. They show the range of data considered regular and usually reach a conventional maximum distance of 1.5 times the IQR."
-    },
-    {
-      id: 'minmax',
-      title: "Minimum and Maximum",
-      desc: "The end caps of the whiskers mark the strict minimum and maximum of the non-outlier data. Any value within these bounds is considered statistically representative."
-    },
-    {
-      id: 'outlier',
-      title: "Outliers",
-      desc: "The isolated points beyond the whiskers are the outliers. Because they are mathematically exceptional, they are shown individually and may need to be analyzed or cleaned separately."
-    },
+    ["overview", "Overview", `Each dot at the top is one measurement (n = ${n}). The box plot below summarizes these ${n} values with five numbers, plus the mean and the outliers.`],
+    ["q1", "First quartile", `The left edge of the box is Q1 = ${fmt(q1, "en", 0)} ms: 25% of the measurements are less than or equal to this value.`],
+    ["median", "Median", `The line inside the box is the median Q2 = ${fmt(med, "en", 1)} ms. It splits the sorted sample into two halves of equal size.`],
+    ["q3", "Third quartile", `The right edge of the box is Q3 = ${fmt(q3, "en", 0)} ms: 75% of the measurements are less than or equal to this value.`],
+    ["iqr", "Interquartile range", `The width of the box is the IQR = Q3 − Q1 = ${fmt(iqr, "en", 0)} ms. It holds the middle 50% of the measurements and does not depend on the extreme values.`],
+    ["fences", "Tukey's fences", `The fences sit at Q1 − 1.5 × IQR = ${fmt(lowFence, "en", 1)} ms and Q3 + 1.5 × IQR = ${fmt(highFence, "en", 1)} ms. A standard box plot does not draw them, but they decide everything that follows.`],
+    ["whisker", "Whiskers", `Each whisker stops at the most extreme measurement that is still inside the fences: ${fmt(lo, "en", 0)} ms on the left, ${fmt(hi, "en", 0)} ms on the right. So a whisker is not necessarily 1.5 × IQR long.`],
+    ["outlier", "Outliers", `Measurements beyond the fences (${outliers.map((x) => `${x} ms`).join(" and ")}) are drawn one by one. They are the ones to investigate: a measurement error, or genuinely rare behavior?`],
+    ["mean", "Mean", `The diamond marks the mean, ${fmt(mean, "en", 1)} ms. The two outliers pull it to the right, past the median: a sign of positive skew.`],
   ],
 };
 
 const LABELS = {
   fr: {
-    title: "Explorateur de boîte à moustaches",
-    intro: "Découvrez la construction d'une boîte à moustaches. Utilisez la navigation ci-dessous pour explorer chaque élément statistique.",
-    outliers1: "Valeurs",
-    outliers2: "Aberrantes",
-    whisker: "Moustache",
-    q1: "Premier Quartile",
-    median: "Médiane",
-    mean: "Moyenne",
-    q3: "Troisième Quartile",
-    iqr: "Écart Interquartile",
     previous: "Étape précédente",
     next: "Étape suivante",
+    axis: "Temps de réponse (ms)",
+    caption: (f) =>
+      `Figure ${f} : Boîte à moustaches de ${n} temps de réponse d'un serveur (données fictives). Les quartiles sont calculés avec la définition des quantiles empiriques donnée plus haut. Utilisez les flèches pour parcourir chaque élément.`,
   },
   en: {
-    title: "Box Plot Explorer",
-    intro: "See how a box plot is built. Use the navigation below to explore each statistical element.",
-    outliers1: "Outliers",
-    outliers2: "",
-    whisker: "Whisker",
-    q1: "First Quartile",
-    median: "Median",
-    mean: "Mean",
-    q3: "Third Quartile",
-    iqr: "Interquartile Range",
     previous: "Previous step",
     next: "Next step",
+    axis: "Response time (ms)",
+    caption: (f) =>
+      `Figure ${f}: Box plot of ${n} server response times (made-up data). The quartiles use the definition of empirical quantiles given above. Use the arrows to walk through each element.`,
   },
 };
 
-export default function BoxPlotExplorer({ lang = "fr" }) {
-  const [step, setStep] = useState(0);
+const W = 600, H = 224, L = 20, R = 20;
+const X_MIN = 0, X_MAX = 90;
+const sx = (x) => L + ((x - X_MIN) / (X_MAX - X_MIN)) * (W - L - R);
+const DOTS_Y = 34, BOX_Y = 110, BOX_H = 44, AXIS_Y = 172;
 
+export default function BoxPlotExplorer({ lang = "fr", figure = 4 }) {
+  const [step, setStep] = useState(0);
   const steps = STEPS[lang] ?? STEPS.fr;
   const t = LABELS[lang] ?? LABELS.fr;
+  const [current, title, desc] = steps[step];
 
-  const isStep = (ids) => {
-    if (step === 0) return true;
-    return ids.includes(steps[step].id);
-  };
+  // Elements shown at full strength for the current step; everything else is faded
+  const on = (...ids) => current === "overview" || ids.includes(current);
+  const color = (...ids) => (current !== "overview" && ids.includes(current) ? "var(--accent)" : "var(--fg-muted)");
+  const opacity = (...ids) => (on(...ids) ? 1 : 0.25);
 
-  const isEmphasized = (ids) => {
-    return step !== 0 && ids.includes(steps[step].id);
-  };
+  // Stack repeated values so every dot stays visible
+  const seen = {};
+  const dots = DATA.map((x) => {
+    const level = (seen[x] = (seen[x] ?? -1) + 1);
+    return { x, y: DOTS_Y - level * 9 };
+  });
 
-  const getLineClass = (visibleIds, emphasizeIds = visibleIds) => {
-    const active = isStep(visibleIds);
-    const emphasized = isEmphasized(emphasizeIds);
-    if (emphasized) return "stroke-[#38bdf8] drop-shadow-[0_0_6px_rgba(56,189,248,0.8)]";
-    if (active) return "stroke-[#0ea5e9]";
-    return "stroke-zinc-700/40";
-  };
-
-  const getStrokeWidth = (visibleIds, emphasizeIds = visibleIds) => {
-    return isEmphasized(emphasizeIds) ? 3 : 2;
-  };
-
-  const getTextClass = (ids) => {
-    const active = isStep(ids);
-    const emphasized = isEmphasized(ids);
-    if (emphasized) return "fill-white font-bold drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]";
-    if (active) return "fill-zinc-300 font-semibold";
-    return "fill-zinc-600 font-medium";
-  };
-
-  const getCircleClass = (visibleIds, emphasizeIds = visibleIds) => {
-    const active = isStep(visibleIds);
-    const emphasized = isEmphasized(emphasizeIds);
-    if (emphasized) return "stroke-[#38bdf8] fill-[#0c0c0e] drop-shadow-[0_0_4px_rgba(56,189,248,0.8)]";
-    if (active) return "stroke-[#0ea5e9] fill-[#0c0c0e]";
-    return "stroke-zinc-700/40 fill-transparent";
-  };
+  const top = BOX_Y - BOX_H / 2;
+  const bottom = BOX_Y + BOX_H / 2;
 
   return (
-    <div className="my-8 rounded-xl bg-[#0c0c0e] text-zinc-300 p-5 sm:p-8 shadow-2xl border border-zinc-800/80 font-sans not-prose">
-      <div className="mb-6">
-        <h3 className="text-2xl font-bold mb-2 text-white">{t.title}</h3>
-        <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
-          {t.intro}
-        </p>
-      </div>
+    <figure className="fig not-prose">
+      <div className="fig-panel">
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title}. ${desc}`}>
+          {/* Raw data */}
+          {dots.map((d) => (
+            <circle
+              cx={sx(d.x)}
+              cy={d.y}
+              r="4"
+              fill={outliers.includes(d.x) && current === "outlier" ? "var(--accent)" : "var(--fg-subtle)"}
+              fillOpacity={current === "overview" || current === "outlier" ? 0.9 : 0.45}
+            />
+          ))}
 
-      <div className="relative w-full overflow-hidden bg-[#121316] rounded-xl border border-zinc-800 p-4 pt-10 pb-6 mb-6">
-        <svg viewBox="0 0 800 320" className="w-full h-auto">
-          {/* Box Fill */}
-          <rect 
-            x="280" y="110" width="300" height="80" 
-            className={`transition-all duration-300 ${isStep(['iqr']) ? (isEmphasized(['iqr']) ? 'fill-[#0ea5e9]/20' : 'fill-[#0ea5e9]/10') : 'fill-transparent'}`} 
+          {/* Fences */}
+          <g opacity={current === "fences" || current === "whisker" || current === "outlier" ? 1 : 0}>
+            {[lowFence, highFence].map((f) => (
+              <g>
+                <line x1={sx(f)} x2={sx(f)} y1={DOTS_Y - 14} y2={AXIS_Y} stroke="var(--fig-mode)" strokeWidth="1.5" strokeDasharray="4 4" />
+                <text x={sx(f)} y={DOTS_Y - 20} fontSize="12" textAnchor="middle" style={{ fill: "var(--fig-mode)" }}>
+                  {fmt(f, lang, 1)}
+                </text>
+              </g>
+            ))}
+          </g>
+
+          {/* IQR band */}
+          <rect
+            x={sx(q1)}
+            y={top}
+            width={sx(q3) - sx(q1)}
+            height={BOX_H}
+            fill="var(--accent)"
+            fillOpacity={current === "iqr" ? 0.18 : 0.06}
           />
 
-          {/* Regular Data Points */}
-          <g className={`transition-all duration-300 ${isStep(['overview']) ? 'opacity-100' : 'opacity-0'}`}>
-            {[190, 220, 300, 350, 480, 520, 620, 650].map(cx => (
-              <circle key={cx} cx={cx} cy="150" r="3" className={getCircleClass(['overview'])} strokeWidth="1.5" />
-            ))}
+          {/* Whiskers and caps */}
+          <g stroke={color("whisker")} strokeWidth="2" opacity={opacity("whisker", "fences")}>
+            <line x1={sx(lo)} x2={sx(q1)} y1={BOX_Y} y2={BOX_Y} />
+            <line x1={sx(q3)} x2={sx(hi)} y1={BOX_Y} y2={BOX_Y} />
+            <line x1={sx(lo)} x2={sx(lo)} y1={BOX_Y - 12} y2={BOX_Y + 12} />
+            <line x1={sx(hi)} x2={sx(hi)} y1={BOX_Y - 12} y2={BOX_Y + 12} />
           </g>
 
-          {/* Outliers */}
-          <g className="transition-all duration-300">
-            {[50, 90, 760].map(cx => (
-              <circle key={cx} cx={cx} cy="150" r="4.5" className={getCircleClass(['outlier', 'overview'], ['outlier'])} strokeWidth="2" />
-            ))}
+          {/* Box */}
+          <g strokeWidth="2">
+            <line x1={sx(q1)} x2={sx(q3)} y1={top} y2={top} stroke={color("iqr")} opacity={opacity("iqr", "q1", "q3")} />
+            <line x1={sx(q1)} x2={sx(q3)} y1={bottom} y2={bottom} stroke={color("iqr")} opacity={opacity("iqr", "q1", "q3")} />
+            <line x1={sx(q1)} x2={sx(q1)} y1={top} y2={bottom} stroke={color("q1", "iqr")} opacity={opacity("q1", "iqr")} />
+            <line x1={sx(q3)} x2={sx(q3)} y1={top} y2={bottom} stroke={color("q3", "iqr")} opacity={opacity("q3", "iqr")} />
+            <line x1={sx(med)} x2={sx(med)} y1={top} y2={bottom} stroke={color("median")} opacity={opacity("median")} strokeWidth="3" />
           </g>
-
-          {/* Whiskers Lines */}
-          <line x1="150" y1="150" x2="280" y2="150" className={`${getLineClass(['whisker', 'minmax', 'overview'], ['whisker'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['whisker'])} />
-          <line x1="580" y1="150" x2="680" y2="150" className={`${getLineClass(['whisker', 'minmax', 'overview'], ['whisker'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['whisker'])} />
-
-          {/* Min & Max Ticks */}
-          <line x1="150" y1="130" x2="150" y2="170" className={`${getLineClass(['minmax', 'overview', 'whisker'], ['minmax'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['minmax'])} />
-          <line x1="680" y1="130" x2="680" y2="170" className={`${getLineClass(['minmax', 'overview', 'whisker'], ['minmax'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['minmax'])} />
-
-          {/* Box Edges */}
-          <line x1="280" y1="110" x2="580" y2="110" className={`${getLineClass(['iqr', 'overview'], ['iqr'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['iqr'])} />
-          <line x1="280" y1="190" x2="580" y2="190" className={`${getLineClass(['iqr', 'overview'], ['iqr'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['iqr'])} />
-
-          <line x1="280" y1="110" x2="280" y2="190" className={`${getLineClass(['q1', 'iqr', 'overview'], ['q1', 'iqr'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['q1', 'iqr'])} />
-          <line x1="440" y1="110" x2="440" y2="190" className={`${getLineClass(['median', 'overview'], ['median'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['median'])} />
-          <line x1="580" y1="110" x2="580" y2="190" className={`${getLineClass(['q3', 'iqr', 'overview'], ['q3', 'iqr'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['q3', 'iqr'])} />
 
           {/* Mean */}
-          <path d="M 395,145 L 405,155 M 395,155 L 405,145" className={`${getLineClass(['mean', 'overview'], ['mean'])} transition-all duration-300`} strokeWidth={getStrokeWidth(['mean']) + 0.5} strokeLinecap="round" />
+          <path
+            d={`M${sx(mean)},${BOX_Y - 7}l7,7l-7,7l-7,-7z`}
+            fill={color("mean")}
+            opacity={opacity("mean")}
+          />
 
-          {/* Typography */}
-          <g className={`transition-all duration-300 ${getTextClass(['outlier', 'overview'])}`}>
-            <text x="70" y="55" fontSize="13" textAnchor="middle">{t.outliers1}</text>
-            <text x="70" y="73" fontSize="12" textAnchor="middle" className="opacity-80">{t.outliers2}</text>
-            <line x1="70" y1="85" x2="70" y2="135" className={`${getLineClass(['outlier', 'overview'], ['outlier'])} opacity-60`} strokeWidth="1.5" strokeDasharray="3,3" />
-            <polygon points="67,132 73,132 70,138" className={isStep(['outlier', 'overview']) ? (isEmphasized(['outlier']) ? 'fill-[#38bdf8]' : 'fill-[#0ea5e9]') : 'fill-zinc-700/40'} />
-          </g>
+          {/* Outliers on the box plot row */}
+          {outliers.map((x) => (
+            <circle cx={sx(x)} cy={BOX_Y} r="5" fill="none" stroke={color("outlier")} strokeWidth="2" opacity={opacity("outlier")} />
+          ))}
 
-          <text x="150" y="205" fontSize="14" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['minmax', 'overview'])}`}>Minimum</text>
-          <text x="680" y="205" fontSize="14" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['minmax', 'overview'])}`}>Maximum</text>
+          {/* Labels for the active element */}
+          {current !== "overview" && (
+            <g fontSize="13">
+              {current === "q1" && <text x={sx(q1)} y={top - 8} textAnchor="middle">Q1</text>}
+              {current === "median" && <text x={sx(med)} y={top - 8} textAnchor="middle">Q2</text>}
+              {current === "q3" && <text x={sx(q3)} y={top - 8} textAnchor="middle">Q3</text>}
+              {current === "iqr" && <text x={(sx(q1) + sx(q3)) / 2} y={top - 8} textAnchor="middle">IQR</text>}
+            </g>
+          )}
 
-          <text x="215" y="140" fontSize="13" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['whisker', 'overview'])}`}>{t.whisker}</text>
-          <text x="630" y="140" fontSize="13" textAnchor="middle" className={`transition-all duration-300 ${getTextClass(['whisker', 'overview'])}`}>{t.whisker}</text>
-
-          <g className={`transition-all duration-300 ${getTextClass(['q1', 'overview'])}`}>
-            <text x="280" y="55" fontSize="13" textAnchor="middle">{t.q1}</text>
-            <text x="280" y="73" fontSize="12" textAnchor="middle" className="opacity-80">Q1</text>
-          </g>
-
-          <g className={`transition-all duration-300 ${getTextClass(['median', 'overview'])}`}>
-            <text x="440" y="55" fontSize="13" textAnchor="middle">{t.median}</text>
-            <text x="440" y="73" fontSize="12" textAnchor="middle" className="opacity-80">Q2</text>
-          </g>
-
-          <g className={`transition-all duration-300 ${getTextClass(['mean', 'overview'])}`}>
-            <text x="385" y="73" fontSize="13" textAnchor="middle">{t.mean}</text>
-            <line x1="385" y1="85" x2="400" y2="135" className={`${getLineClass(['mean', 'overview'], ['mean'])} opacity-60`} strokeWidth="1.5" strokeDasharray="3,3" />
-            <polygon points="398,131 404,133 401,139" className={isStep(['mean', 'overview']) ? (isEmphasized(['mean']) ? 'fill-[#38bdf8]' : 'fill-[#0ea5e9]') : 'fill-zinc-700/40'} />
-          </g>
-
-          <g className={`transition-all duration-300 ${getTextClass(['q3', 'overview'])}`}>
-            <text x="580" y="55" fontSize="13" textAnchor="middle">{t.q3}</text>
-            <text x="580" y="73" fontSize="12" textAnchor="middle" className="opacity-80">Q3</text>
-          </g>
-
-          <g className={`transition-all duration-300 ${getTextClass(['iqr', 'overview'])}`}>
-            <path d="M 280,215 Q 280,225 355,225 Q 430,225 430,235 Q 430,225 505,225 Q 580,225 580,215" fill="none" className={`${getLineClass(['iqr', 'overview'], ['iqr'])} transition-all duration-300`} strokeWidth="1.5" />
-            <text x="430" y="255" fontSize="14" textAnchor="middle">{t.iqr}</text>
-            <text x="430" y="275" fontSize="13" textAnchor="middle" className="opacity-80">IQR</text>
-          </g>
+          {/* Axis */}
+          <line className="axis" x1={L} x2={W - R} y1={AXIS_Y} y2={AXIS_Y} />
+          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90].map((v) => (
+            <g>
+              <line className="axis" x1={sx(v)} x2={sx(v)} y1={AXIS_Y} y2={AXIS_Y + 5} />
+              <text x={sx(v)} y={AXIS_Y + 19} fontSize="13" textAnchor="middle">{v}</text>
+            </g>
+          ))}
+          <text x={W / 2} y={H - 2} fontSize="13" textAnchor="middle">{t.axis}</text>
         </svg>
-      </div>
 
-      <div className="flex flex-col bg-[#18191b] rounded-xl border border-zinc-800/80 overflow-hidden shadow-lg mt-8 relative">
-        <div className="absolute top-0 left-0 h-[3px] bg-zinc-800 w-full">
-            <div className="h-full bg-[#0ea5e9] transition-all duration-500 ease-in-out" style={{ width: `${((step + 1) / steps.length) * 100}%` }}></div>
-        </div>
-        <div className="p-6 pt-7">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xl font-bold text-[#e2e8f0]">{steps[step].title}</h4>
-            <div className="flex items-center gap-2 bg-[#0c0c0e] px-2 py-1 rounded-lg border border-zinc-800 shadow-inner">
-              <button 
-                onClick={() => setStep(s => Math.max(0, s - 1))}
+        <div className="fig-note" style={{ textAlign: "left" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+            <strong>{title}</strong>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+              <button
+                type="button"
+                className="fig-chip"
+                onClick={() => setStep((s) => Math.max(0, s - 1))}
                 aria-label={t.previous}
                 disabled={step === 0}
-                className="text-zinc-500 p-1.5 hover:text-white hover:bg-zinc-800 rounded-md transition-all disabled:opacity-30 disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
+                style={{ opacity: step === 0 ? 0.4 : 1 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                ←
               </button>
-              <span className="text-xs font-bold text-zinc-500 tracking-[0.2em] w-[45px] text-center">
+              <span className="fig-value" style={{ minWidth: "3rem", textAlign: "center" }}>
                 {step + 1}/{steps.length}
               </span>
-              <button 
-                onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))}
+              <button
+                type="button"
+                className="fig-chip"
+                onClick={() => setStep((s) => Math.min(steps.length - 1, s + 1))}
                 aria-label={t.next}
                 disabled={step === steps.length - 1}
-                className="text-zinc-500 p-1.5 hover:text-white hover:bg-zinc-800 rounded-md transition-all disabled:opacity-30 disabled:hover:text-zinc-500 disabled:hover:bg-transparent"
+                style={{ opacity: step === steps.length - 1 ? 0.4 : 1 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                →
               </button>
             </div>
           </div>
-          <p className="text-sm md:text-[15px] text-zinc-400 leading-relaxed min-h-[72px]">
-            {steps[step].desc}
-          </p>
+          <p style={{ marginTop: "0.5rem", minHeight: "4.5em" }}>{desc}</p>
         </div>
       </div>
-    </div>
+      <figcaption>{t.caption(figure)}</figcaption>
+    </figure>
   );
 }

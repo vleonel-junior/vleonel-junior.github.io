@@ -1,301 +1,148 @@
 import { useState, useMemo } from 'preact/hooks';
+import { lgamma, normalPdf, linspace, quantileOf, linePath, fmt } from './figures/math.js';
 
 const STRINGS = {
   fr: {
-    title: "Explorateur d'asymétrie",
-    intro: "Déplacez le curseur pour voir comment l'asymétrie affecte la forme de la distribution et la relation entre la Moyenne, la Médiane et le Mode.",
-    skewness: "Asymétrie",
-    symmetric: "Symétrique",
-    left: "Asymétrique à gauche (négatif)",
-    right: "Asymétrique à droite (positif)",
-    descSymmetric: "Dans des données symétriques, les mesures de centralité coïncident.",
-    descLeft: "Dans une asymétrie à gauche, la traîne attire la moyenne vers la gauche.",
-    descRight: "Dans une asymétrie à droite, la traîne attire la moyenne vers la droite.",
-    leftEnd: "Gauche",
-    rightEnd: "Droite",
+    label: "Asymétrie",
+    presets: [["Gauche", -1], ["Symétrique", 0], ["Droite", 1]],
     mean: "Moyenne",
     median: "Médiane",
     mode: "Mode",
-    frequency: "Fréquence",
-    value: "Valeur",
+    axis: "Valeur (centrée réduite)",
+    symmetric: "La distribution est symétrique : les trois mesures sont confondues.",
+    right: "La queue s'étire vers la droite et entraîne la moyenne avec elle.",
+    left: "La queue s'étire vers la gauche et entraîne la moyenne avec elle.",
+    caption: (n) =>
+      `Figure ${n} : Déplacez le curseur pour changer le coefficient d'asymétrie S. Chaque courbe est une loi gamma centrée réduite (réfléchie quand S < 0), donc la moyenne reste à 0 et seule la forme change. Plus la queue s'allonge, plus la moyenne s'éloigne du mode.`,
   },
   en: {
-    title: "Skewness Explorer",
-    intro: "Move the slider to see how skewness changes the shape of the distribution and the relationship between the Mean, the Median and the Mode.",
-    skewness: "Skewness",
-    symmetric: "Symmetric",
-    left: "Left-skewed (negative)",
-    right: "Right-skewed (positive)",
-    descSymmetric: "In symmetric data, the measures of central tendency coincide.",
-    descLeft: "In a left-skewed distribution, the tail pulls the mean to the left.",
-    descRight: "In a right-skewed distribution, the tail pulls the mean to the right.",
-    leftEnd: "Left",
-    rightEnd: "Right",
+    label: "Skewness",
+    presets: [["Left", -1], ["Symmetric", 0], ["Right", 1]],
     mean: "Mean",
     median: "Median",
     mode: "Mode",
-    frequency: "Frequency",
-    value: "Value",
+    axis: "Value (standardized)",
+    symmetric: "The distribution is symmetric: the three measures coincide.",
+    right: "The tail stretches to the right and pulls the mean along with it.",
+    left: "The tail stretches to the left and pulls the mean along with it.",
+    caption: (n) =>
+      `Figure ${n}: Move the slider to change the skewness coefficient S. Each curve is a standardized gamma distribution (mirrored when S < 0), so the mean stays at 0 and only the shape changes. The longer the tail, the further the mean moves away from the mode.`,
   },
 };
 
-export default function SkewnessExplorer({ lang = "fr" }) {
+// Chart geometry (SVG user units)
+const W = 600, H = 262, L = 16, R = 16, T = 14, B = 52;
+const X_MIN = -4, X_MAX = 4, Y_MAX = 0.6;
+const sx = (x) => L + ((x - X_MIN) / (X_MAX - X_MIN)) * (W - L - R);
+const sy = (y) => H - B - (Math.min(y, Y_MAX) / Y_MAX) * (H - T - B);
+
+/**
+ * Standardized gamma density with skewness s (k = 4 / s²), mirrored for s < 0.
+ * s = 0 is the normal distribution, the limit of the family.
+ */
+function density(x, s) {
+  if (Math.abs(s) < 1e-6) return normalPdf(x);
+  const k = 4 / (s * s);
+  const g = Math.sqrt(k) * Math.sign(s) * x + k;
+  return g <= 0 ? 0 : Math.sqrt(k) * Math.exp((k - 1) * Math.log(g) - g - lgamma(k));
+}
+
+export default function SkewnessExplorer({ lang = "fr", figure = 2 }) {
   const t = STRINGS[lang] ?? STRINGS.fr;
-  const [skewValue, setSkewValue] = useState(50); // 0 to 100
+  const [s, setS] = useState(1);
 
-  const p = skewValue / 100;
-  
-  // Base arrays reflecting EXACTLY the shapes from the images
-  const RIGHT_BINS = [0.5, 100, 25, 18, 14, 11, 9, 8, 7, 6, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5];
-  const SYMM_BINS = [1, 2, 4, 8, 15, 25, 40, 60, 85, 100, 100, 85, 60, 40, 25, 15, 8, 4, 2, 1];
-  const LEFT_BINS = [...RIGHT_BINS].reverse();
-  
-  const numBins = 20;
-  
-  const interpolatedBins = useMemo(() => {
-    return Array.from({ length: numBins }).map((_, i) => {
-      if (p < 0.5) {
-        // Interpolate between LEFT and SYMM
-        const weightSymm = p * 2;
-        return LEFT_BINS[i] * (1 - weightSymm) + SYMM_BINS[i] * weightSymm;
-      } else {
-        // Interpolate between SYMM and RIGHT
-        const weightRight = (p - 0.5) * 2;
-        return SYMM_BINS[i] * (1 - weightRight) + RIGHT_BINS[i] * weightRight;
-      }
-    });
-  }, [p]);
-  
-  // Calculate Stats exactly from the bars
-  let sum = 0;
-  let sumX = 0;
-  let maxD = 0;
-  let modeIndex = 0;
-  
-  interpolatedBins.forEach((val, i) => {
-    sum += val;
-    sumX += val * (i + 0.5);
-    if (val > maxD) {
-      maxD = val;
-      modeIndex = i;
-    }
-  });
-  
-  let mean = (sumX / sum) / numBins;
-  
-  // If perfectly symmetric, mode should be exactly 0.5 (between the two peaks)
-  let mode = p === 0.5 ? 0.5 : (modeIndex + 0.5) / numBins;
-  
-  let runningSum = 0;
-  let median = 0;
-  for (let i = 0; i < numBins; i++) {
-    runningSum += interpolatedBins[i];
-    if (runningSum >= sum / 2) {
-      const prevSum = runningSum - interpolatedBins[i];
-      const needed = (sum / 2) - prevSum;
-      const fraction = needed / interpolatedBins[i];
-      median = (i + fraction) / numBins;
-      break;
-    }
-  }
+  const { curve, area, median, mode } = useMemo(() => {
+    // Wide grid for the median, visible window for the drawing
+    const wide = linspace(-10, 10, 4001);
+    const median = quantileOf(wide, wide.map((x) => density(x, s)), 0.5);
+    const mode = Math.abs(s) < 1e-6 ? 0 : -Math.sign(s) * (Math.abs(s) / 2);
+    const xs = linspace(X_MIN, X_MAX, 321);
+    const ys = xs.map((x) => density(x, s));
+    const curve = linePath(xs, ys, sx, sy);
+    const area = `${curve}L${sx(X_MAX)},${sy(0)}L${sx(X_MIN)},${sy(0)}Z`;
+    return { curve, area, median, mode };
+  }, [s]);
 
-  // Final rendering array (scale max to 85% visually)
-  const bins = interpolatedBins.map((val, i) => ({
-    x: (i + 0.5) / numBins,
-    height: (val / maxD) * 85
-  }));
-
-  // Determine heights of the lines at their exact positions
-  const getLineHeight = (pos) => {
-    // Find nearest bin
-    const binIndex = Math.min(Math.max(Math.floor(pos * numBins), 0), numBins - 1);
-    return bins[binIndex]?.height || 0;
-  };
-
-  let theme = {
-    category: t.symmetric,
-    badgeBg: "bg-[#14532d]/40",
-    badgeText: "text-[#22c55e]",
-    badgeBorder: "border-[#22c55e]/30",
-    barBg: "bg-[#22c55e]/30",
-    barBorder: "border-[#22c55e]",
-    sliderFill: "#22c55e",
-    relation: ["mean", "≈", "median", "≈", "mode"],
-    desc: t.descSymmetric,
-  };
-  
-  if (p < 0.45) {
-    theme = {
-      category: t.left,
-      badgeBg: "bg-[#1e3a8a]/40",
-      badgeText: "text-[#3b82f6]",
-      badgeBorder: "border-[#3b82f6]/30",
-      barBg: "bg-[#3b82f6]/30",
-      barBorder: "border-[#3b82f6]",
-      sliderFill: "#3b82f6",
-      relation: ["mean", "<", "median", "<", "mode"],
-      desc: t.descLeft,
-    };
-  } else if (p > 0.55) {
-    theme = {
-      category: t.right,
-      badgeBg: "bg-[#78350f]/40",
-      BadgeText: "text-[#f59e0b]",
-      badgeText: "text-[#f59e0b]",
-      badgeBorder: "border-[#f59e0b]/30",
-      barBg: "bg-[#f59e0b]/30",
-      barBorder: "border-[#f59e0b]",
-      sliderFill: "#f59e0b",
-      relation: ["mode", "<", "median", "<", "mean"],
-      desc: t.descRight,
-    };
-  }
-
-  const renderRelationString = () => {
-    return theme.relation.map((word, i) => {
-      let colorClass = "text-zinc-500";
-      if (word === "mean") colorClass = "text-[#22c55e]";
-      if (word === "median") colorClass = "text-[#06b6d4]";
-      if (word === "mode") colorClass = "text-[#f59e0b]";
-      
-      return (
-        <span key={i} className={`mx-1 font-bold ${colorClass}`}>
-          {t[word] ?? word}
-        </span>
-      );
-    });
-  };
+  const mean = 0;
+  const symmetric = Math.abs(s) < 1e-6;
+  const markers = [
+    { key: "mode", x: mode, color: "var(--fig-mode)", dash: "2 4" },
+    { key: "median", x: median, color: "var(--fig-median)", dash: "7 4" },
+    { key: "mean", x: mean, color: "var(--fig-mean)", dash: "" },
+  ];
+  const order = symmetric
+    ? `${t.mean} = ${t.median} = ${t.mode}`
+    : [...markers].sort((a, b) => a.x - b.x).map((m) => t[m.key]).join(" < ");
 
   return (
-    <div className="my-8 rounded-xl bg-[#0c0c0e] text-zinc-300 p-5 sm:p-8 shadow-2xl border border-zinc-800/80 font-sans not-prose">
-      {/* Header */}
-      <div className="mb-8">
-        <h3 className="text-2xl font-bold mb-2 text-white">{t.title}</h3>
-        <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
-          {t.intro}
-        </p>
-      </div>
-
-      {/* Slider Area */}
-      <div className="flex flex-col mb-12">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-zinc-400">{t.skewness}</span>
-          <span className={`px-4 py-1.5 rounded-md text-sm font-bold border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder} transition-colors duration-300 shadow-sm`}>
-            {theme.category}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-4 relative">
-          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">{t.leftEnd}</span>
-          <div className="relative flex-1 flex items-center h-2">
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={skewValue} 
-              onInput={(e) => setSkewValue(e.currentTarget.valueAsNumber)}
-              className="absolute w-full h-full opacity-0 cursor-pointer z-20"
-            />
-            {/* Custom slider track */}
-            <div className="absolute top-0 left-0 w-full h-full bg-zinc-700/50 rounded-full z-0 overflow-hidden">
-              <div 
-                className="h-full transition-all duration-300 rounded-full" 
-                style={{ width: `${skewValue}%`, backgroundColor: theme.sliderFill }}
-              ></div>
-            </div>
-            {/* Custom slider thumb */}
-            <div 
-              className="absolute w-5 h-5 bg-[#0c0c0e] border-[3px] border-zinc-300 rounded-full z-10 transition-all duration-75 pointer-events-none transform -translate-x-1/2"
-              style={{ left: `${skewValue}%` }}
-            ></div>
-          </div>
-          <span className="text-xs text-zinc-500 font-medium tracking-wide uppercase">{t.rightEnd}</span>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex justify-center gap-8 mb-10 text-sm font-semibold">
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-[#22c55e]"></div>
-          <span className="text-zinc-300">{t.mean}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-[#06b6d4]"></div>
-          <span className="text-zinc-300">{t.median}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-[#f59e0b]"></div>
-          <span className="text-zinc-300">{t.mode}</span>
-        </div>
-      </div>
-
-      {/* Chart Area */}
-      <div className="relative w-full h-[280px] mb-12 flex items-end pl-10 pb-8">
-        {/* Y Axis Label */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
-          {t.frequency}
-        </div>
-        {/* X Axis Label */}
-        <div className="absolute -bottom-6 left-1/2 text-[11px] text-zinc-500 font-medium tracking-[0.2em] uppercase">
-          {t.value}
-        </div>
-
-        {/* Axes lines (L-shape) */}
-        <div className="absolute left-12 bottom-9 top-0 w-px bg-zinc-600/60 z-10"></div>
-        <div className="absolute left-12 bottom-9 right-0 h-px bg-zinc-600/60 z-10"></div>
-
-        {/* Chart content container */}
-        <div className="relative w-full h-full flex items-end px-1 ml-2">
-          
-          {/* Bins */}
-          <div className="absolute inset-x-1 bottom-0 h-full flex items-end z-20">
-            {bins.map((bin, i) => (
-              <div 
-                key={i} 
-                className={`flex-1 mx-[1px] border-t-2 border-r-2 border-l-2 opacity-90 transition-all duration-300 ${theme.barBg} ${theme.barBorder}`}
-                style={{ height: `${bin.height}%` }}
-              ></div>
+    <figure className="fig not-prose">
+      <div className="fig-panel">
+        <div className="fig-controls">
+          <span className="fig-label">{t.label}</span>
+          <input
+            type="range"
+            min="-1.5"
+            max="1.5"
+            step="0.05"
+            value={s}
+            aria-label={t.label}
+            onInput={(e) => setS(Math.round(e.currentTarget.valueAsNumber * 100) / 100)}
+          />
+          <span className="fig-value">S = {fmt(s, lang)}</span>
+          <div className="fig-chips">
+            {t.presets.map(([name, value]) => (
+              <button type="button" className="fig-chip" aria-pressed={s === value} onClick={() => setS(value)}>
+                {name}
+              </button>
             ))}
           </div>
-
-          {/* Median Line (Solid Cyan, sits exactly at bar height, dot at bottom) */}
-          <div 
-            className="absolute bottom-0 w-px bg-[#06b6d4] z-30 transition-all duration-300 flex flex-col justify-end items-center"
-            style={{ left: `${median * 100}%`, height: `${getLineHeight(median)}%` }}
-          >
-            <div className="absolute -bottom-[5px] w-2.5 h-2.5 rounded-full bg-[#06b6d4]"></div>
-            <span className="absolute -bottom-[26px] text-xs text-[#06b6d4] font-bold">{t.median}</span>
-          </div>
-
-          {/* Mean Line (Dashed Green, goes above bars, dot at top) */}
-          <div 
-            className="absolute bottom-0 w-px border-l-[2px] border-dashed border-[#22c55e] z-30 transition-all duration-300 flex flex-col justify-start items-center"
-            style={{ left: `${mean * 100}%`, height: `${Math.max(getLineHeight(mean) + 15, 40)}%` }}
-          >
-            <div className="absolute -top-[5px] w-2.5 h-2.5 rounded-full bg-[#22c55e]"></div>
-            <span className="absolute -top-[24px] text-xs text-[#22c55e] font-bold">{t.mean}</span>
-          </div>
-
-          {/* Mode Line (Dotted Orange, stops exactly at peak with arrow) */}
-          <div 
-            className="absolute bottom-0 w-px border-l-[2px] border-dotted border-[#f59e0b] z-30 transition-all duration-300 flex flex-col justify-start items-center"
-            style={{ left: `${mode * 100}%`, height: `${getLineHeight(mode)}%` }}
-          >
-            {/* Arrow Head */}
-            <div className="absolute -top-1 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[6px] border-b-[#f59e0b]"></div>
-            <span className="absolute -top-[22px] text-xs text-[#f59e0b] font-bold">{t.mode}</span>
-          </div>
-          
         </div>
-      </div>
 
-      {/* Summary Box */}
-      <div className="bg-[#18191b] rounded-xl p-5 text-center border border-zinc-800/80">
-        <div className="text-[17px] tracking-wide mb-2 flex items-center justify-center">
-          {renderRelationString()}
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${t.label} S = ${fmt(s, lang)}. ${order}`}>
+          <path d={area} fill="var(--fig-data)" fillOpacity="0.12" />
+          <path d={curve} fill="none" stroke="var(--fig-data)" strokeWidth="2" />
+          {markers.map((m) => (
+            <line
+              x1={sx(m.x)}
+              x2={sx(m.x)}
+              y1={sy(0)}
+              y2={T}
+              stroke={m.color}
+              strokeWidth="2"
+              strokeDasharray={m.dash}
+              style={{ transition: "all 150ms" }}
+            />
+          ))}
+          <line className="axis" x1={L} x2={W - R} y1={sy(0)} y2={sy(0)} />
+          {[-3, -2, -1, 0, 1, 2, 3].map((v) => (
+            <g>
+              <line className="axis" x1={sx(v)} x2={sx(v)} y1={sy(0)} y2={sy(0) + 5} />
+              <text x={sx(v)} y={sy(0) + 19} fontSize="13" textAnchor="middle">
+                {v < 0 ? `−${-v}` : v}
+              </text>
+            </g>
+          ))}
+          <text x={W / 2} y={H - 2} fontSize="13" textAnchor="middle">{t.axis}</text>
+        </svg>
+
+        <div className="fig-legend">
+          {[...markers].reverse().map((m) => (
+            <span style={{ color: m.color }}>
+              <i style={{ borderTopStyle: m.dash ? (m.dash === "2 4" ? "dotted" : "dashed") : "solid" }} />
+              <span style={{ color: "var(--fg-muted)" }}>
+                {t[m.key]} {fmt(m.x, lang)}
+              </span>
+            </span>
+          ))}
         </div>
-        <div className="text-sm text-zinc-500">{theme.desc}</div>
+
+        <p className="fig-note">
+          <strong>{order}</strong>
+          <br />
+          {symmetric ? t.symmetric : s > 0 ? t.right : t.left}
+        </p>
       </div>
-    </div>
+      <figcaption>{t.caption(figure)}</figcaption>
+    </figure>
   );
 }

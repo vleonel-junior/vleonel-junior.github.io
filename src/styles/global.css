@@ -288,6 +288,137 @@
     text-align: center;
 }
 
+/* Generated and interactive figures (charts drawn in SVG) */
+:root {
+    --fig-data: #047857;
+    --fig-mean: #047857;
+    --fig-median: #2563eb;
+    --fig-mode: #c2410c;
+    --fig-ref: #71717a;
+}
+.dark {
+    --fig-data: #34d399;
+    --fig-mean: #34d399;
+    --fig-median: #60a5fa;
+    --fig-mode: #fb923c;
+    --fig-ref: #a1a1aa;
+}
+.fig {
+    margin: 2.25em 0;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--fg-muted);
+}
+.fig-panel {
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1.25rem 1.25rem 1rem;
+}
+.fig svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+.fig svg text {
+    fill: var(--fg-muted);
+    font-family: inherit;
+}
+ /* SVG text is sized in chart units, so it shrinks with the chart: bump it on phones */
+@media (max-width: 640px) {
+    .fig svg text {
+        font-size: 21px;
+    }
+    .fig svg text.fig-annot {
+        font-size: 19px;
+    }
+}
+.fig .axis {
+    stroke: var(--fg-subtle);
+    stroke-width: 1;
+}
+.fig .grid {
+    stroke: var(--border);
+    stroke-width: 1;
+}
+.fig figcaption {
+    margin-top: 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--caption);
+    text-align: center;
+}
+.fig-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-bottom: 1rem;
+}
+.fig-controls input[type="range"] {
+    flex: 1 1 12rem;
+    accent-color: var(--accent);
+}
+.fig-label {
+    font-weight: 600;
+    color: var(--fg);
+}
+.fig-value {
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+    min-width: 4.5rem;
+}
+.fig-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+.fig-chip {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.125rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+    background: transparent;
+    cursor: pointer;
+}
+.fig-chip:hover {
+    color: var(--fg);
+}
+.fig-chip[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.fig-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 1.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+.fig-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-variant-numeric: tabular-nums;
+}
+.fig-legend i {
+    display: inline-block;
+    width: 1.25rem;
+    border-top: 2px solid currentColor;
+}
+.fig-note {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.875rem;
+}
+.fig-note strong {
+    color: var(--fg);
+    font-weight: 600;
+}
+
 /* Tables */
 .article :where(table) {
     font-size: 0.875em;

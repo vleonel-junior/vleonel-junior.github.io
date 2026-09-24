@@ -99,8 +99,8 @@ export default function SkewnessExplorer({ lang = "fr", figure = 2 }) {
         </div>
 
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${t.label} S = ${fmt(s, lang)}. ${order}`}>
-          <path d={area} fill="var(--fig-data)" fillOpacity="0.12" />
-          <path d={curve} fill="none" stroke="var(--fig-data)" strokeWidth="2" />
+          <path d={area} fill="var(--fig-data)" fill-opacity="0.12" />
+          <path d={curve} fill="none" stroke="var(--fig-data)" stroke-width="2" />
           {markers.map((m) => (
             <line
               x1={sx(m.x)}
@@ -108,8 +108,8 @@ export default function SkewnessExplorer({ lang = "fr", figure = 2 }) {
               y1={sy(0)}
               y2={T}
               stroke={m.color}
-              strokeWidth="2"
-              strokeDasharray={m.dash}
+              stroke-width="2"
+              stroke-dasharray={m.dash}
               style={{ transition: "all 150ms" }}
             />
           ))}
@@ -117,12 +117,12 @@ export default function SkewnessExplorer({ lang = "fr", figure = 2 }) {
           {[-3, -2, -1, 0, 1, 2, 3].map((v) => (
             <g>
               <line className="axis" x1={sx(v)} x2={sx(v)} y1={sy(0)} y2={sy(0) + 5} />
-              <text x={sx(v)} y={sy(0) + 19} fontSize="13" textAnchor="middle">
+              <text x={sx(v)} y={sy(0) + 19} font-size="13" text-anchor="middle">
                 {v < 0 ? `−${-v}` : v}
               </text>
             </g>
           ))}
-          <text x={W / 2} y={H - 2} fontSize="13" textAnchor="middle">{t.axis}</text>
+          <text x={W / 2} y={H - 2} font-size="13" text-anchor="middle">{t.axis}</text>
         </svg>
 
         <div className="fig-legend">

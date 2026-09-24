@@ -106,20 +106,20 @@ export default function KurtosisExplorer({ lang = "fr", figure = 3 }) {
         </div>
 
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${t.label} K = ${fmt(K, lang)}`}>
-          <path d={leftTail} fill="var(--fig-data)" fillOpacity="0.45" />
-          <path d={rightTail} fill="var(--fig-data)" fillOpacity="0.45" />
-          <path d={normal} fill="none" stroke="var(--fig-ref)" strokeWidth="1.5" strokeDasharray="3 4" />
-          <path d={curve} fill="none" stroke="var(--fig-data)" strokeWidth="2" />
+          <path d={leftTail} fill="var(--fig-data)" fill-opacity="0.45" />
+          <path d={rightTail} fill="var(--fig-data)" fill-opacity="0.45" />
+          <path d={normal} fill="none" stroke="var(--fig-ref)" stroke-width="1.5" stroke-dasharray="3 4" />
+          <path d={curve} fill="none" stroke="var(--fig-data)" stroke-width="2" />
           <line className="axis" x1={L} x2={W - R} y1={sy(0)} y2={sy(0)} />
           {[-3, -2, -1, 0, 1, 2, 3].map((v) => (
             <g>
               <line className="axis" x1={sx(v)} x2={sx(v)} y1={sy(0)} y2={sy(0) + 5} />
-              <text x={sx(v)} y={sy(0) + 19} fontSize="13" textAnchor="middle">
+              <text x={sx(v)} y={sy(0) + 19} font-size="13" text-anchor="middle">
                 {v < 0 ? `−${-v}` : v}
               </text>
             </g>
           ))}
-          <text x={W / 2} y={H - 2} fontSize="13" textAnchor="middle">{t.axis}</text>
+          <text x={W / 2} y={H - 2} font-size="13" text-anchor="middle">{t.axis}</text>
         </svg>
 
         <div className="fig-legend">

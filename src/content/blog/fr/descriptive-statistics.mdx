@@ -362,20 +362,20 @@ $$\text{IQR} = Q_3 - Q_1$$
 
 Une règle couramment admise consiste à signaler comme **valeur aberrante** tout point de donnée qui se situe en dehors des « barrières » calculées à partir de l'écart interquartile (IQR).
 
-### La règle des 1.5 × IQR
+### La règle des 1,5 × IQR
 
 On définit deux seuils critiques pour identifier ces anomalies :
 
-* **Le seuil inférieur :** Toute valeur en dessous de $Q_1 - 1.5 \times \text{IQR}$.
-* **Le seuil supérieur :** Toute valeur au-dessus de $Q_3 + 1.5 \times \text{IQR}$.
+* **Le seuil inférieur :** Toute valeur en dessous de $Q_1 - 1{,}5 \times \text{IQR}$.
+* **Le seuil supérieur :** Toute valeur au-dessus de $Q_3 + 1{,}5 \times \text{IQR}$.
 
 C'est selon cette règle que sont tracées les « moustaches » (*whiskers*) des boîtes à moustaches (**box plots**).
 
 <BoxPlotExplorer client:load lang="fr" />
 
-### Origine et Logique : Pourquoi 1.5 ?
+### Origine et Logique : Pourquoi 1,5 ?
 
-Le choix du coefficient **1.5** a été popularisé par le statisticien **John Tukey**. Il ne s'agit pas d'une loi mathématique absolue, mais d'une **heuristique** (une règle pratique) qui repose sur un compromis statistique lié à la loi normale. L'idée était de trouver un équilibre entre une détection trop sensible et une détection trop permissive des outliers.
+Le choix du coefficient **1,5** a été popularisé par le statisticien **John Tukey**. Il ne s'agit pas d'une loi mathématique absolue, mais d'une **heuristique** (une règle pratique) qui repose sur un compromis statistique lié à la loi normale. L'idée était de trouver un équilibre entre une détection trop sensible et une détection trop permissive des outliers.
 
 ---
 

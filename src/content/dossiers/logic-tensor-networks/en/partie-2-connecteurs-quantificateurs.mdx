@@ -76,6 +76,13 @@ tensor(0.9822)
 
 We do get $1 - 0.0178 = 0.9822$.
 
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Negation applied to Eq(c1, c2), a single number](/images/dossiers/logic-tensor-networks/schema-non-constantes-en.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*With two constants, there is no free variable: $\mathrm{Eq}(c_1, c_2)$ is a single number, and the negation gives $1 - 0.0178 = 0.9822$.*</figcaption>
+</figure>
+
 ```python
 Implies(Eq(c1, c2), Eq(c2, c1)).value
 ```
@@ -98,6 +105,13 @@ torch.Size([10])
 
 In `And(Eq(x, c1), Eq(x, c2))`, only the variable $x$ appears in both subformulas. Both results already have the same shape $(10,)$, so no broadcasting is needed: `And` combines them directly, individual by individual.
 
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Conjunction of two subformulas that only depend on x](/images/dossiers/logic-tensor-networks/schema-et-meme-variable-en.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*`And` applied to two subformulas that only depend on $x$: they already have the same shape $(10,)$, and the conjunction combines them individual by individual, with no broadcasting.*</figcaption>
+</figure>
+
 ```python
 Or(Eq(x, c1), Eq(x, y)).shape()
 ```
@@ -107,6 +121,15 @@ torch.Size([10, 5])
 ```
 
 In `Or(Eq(x, c1), Eq(x, y))`, the situation is different. `Eq(x, c1)` only depends on $x$ and has shape $(10,)$, while `Eq(x, y)` depends on both $x$ and $y$ and has shape $(10, 5)$: an evaluation over two variables produces every combination. The connective detects this mismatch and extends the first result along the missing axis, that of $y$, by repeating each value for the 5 individuals of $y$. It then applies `Or` element-wise, hence the final shape $(10, 5)$.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Disjunction with Eq(x, c1) broadcast along the axis of y](/images/dossiers/logic-tensor-networks/schema-ou-broadcasting-en.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*`Or` applied to $\mathrm{Eq}(x, c_1)$, of shape $(10,)$, and to $\mathrm{Eq}(x, y)$, of shape $(10, 5)$: the first result is first copied along the axis of $y$, then the disjunction is applied entry by entry.*</figcaption>
+</figure>
+
+The figure from the paper shows the same mechanism in the general case of two subformulas that each involve a different variable:
 
 <figure class="my-8 flex flex-col items-center gap-3">
 
@@ -172,6 +195,13 @@ torch.Size([5])
 ```
 
 The axis of $x$ is gone, only that of $y$ remains. The result is still a function of $y$: for each of the 5 individuals of $y$, it tells to what degree the property holds for every $x$.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Quantifying over x alone: the axis of x disappears](/images/dossiers/logic-tensor-networks/schema-pour-tout-un-axe-en.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*Quantifying over $x$ alone aggregates along the axis of $x$, which disappears: a vector of shape $(5,)$ remains, one value per individual of $y$.*</figcaption>
+</figure>
 
 When the quantification covers both variables, both axes disappear and we get a scalar, a single degree of satisfaction for the whole formula:
 

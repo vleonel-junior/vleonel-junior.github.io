@@ -110,7 +110,7 @@ export const dossiers: DossierMeta[] = [
             en: 'This series follows the progression of the <a href="https://github.com/logictensornetworks/LTNtorch">LTNtorch</a> tutorials (T. Carraro, MIT license). Code snippets come from the library’s tutorials. Figures credited to Badreddine et al. (2022) are reproduced from the original article, <a href="https://arxiv.org/abs/2012.13635"><em>Logic Tensor Networks</em></a>, under the CC BY 4.0 license. Each part has a runnable notebook in <a href="https://github.com/vleonel-junior/logic-tensor-networks">my repository</a>.',
             fr: 'Cette série suit la progression des tutoriels de <a href="https://github.com/logictensornetworks/LTNtorch">LTNtorch</a> (T. Carraro, licence MIT). Les extraits de code proviennent des tutoriels de la bibliothèque. Les figures créditées à Badreddine et al. (2022) sont reproduites de l’article original, <a href="https://arxiv.org/abs/2012.13635"><em>Logic Tensor Networks</em></a>, sous licence CC BY 4.0. Chaque partie a son notebook exécutable dans <a href="https://github.com/vleonel-junior/logic-tensor-networks">mon dépôt</a>.',
         },
-        totalChapters: 4,
+        totalChapters: 5,
         tags: ["Neuro-symbolic AI", "Logic", "PyTorch"],
         chapters: [
             {
@@ -144,6 +144,14 @@ export const dossiers: DossierMeta[] = [
                     fr: "Apprendre en satisfaisant une base de connaissances",
                 },
                 slug: "partie-4-apprentissage",
+            },
+            {
+                number: 5,
+                title: {
+                    en: "Case study: adding digits without ever labeling them",
+                    fr: "Étude de cas : additionner des chiffres sans jamais les étiqueter",
+                },
+                slug: "partie-5-mnist",
             },
         ],
     },

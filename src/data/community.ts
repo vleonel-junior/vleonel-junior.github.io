@@ -9,6 +9,8 @@ export interface CommunityItem {
     description: Text;
     /** Proof: certificate, badge or public page */
     proof?: { href: string; label: Text };
+    /** Logo banner shown under the date, 480 x 240 */
+    banner?: string;
 }
 
 export const communityData: CommunityItem[] = [
@@ -27,6 +29,7 @@ export const communityData: CommunityItem[] = [
             href: "/documents/indabax-benin-2026-certificat.pdf",
             label: { en: "Certificate of participation", fr: "Certificat de participation" },
         },
+        banner: "/images/community/indabax-benin-2026.png",
     },
     {
         title: "Deep Learning Indaba 2026",
@@ -44,6 +47,7 @@ export const communityData: CommunityItem[] = [
             href: "https://deeplearningindaba.com/2026/",
             label: { en: "Event website", fr: "Site de l'événement" },
         },
+        banner: "/images/community/deep-learning-indaba-2026.png",
     },
     {
         title: { en: "Cohere Labs community member", fr: "Membre de la communauté Cohere Labs" },
@@ -57,5 +61,6 @@ export const communityData: CommunityItem[] = [
             href: "/images/community/cohere-labs-community-member.webp",
             label: { en: "Member badge", fr: "Badge de membre" },
         },
+        banner: "/images/community/cohere-labs.webp",
     },
 ];

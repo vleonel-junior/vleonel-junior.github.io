@@ -335,8 +335,27 @@ const base = import.meta.env.BASE_URL;
 			<ol class="space-y-6">
 				{
 					communityData.map((item) => (
-						<li class="grid gap-1 sm:grid-cols-[7rem_1fr] sm:gap-6">
-							<p class="text-sm tabular-nums text-fg-subtle">{tr(item.period, lang)}</p>
+						<li class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-6">
+							<div>
+								<p class="text-sm tabular-nums text-fg-subtle">{tr(item.period, lang)}</p>
+								{item.banner && (
+									<a
+										href={item.proof ? withBase(item.proof.href) : undefined}
+										target="_blank"
+										rel="noopener"
+										class="mt-2 mb-2 block w-40 sm:mb-0 sm:w-full"
+									>
+										<img
+											src={withBase(item.banner)}
+											alt={tr(item.title, lang)}
+											width="480"
+											height="240"
+											loading="lazy"
+											class="w-full rounded-md border border-border"
+										/>
+									</a>
+								)}
+							</div>
 							<div>
 								<h3 class="text-base font-semibold text-fg">{tr(item.title, lang)}</h3>
 								<p class="text-sm text-fg-subtle">{tr(item.organization, lang)}</p>
@@ -361,8 +380,27 @@ const base = import.meta.env.BASE_URL;
 			<ol class="space-y-6">
 				{
 					volunteeringData.map((vol) => (
-						<li class="grid gap-1 sm:grid-cols-[7rem_1fr] sm:gap-6">
-							<p class="text-sm tabular-nums text-fg-subtle">{tr(vol.period, lang)}</p>
+						<li class="grid gap-1 sm:grid-cols-[13rem_1fr] sm:gap-6">
+							<div>
+								<p class="text-sm tabular-nums text-fg-subtle">{tr(vol.period, lang)}</p>
+								{vol.banner && (
+									<a
+										href={vol.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="mt-2 mb-2 block w-40 sm:mb-0 sm:w-full"
+									>
+										<img
+											src={withBase(vol.banner)}
+											alt={tr(vol.organization, lang).split(",")[0]}
+											width="480"
+											height="240"
+											loading="lazy"
+											class="w-full rounded-md border border-border"
+										/>
+									</a>
+								)}
+							</div>
 							<div>
 								<h3 class="text-base font-semibold text-fg">{tr(vol.role, lang)}</h3>
 								<p class="text-sm text-fg-subtle">{tr(vol.organization, lang)}</p>

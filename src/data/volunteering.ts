@@ -7,6 +7,8 @@ export interface VolunteeringItem {
     description: Text;
     /** Public page about the activity */
     url?: string;
+    /** Logo banner shown under the date, 480 x 240 */
+    banner?: string;
 }
 
 export const volunteeringData: VolunteeringItem[] = [
@@ -25,5 +27,6 @@ export const volunteeringData: VolunteeringItem[] = [
             fr: "Co-animation d'un atelier d'initiation pratique aux outils d'IA générative (ChatGPT, Gemini) pour une vingtaine d'artisans et d'entrepreneurs locaux : couturiers, électriciens, coiffeurs, agriculteurs. Cas d'usage construits à partir des difficultés concrètes des participants (relation client, contenu promotionnel, organisation du travail), deux heures de pratique en groupes et restitution des solutions imaginées par chaque groupe.",
         },
         url: "https://www.isheero.com/intelligence-artificielle-au-profit-des-artisans-juillet-2026/",
+        banner: "/images/community/isheero.png",
     },
 ];

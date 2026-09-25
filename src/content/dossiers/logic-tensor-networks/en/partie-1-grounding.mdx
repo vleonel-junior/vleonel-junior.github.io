@@ -25,7 +25,9 @@ All of LTN's vocabulary comes from first-order logic (FOL). It is a formal langu
 
 The **domain** $D$ (or universe of discourse) is the set of all the objects we talk about. For a system describing a small group of people:
 
-$$D = \{\text{Léonel}, \text{Mélène}, \text{Alice}, \text{Abdel}\}$$
+$$
+D = \{\text{Léonel}, \text{Mélène}, \text{Alice}, \text{Abdel}\}
+$$
 
 The domain sets the playing field: logic only talks about the objects it contains.
 
@@ -44,7 +46,9 @@ The domain sets the playing field: logic only talks about the objects it contain
 
 A **formula** is a well-formed logical sentence that combines all of these. For example:
 
-$$\forall x\, \big(\text{IsStudent}(x) \implies \exists y\, \text{IsFriendOf}(x,y)\big)$$
+$$
+\forall x\, \big(\text{IsStudent}(x) \implies \exists y\, \text{IsFriendOf}(x,y)\big)
+$$
 
 reads "for every $x$, if $x$ is a student, then there is a $y$ such that $x$ is a friend of $y$", in other words: every student has at least one friend.
 
@@ -53,7 +57,11 @@ reads "for every $x$, if $x$ is a student, then there is a $y$ such that $x$ is 
 So far, symbols are just empty labels. The **interpretation** $\mathcal{I}$ bridges syntax and meaning: it assigns each symbol a concrete object, in a domain chosen beforehand. It is not a single rule but three assignments, one per kind of symbol.
 
 1. **A constant becomes an element of the domain.** With $D = \{\text{Alice}, \text{Bob}, \text{Chloé}\}$, we can decide that $\mathcal{I}(c_1) = \text{Alice}$.
-2. **An $n$-ary predicate becomes a subset of $D^n$.** Why a subset rather than "true or false"? Because a predicate must be evaluable on every possible combination of objects, and the cleanest way to do that is to list exactly the combinations for which it is true. $\mathcal{I}(\text{IsStudent}) = \{\text{Alice}, \text{Chloé}\}$ means the predicate is true for Alice and Chloé, and false for Bob. For a binary predicate, we list pairs: $\mathcal{I}(\text{IsFriendOf}) = \{(\text{Alice},\text{Bob}), (\text{Bob},\text{Alice}), (\text{Chloé},\text{Alice})\}$.
+2. **An $n$-ary predicate becomes a subset of $D^n$.** Why a subset rather than "true or false"? Because a predicate must be evaluable on every possible combination of objects, and the cleanest way to do that is to list exactly the combinations for which it is true. $\mathcal{I}(\text{IsStudent}) = \{\text{Alice}, \text{Chloé}\}$ means the predicate is true for Alice and Chloé, and false for Bob. For a binary predicate, we list pairs:
+
+   $$
+   \mathcal{I}(\text{IsFriendOf}) = \{(\text{Alice},\text{Bob}), (\text{Bob},\text{Alice}), (\text{Chloé},\text{Alice})\}
+   $$
 3. **A function becomes an actual mathematical function** $\mathcal{I}(f) : D^n \to D$.
 
 Evaluating a formula then comes down to working up symbol by symbol. For $\text{IsStudent}(c_1)$: $c_1$ refers to Alice, $\text{IsStudent}$ refers to $\{\text{Alice}, \text{Chloé}\}$, Alice belongs to that set, so the formula is **true** under $\mathcal{I}$.
@@ -135,7 +143,9 @@ An LTN predicate is a function that maps its $n$ arguments to a value in $[0, 1]
 
 ### A predicate defined by a formula
 
-$$P_1(x) = \exp\big(-\|x - \mu\|\big)$$
+$$
+P_1(x) = \exp\big(-\|x - \mu\|\big)
+$$
 
 where $\|x - \mu\|$ is the Euclidean distance between $x$ and a fixed point $\mu$. If $x = \mu$, the distance is zero and $P_1(x) = e^0 = 1$: maximal truth. The farther $x$ moves from $\mu$, the closer $P_1(x)$ gets to 0. The output always stays in $(0, 1]$: it is indeed a valid predicate.
 

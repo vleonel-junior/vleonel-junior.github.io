@@ -29,11 +29,27 @@ We consider two tasks, built from the MNIST dataset of handwritten digits.
 
 **Adding two digits.** Consider the predicate $\mathrm{addition}(X, Y, n)$, where $X$ and $Y$ are images of digits and $n$ an integer equal to their sum. It must estimate whether the addition is valid: $\mathrm{addition}(\mathrm{img}(8), \mathrm{img}(3), 11)$ is valid, $\mathrm{addition}(\mathrm{img}(3), \mathrm{img}(3), 5)$ is not. Here, $\mathrm{img}(x)$ simply means "an image of the digit $x$", not a logical function.
 
-**Adding two-digit numbers.** The predicate becomes $\mathrm{addition}([\mathrm{img}(X_1), \mathrm{img}(X_2)], [\mathrm{img}(Y_1), \mathrm{img}(Y_2)], n)$, where each list represents a two-digit number. $\mathrm{addition}([\mathrm{img}(2), \mathrm{img}(0)], [\mathrm{img}(1), \mathrm{img}(7)], 37)$ is valid, $\mathrm{addition}([\mathrm{img}(5), \mathrm{img}(4)], [\mathrm{img}(9), \mathrm{img}(0)], 50)$ is not.
+**Adding two-digit numbers.** The predicate becomes:
+
+$$
+\mathrm{addition}([\mathrm{img}(X_1), \mathrm{img}(X_2)],\ [\mathrm{img}(Y_1), \mathrm{img}(Y_2)],\ n)
+$$
+
+where each list represents a two-digit number. The first addition below is valid, the second is not:
+
+$$
+\mathrm{addition}([\mathrm{img}(2), \mathrm{img}(0)],\ [\mathrm{img}(1), \mathrm{img}(7)],\ 37)
+$$
+
+$$
+\mathrm{addition}([\mathrm{img}(5), \mathrm{img}(4)],\ [\mathrm{img}(9), \mathrm{img}(0)],\ 50)
+$$
 
 The neuro-symbolic approach is to learn a **single-digit classifier**, and to rely on what we already know about addition. If a predicate $\mathrm{digit}(x, d)$ gives the likelihood that image $x$ represents digit $d$, the addition $\mathrm{addition}(\mathrm{img}(3), \mathrm{img}(8), 11)$ is written in LTN as:
 
-$$\exists d_1, d_2 : d_1 + d_2 = 11\ \ \big(\mathrm{digit}(\mathrm{img}(3), d_1) \land \mathrm{digit}(\mathrm{img}(8), d_2)\big)$$
+$$
+\exists d_1, d_2 : d_1 + d_2 = 11\ \ \big(\mathrm{digit}(\mathrm{img}(3), d_1) \land \mathrm{digit}(\mathrm{img}(8), d_2)\big)
+$$
 
 The difficulty is that **no label of an individual digit** is given during training: only the sum of each pair is known. The classifier is therefore never trained directly on its own task. Its output remains latent information, used only by the logic. This is not a problem for LTN, since the gradient flows through the whole logical structure, all the way to the classifier's weights.
 
@@ -54,11 +70,15 @@ The difficulty is that **no label of an individual digit** is given during train
 
 **Axioms.** For adding two digits:
 
-$$\forall\, \mathrm{Diag}(x, y, n)\ \ \Big(\exists d_1, d_2 : d_1 + d_2 = n\ \ \big(\mathrm{digit}(x, d_1) \land \mathrm{digit}(y, d_2)\big)\Big)$$
+$$
+\forall\, \mathrm{Diag}(x, y, n)\ \ \Big(\exists d_1, d_2 : d_1 + d_2 = n\ \ \big(\mathrm{digit}(x, d_1) \land \mathrm{digit}(y, d_2)\big)\Big)
+$$
 
 and for adding two-digit numbers:
 
-$$\forall\, \mathrm{Diag}(x_1, x_2, y_1, y_2, n)\ \ \Big(\exists d_1, d_2, d_3, d_4 : 10d_1 + d_2 + 10d_3 + d_4 = n\ \ \big(\mathrm{digit}(x_1, d_1) \land \mathrm{digit}(x_2, d_2) \land \mathrm{digit}(y_1, d_3) \land \mathrm{digit}(y_2, d_4)\big)\Big)$$
+$$
+\forall\, \mathrm{Diag}(x_1, x_2, y_1, y_2, n)\ \ \Big(\exists d_1, d_2, d_3, d_4 : 10d_1 + d_2 + 10d_3 + d_4 = n\ \ \big(\mathrm{digit}(x_1, d_1) \land \mathrm{digit}(x_2, d_2) \land \mathrm{digit}(y_1, d_3) \land \mathrm{digit}(y_2, d_4)\big)\Big)
+$$
 
 Two mechanisms from [part 2](/blog/dossier/logic-tensor-networks/partie-2-connecteurs-quantificateurs/) come back:
 
@@ -79,7 +99,7 @@ The figure from the original paper sums up the full computation graph for adding
 
 ![LTN computation graph for adding two digits](/images/dossiers/logic-tensor-networks/paper-mnist-graphe.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*The computation graph for adding two digits. The same convolutional network produces a distribution over digits for x and for y; the conjunction T_P combines them for each pair (d₁, d₂); the mask d₁ + d₂ = n keeps only the pairs compatible with the result; finally the existential (A_pM) aggregates over the pairs and the universal (A_pME) over the examples, with Diag(x, y, n). Source: Badreddine et al. (2022).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*The computation graph for adding two digits. The same convolutional network produces a distribution over digits for $x$ and for $y$; the conjunction $T_P$ combines them for each pair $(d_1, d_2)$; the mask $d_1 + d_2 = n$ keeps only the pairs compatible with the result; finally the existential ($A_{pM}$) aggregates over the pairs and the universal ($A_{pME}$) over the examples, with $\mathrm{Diag}(x, y, n)$. Source: Badreddine et al. (2022).*</figcaption>
 </figure>
 
 ## The dataset
@@ -473,11 +493,15 @@ The baseline is trained longer (30 epochs versus 20), following the protocol of 
 
 Let $D$ be the set of examples. The objective is:
 
-$$\mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow D}(\phi)$$
+$$
+\mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow D}(\phi)
+$$
 
 that is, each formula of $\mathcal{K}$ is evaluated on the examples of $D$ with the model of parameters $\theta$, then $\mathrm{SatAgg}$ aggregates these satisfactions. In practice, the optimizer minimizes, on a mini-batch $B$ drawn from $D$:
 
-$$L = 1 - \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow B}(\phi)$$
+$$
+L = 1 - \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow B}(\phi)
+$$
 
 Since the knowledge base here contains a single axiom, `SatAgg` is not used explicitly: applied to a single value, it would return it unchanged. The result of `Forall` directly serves as the satisfaction level.
 
@@ -1059,7 +1083,7 @@ plot_task_with_baseline(history_multi, history_baseline_multi, "15000")
 
 ![Accuracy and satisfaction for adding two digits](/images/dossiers/logic-tensor-networks/mnist-resultats-1-chiffre.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Adding two digits (30,000 examples). Left, the accuracy of the LTN and the baseline; right, the satisfaction of the LTN, with the steps of p.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Adding two digits (30,000 examples). Left, the accuracy of the LTN and the baseline; right, the satisfaction of the LTN, with the steps of $p$.*</figcaption>
 </figure>
 
 <figure class="my-8 flex flex-col items-center gap-3">

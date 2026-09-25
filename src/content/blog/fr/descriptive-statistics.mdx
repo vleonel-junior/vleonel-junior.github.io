@@ -41,7 +41,9 @@ La moyenne est la mesure de tendance centrale la plus répandue. Elle représent
 #### Définition
 La moyenne arithmétique est la somme de toutes les valeurs divisée par l'effectif total.
 
-$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i = \frac{x_1 + x_2 + \dots + x_n}{n}$$
+$$
+\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i = \frac{x_1 + x_2 + \dots + x_n}{n}
+$$
 
 **Exemple : Températures stables**
 
@@ -60,7 +62,9 @@ La médiane est la valeur qui sépare l'ensemble des données en deux groupes é
 #### Définition
 Une fois les données triées par ordre croissant :
 
-$$\text{Médiane} = \begin{cases} x_{\frac{n+1}{2}} & \text{si } n \text{ est impair} \\ \frac{x_{\frac{n}{2}} + x_{\frac{n}{2} + 1}}{2} & \text{si } n \text{ est pair} \end{cases}$$
+$$
+\text{Médiane} = \begin{cases} x_{\frac{n+1}{2}} & \text{si } n \text{ est impair} \\ \frac{x_{\frac{n}{2}} + x_{\frac{n}{2} + 1}}{2} & \text{si } n \text{ est pair} \end{cases}
+$$
 
 **Exemple : L'impact d'une valeur aberrante (Outlier)**
 
@@ -113,7 +117,9 @@ Pour un échantillon de taille $n$, le quantile empirique d'ordre $p$ (où $p \i
 
 Il est défini par l'expression suivante :
 
-$$\tilde{q}_{n,p} = \begin{cases} \frac{1}{2}(x^*_{np} + x^*_{np+1}) & \text{si } np \text{ est un entier} \\ x^*_{\lfloor np \rfloor + 1} & \text{sinon} \end{cases}$$
+$$
+\tilde{q}_{n,p} = \begin{cases} \frac{1}{2}(x^*_{np} + x^*_{np+1}) & \text{si } np \text{ est un entier} \\ x^*_{\lfloor np \rfloor + 1} & \text{sinon} \end{cases}
+$$
 
 > **Note :** $\lfloor np \rfloor$ représente la partie entière de $n \times p$. Par exemple, si $n=10$ et que l'on cherche le premier quartile ($p=0{,}25$), alors $np = 2{,}5$. Comme $2{,}5$ n'est pas entier, le quantile sera la valeur de rang $\lfloor 2{,}5 \rfloor + 1 = 3$, soit la troisième valeur de l'échantillon trié.
 
@@ -153,7 +159,9 @@ Est-ce que la distribution est **équilibrée de part et d'autre**, ou possède-
 
 Pour un échantillon de $n$ données, l'expression du coefficient d'asymétrie est la suivante :
 
-$$S = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{s^3}$$
+$$
+S = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^3}{s^3}
+$$
 
 Où :
 * $x_i$ représente chaque valeur de votre échantillon.
@@ -198,7 +206,9 @@ Alors que l'asymétrie nous renseigne sur la symétrie de nos données, le kurto
 
 Le kurtosis mesure l'épaisseur des extrémités (queues) d'une distribution. Il vous indique si vos données ont des queues lourdes (plus de valeurs aberrantes) ou des queues légères (moins de valeurs aberrantes) par rapport à une distribution normale.
 
-$$K = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^4}{s^4}$$
+$$
+K = \frac{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^4}{s^4}
+$$
 
 La puissance quatrième amplifie les écarts extrêmes, ce qui rend le kurtosis très sensible aux valeurs aberrantes.
 
@@ -212,15 +222,21 @@ Si la valeur 3 vous intrigue, sachez qu'elle correspond simplement à la kurtosi
 
 En effet, la fonction de densité de la loi normale centrée réduite ($\mu = 0, \sigma = 1$) est donnée par :
 
-$$f(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}$$
+$$
+f(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}
+$$
 
 Le kurtosis est défini par l'espérance de la variable à la puissance 4, soit $E[X^4]$. Mathématiquement, cela revient à calculer l'intégrale suivante :
 
-$$I = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx$$
+$$
+I = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx
+$$
 
 Par symétrie de la fonction (qui est paire), nous pouvons simplifier l'étude sur $[0, +\infty[$ et multiplier le résultat par 2 :
 
-$$I = \frac{2}{\sqrt{2\pi}} \int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx$$
+$$
+I = \frac{2}{\sqrt{2\pi}} \int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx
+$$
 
 #### Première Intégration par Parties (IPP)
 
@@ -231,11 +247,15 @@ Nous décomposons le terme $x^4 e^{-\frac{x^2}{2}}$ en deux parties pour faire a
 
 La formule de l'IPP ($\int u \, dv = [uv] - \int v \, du$) donne :
 
-$$\int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x^3 e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -3x^2 e^{-\frac{x^2}{2}} \, dx$$
+$$
+\int_{0}^{+\infty} x^4 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x^3 e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -3x^2 e^{-\frac{x^2}{2}} \, dx
+$$
 
 Le premier terme s'annule car l'exponentielle l'emporte sur la puissance en $+\infty$. Il nous reste :
 
-$$3 \int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx$$
+$$
+3 \int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx
+$$
 
 #### Deuxième Intégration par Parties (IPP)
 
@@ -246,11 +266,15 @@ Réitérons le procédé sur l'intégrale restante $\int x^2 e^{-\frac{x^2}{2}} 
 
 L'IPP donne :
 
-$$\int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -e^{-\frac{x^2}{2}} \, dx$$
+$$
+\int_{0}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx = \underbrace{\left[ -x e^{-\frac{x^2}{2}} \right]_{0}^{+\infty}}_{= 0} - \int_{0}^{+\infty} -e^{-\frac{x^2}{2}} \, dx
+$$
 
 Il nous reste alors :
 
-$$\int_{0}^{+\infty} e^{-\frac{x^2}{2}} \, dx$$
+$$
+\int_{0}^{+\infty} e^{-\frac{x^2}{2}} \, dx
+$$
 
 Cette expression est l'intégrale de Gauss classique. On sait que $\int_{-\infty}^{+\infty} e^{-\frac{x^2}{2}} \, dx = \sqrt{2\pi}$. Par symétrie, sur $[0, +\infty[$, elle vaut $\frac{\sqrt{2\pi}}{2}$.
 
@@ -264,11 +288,15 @@ Remontons la chaîne des calculs :
 
 Le calcul final est donc :
 
-$$I = \frac{2}{\sqrt{2\pi}} \times \left( 3 \times \frac{\sqrt{2\pi}}{2} \right)$$
+$$
+I = \frac{2}{\sqrt{2\pi}} \times \left( 3 \times \frac{\sqrt{2\pi}}{2} \right)
+$$
 
 En simplifiant par $2$ et par $\sqrt{2\pi}$, on obtient :
 
-$$\boxed{I = 3}$$
+$$
+\boxed{I = 3}
+$$
 
 C'est ainsi que l'on démontre que pour une distribution normale, le rapport entre l'étalement des extrêmes (moment d'ordre 4) et le carré de la variance donne précisément cette constante **3**.
 
@@ -295,20 +323,27 @@ Ce sont les mesures de dispersion les plus utilisées en statistiques et en scie
 
 La variance est la moyenne des carrés des écarts à la moyenne. Plus la variance est élevée, plus les données sont dispersées.
 
-$$\sigma^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2$$
+$$
+\sigma^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2
+$$
 
 #### L'Écart-Type (σ)
 
 L'écart-type est la racine carrée de la variance. Son avantage majeur est qu'il s'exprime dans la **même unité** que les données d'origine (par exemple en heures ou en dollars), ce qui facilite l'interprétation.
 
-$$\sigma = \sqrt{\sigma^2} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2}$$
+$$
+\sigma = \sqrt{\sigma^2} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2}
+$$
 
 #### Exemple détaillé : Durée de vie d'ampoules
 
 Vous testez 5 ampoules dont les durées de vie sont : 980, 1000, 1010, 1020 et 1040 heures.
 
 1.  **Calcul de la moyenne ($\bar{x}$)** :
-$$\bar{x} = \frac{980 + 1000 + 1010 + 1020 + 1040}{5} = 1010 \text{ heures}$$
+
+$$
+\bar{x} = \frac{980 + 1000 + 1010 + 1020 + 1040}{5} = 1010 \text{ heures}
+$$
 
 2.  **Calcul des écarts à la moyenne ($x_i - \bar{x}$)** :
     * $980 - 1010 = -30$
@@ -318,13 +353,22 @@ $$\bar{x} = \frac{980 + 1000 + 1010 + 1020 + 1040}{5} = 1010 \text{ heures}$$
     * $1040 - 1010 = +30$
 
 3.  **Élévation au carré des écarts** :
-$$(-30)^2 = 900 \quad | \quad (-10)^2 = 100 \quad | \quad (0)^2 = 0 \quad | \quad (10)^2 = 100 \quad | \quad (30)^2 = 900$$
+
+$$
+(-30)^2 = 900 \quad | \quad (-10)^2 = 100 \quad | \quad (0)^2 = 0 \quad | \quad (10)^2 = 100 \quad | \quad (30)^2 = 900
+$$
 
 4.  **Calcul de la Variance ($\sigma^2$)** :
-$$\sigma^2 = \frac{900 + 100 + 0 + 100 + 900}{5} = 400 \text{ heures}^2$$
+
+$$
+\sigma^2 = \frac{900 + 100 + 0 + 100 + 900}{5} = 400 \text{ heures}^2
+$$
 
 5.  **Calcul de l'Écart-Type ($\sigma$)** :
-$$\sigma = \sqrt{400} = 20 \text{ heures}$$
+
+$$
+\sigma = \sqrt{400} = 20 \text{ heures}
+$$
 
 #### Pourquoi élever les écarts au carré ?
 
@@ -340,7 +384,9 @@ Il existe deux raisons fondamentales à ce choix mathématique :
 
 C'est la mesure de dispersion la plus simple. Elle représente la différence entre la valeur maximale et la valeur minimale d'un ensemble de données.
 
-$$\text{Étendue} = \text{Max} - \text{Min}$$
+$$
+\text{Étendue} = \text{Max} - \text{Min}
+$$
 
 * **Faiblesse :** Elle est extrêmement sensible aux valeurs aberrantes.
 
@@ -348,7 +394,9 @@ $$\text{Étendue} = \text{Max} - \text{Min}$$
 
 L'écart interquartile se concentre sur la dispersion des **50 % centraux** des données. Il correspond à la différence entre le troisième quartile ($Q_3$) et le premier quartile ($Q_1$).
 
-$$\text{IQR} = Q_3 - Q_1$$
+$$
+\text{IQR} = Q_3 - Q_1
+$$
 
 * **Composantes :**
     * **$Q_1$ (25ème centile) :** La valeur en dessous de laquelle se trouvent 25 % des données.

@@ -112,7 +112,7 @@ In `Or(Eq(x, c1), Eq(x, y))`, the situation is different. `Eq(x, c1)` only depen
 
 ![A connective applied element-wise to p(x) and q(y)](/images/dossiers/logic-tensor-networks/paper-connecteur.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*A connective applied element-wise, here p(x) ∧ q(y). Since x and y are two different variables, the result holds a degree of truth in [0, 1] for every combination of individuals of x and y. Source: Badreddine et al. (2022).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*A connective applied element-wise, here $p(x) \land q(y)$. Since $x$ and $y$ are two different variables, the result holds a degree of truth in $[0, 1]$ for every combination of individuals of $x$ and $y$. Source: Badreddine et al. (2022).*</figcaption>
 </figure>
 
 Like predicates and functions, connectives return `LTNObject`s: we read the result with `.value` and its shape with `shape()`.
@@ -125,11 +125,15 @@ For a list of degrees of truth $u_1, \dots, u_n$ in $[0, 1]$, the two recommende
 
 - for $\exists$, the **generalized mean** (`pMean`):
 
-$$\mathrm{pM}(u_1, \dots, u_n) = \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p}, \qquad p \geq 1$$
+$$
+\mathrm{pM}(u_1, \dots, u_n) = \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p}, \qquad p \geq 1
+$$
 
 - for $\forall$, the **generalized mean of the deviations from truth** (`pMeanError`):
 
-$$\mathrm{pME}(u_1, \dots, u_n) = 1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}, \qquad p \geq 1$$
+$$
+\mathrm{pME}(u_1, \dots, u_n) = 1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}, \qquad p \geq 1
+$$
 
 These formulas are not chosen at random: `pMean` approximates the **maximum** and `pMeanError` the **minimum**. That is exactly the spirit of $\exists$, for which a single individual satisfying the property is enough, and of $\forall$, for which the worst case is what counts. We will prove it a little further down.
 
@@ -201,7 +205,7 @@ The last example nests two quantifiers: "for every $x$, there is a similar $y$".
 
 ![Aggregation implementing ∀y ∃x p(x, y)](/images/dossiers/logic-tensor-networks/paper-quantificateurs.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*An aggregation implementing the quantification ∀y ∃x p(x, y): ∃x removes the axis of x, then ∀y that of y. The result is a single number in [0, 1]. Source: Badreddine et al. (2022).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*An aggregation implementing the quantification $\forall y\, \exists x\, p(x, y)$: $\exists x$ removes the axis of $x$, then $\forall y$ that of $y$. The result is a single number in $[0, 1]$. Source: Badreddine et al. (2022).*</figcaption>
 </figure>
 
 A point of syntax to remember: a single variable is passed to the quantifier directly, while several variables must be grouped in a list, like `[x, y]`.
@@ -212,11 +216,15 @@ We claimed that `pMean` approximates the maximum and `pMeanError` the minimum. L
 
 **`pMean` tends to the maximum.** We want to show that, for $u_1, \dots, u_n \in [0, 1]$:
 
-$$\lim_{p \to +\infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = \max(u_1, \dots, u_n)$$
+$$
+\lim_{p \to +\infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = \max(u_1, \dots, u_n)
+$$
 
 Let $M = \max(u_1, \dots, u_n)$. The case $M = 0$ is trivial (all the $u_i$ are zero and `pMean` equals 0); we therefore assume $M > 0$, which lets us factor it out:
 
-$$\left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot \left(\frac{1}{n} \sum_{i=1}^n \left(\frac{u_i}{M}\right)^p\right)^{1/p}$$
+$$
+\left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot \left(\frac{1}{n} \sum_{i=1}^n \left(\frac{u_i}{M}\right)^p\right)^{1/p}
+$$
 
 Let $r_i = u_i / M$, which lies in $[0, 1]$ since $u_i \leq M$. Two cases arise:
 
@@ -225,19 +233,27 @@ Let $r_i = u_i / M$, which lies in $[0, 1]$ since $u_i \leq M$. Two cases arise:
 
 Writing $k \geq 1$ for the number of indices that achieve the maximum (usually $k = 1$, but ties are possible):
 
-$$\lim_{p \to \infty} \frac{1}{n} \sum_{i=1}^n r_i^p = \frac{k}{n}$$
+$$
+\lim_{p \to \infty} \frac{1}{n} \sum_{i=1}^n r_i^p = \frac{k}{n}
+$$
 
 What remains is the $p$-th root. Since $k/n$ is a strictly positive constant, we use the classical result $\lim_{p \to \infty} c^{1/p} = 1$ for every $c > 0$: just write $c^{1/p} = e^{\frac{1}{p} \ln c}$ and note that $\frac{1}{p} \ln c \to 0$. Hence:
 
-$$\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot 1 = \max(u_1, \dots, u_n)$$
+$$
+\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot 1 = \max(u_1, \dots, u_n)
+$$
 
 **`pMeanError` tends to the minimum.** We want to show that:
 
-$$\lim_{p \to +\infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = \min(u_1, \dots, u_n)$$
+$$
+\lim_{p \to +\infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = \min(u_1, \dots, u_n)
+$$
 
 The trick is to apply the previous result not to the $u_i$, but to their complements $1 - u_i$, which are also in $[0, 1]$:
 
-$$\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p} = \max_i (1 - u_i)$$
+$$
+\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p} = \max_i (1 - u_i)
+$$
 
 Now, $\max_i (1 - u_i) = 1 - \min_i u_i$.
 
@@ -254,7 +270,9 @@ The two inequalities give the equality.
 
 We conclude:
 
-$$\lim_{p \to \infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = 1 - (1 - \min_i u_i) = \min_i u_i$$
+$$
+\lim_{p \to \infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = 1 - (1 - \min_i u_i) = \min_i u_i
+$$
 
 ### The role of p
 
@@ -353,7 +371,7 @@ Without `ltn.diag`, `C(x, l)` evaluates the $100 \times 100$ combinations. Let's
 
 ![Diagonal quantification over x1 and x2](/images/dossiers/logic-tensor-networks/paper-diagonale.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Diagonal quantification: Diag(x₁, x₂) only quantifies over the pairs that match the i-th individual of x₁ with the i-th individual of x₂. It therefore assumes that x₁ and x₂ have the same number of individuals, like samples and their labels in supervised learning. Source: Badreddine et al. (2022).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Diagonal quantification: $\mathrm{Diag}(x_1, x_2)$ only quantifies over the pairs that match the $i$-th individual of $x_1$ with the $i$-th individual of $x_2$. It therefore assumes that $x_1$ and $x_2$ have the same number of individuals, like samples and their labels in supervised learning. Source: Badreddine et al. (2022).*</figcaption>
 </figure>
 
 Once again, the mechanism relies on variable labels: `ltn.diag` temporarily gives $x$ and $l$ the **same label**, prefixed with `diag_`. Since LTN relies on labels to decide whether two variables are crossed or traversed together, sharing the same label is enough to switch from the full cross product to one-to-one correspondence. `ltn.undiag` restores the original labels.
@@ -410,7 +428,9 @@ The mask can depend on other variables of the formula: $\exists y\ (\forall x : 
 
 Take an example stating that there is a distance $d$ below which all pairs of points are similar:
 
-$$\exists d\ \big(\forall x, y : \mathrm{dist}(x, y) < d\big)\ \mathrm{Eq}(x, y)$$
+$$
+\exists d\ \big(\forall x, y : \mathrm{dist}(x, y) < d\big)\ \mathrm{Eq}(x, y)
+$$
 
 $\mathrm{Eq}$ is the similarity predicate used so far, and $\mathrm{dist}$ computes the Euclidean distance between two points.
 
@@ -446,7 +466,7 @@ Here, `cond_vars=[x, y, d]` says that the condition depends on $x$, $y$ and $d$,
 
 ![Guarded quantification with the mask age(x) > age(y)](/images/dossiers/logic-tensor-networks/paper-quantification-gardee.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*An example of guarded quantification: elements that do not satisfy the condition, here age(x) > age(y), are filtered out before the aggregators for ∀ and ∃ are applied. Source: Badreddine et al. (2022).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*An example of guarded quantification: elements that do not satisfy the condition, here $\mathrm{age}(x) > \mathrm{age}(y)$, are filtered out before the aggregators for $\forall$ and $\exists$ are applied. Source: Badreddine et al. (2022).*</figcaption>
 </figure>
 
 This is especially useful for learning: the gradient then only flows through the part of the domain that satisfies the condition, instead of being diluted over combinations that make no sense for the rule.

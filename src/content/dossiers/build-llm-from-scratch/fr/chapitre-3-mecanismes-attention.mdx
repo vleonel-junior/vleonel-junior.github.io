@@ -196,7 +196,9 @@ En pratique, on lui préfère systématiquement la **softmax**, pour deux raison
 
 **Raison 1. Stabilité numérique.** La softmax naïve calcule :
 
-$$\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}$$
+$$
+\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}
+$$
 
 En float32, $e^x$ produit `inf` dès $x \approx 89$ (*overflow*) et s'annule à zéro dès
 $x \approx -104$ (*underflow*). Sur de grandes séquences, les scores d'attention peuvent
@@ -211,7 +213,9 @@ On obtient alors `inf/inf = NaN` ou `0/0 = NaN`, et le gradient devient inexploi
 PyTorch contourne cela avec l'astuce **log-sum-exp** : on soustrait le maximum des scores
 avant d'exponentier,
 
-$$\text{softmax}(x_i) = \frac{e^{x_i - \max(x)}}{\sum_j e^{x_j - \max(x)}}$$
+$$
+\text{softmax}(x_i) = \frac{e^{x_i - \max(x)}}{\sum_j e^{x_j - \max(x)}}
+$$
 
 ce qui est mathématiquement identique (le $e^{-\max(x)}$ se simplifie en numérateur et
 dénominateur) mais numériquement stable : la valeur la plus grande devient $e^0 = 1$,
@@ -254,7 +258,10 @@ scores positifs, ce que le produit scalaire ne garantit pas.
 > $$
 >
 > Les deux cas s'unifient avec le delta de Kronecker $\delta_{ij}$ :
-> $$\boxed{\frac{\partial w_i}{\partial x_j} = w_i(\delta_{ij} - w_j)}$$
+>
+> $$
+> \boxed{\frac{\partial w_i}{\partial x_j} = w_i(\delta_{ij} - w_j)}
+> $$
 
 Ce Jacobien présente trois avantages concrets :
 
@@ -294,7 +301,9 @@ pour produire les poids d'attention $\alpha_{21}$ à $\alpha_{2T}$, qui somment 
 Le vecteur de contexte $z^{(2)}$ est la **somme pondérée** de tous les vecteurs d'entrée,
 chacun multiplié par son poids d'attention :
 
-$$z^{(2)} = \sum_{i} \alpha_{2i} \cdot x^{(i)}$$
+$$
+z^{(2)} = \sum_{i} \alpha_{2i} \cdot x^{(i)}
+$$
 
 ```python
 context_vec_2 = torch.zeros(query.shape)
@@ -395,7 +404,9 @@ La différence structurelle avec la version simplifiée est l'introduction de **
 
 Chaque token d'entrée $x^{(i)}$ est projeté dans **trois sous-espaces distincts** via ces matrices :
 
-$$q^{(i)} = x^{(i)} W_Q \qquad k^{(i)} = x^{(i)} W_K \qquad v^{(i)} = x^{(i)} W_V$$
+$$
+q^{(i)} = x^{(i)} W_Q \qquad k^{(i)} = x^{(i)} W_K \qquad v^{(i)} = x^{(i)} W_V
+$$
 
 Les termes *query*, *key* et *value* viennent du domaine des bases de données et de la recherche d'information :
 
@@ -492,7 +503,9 @@ C'est la justification qui donne son nom à l'architecture : *scaled dot-product
 
 Supposons que les composantes de $q$ et $k$ soient approximativement i.i.d. de loi $\mathcal{N}(0, 1)$. Le produit scalaire $q \cdot k = \sum_{l=1}^{d_k} q_l k_l$ est alors une somme de $d_k$ variables aléatoires indépendantes de moyenne 0 et de variance 1, donc :
 
-$$\text{Var}(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqrt{d_k}$$
+$$
+\text{Var}(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqrt{d_k}
+$$
 
 <details>
 <summary>Démonstration</summary>
@@ -501,33 +514,47 @@ $$\text{Var}(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqr
 
 **Étape 1. Variance du produit $q_l k_l$**
 
-$$\text{Var}(q_l k_l) = \mathbb{E}[q_l^2 k_l^2] - \mathbb{E}[q_l k_l]^2$$
+$$
+\text{Var}(q_l k_l) = \mathbb{E}[q_l^2 k_l^2] - \mathbb{E}[q_l k_l]^2
+$$
 
 Puisque $q_l, k_l \sim \mathcal{N}(0,1)$ indépendantes, leurs carrés suivent des lois du khi-deux à 1 degré de liberté indépendantes :
 
-$$q_l^2 \sim \chi^2(1) \qquad k_l^2 \sim \chi^2(1) \quad \text{indépendantes}$$
+$$
+q_l^2 \sim \chi^2(1) \qquad k_l^2 \sim \chi^2(1) \quad \text{indépendantes}
+$$
 
 Pour une loi $\chi^2(1)$ : $\mathbb{E}[X] = 1$. Par indépendance de $q_l^2$ et $k_l^2$ :
 
-$$\mathbb{E}[q_l^2 k_l^2] = \mathbb{E}[q_l^2]\,\mathbb{E}[k_l^2] = 1 \times 1 = 1$$
+$$
+\mathbb{E}[q_l^2 k_l^2] = \mathbb{E}[q_l^2]\,\mathbb{E}[k_l^2] = 1 \times 1 = 1
+$$
 
 Et $\mathbb{E}[q_l k_l] = \mathbb{E}[q_l]\,\mathbb{E}[k_l] = 0$, donc :
 
-$$\text{Var}(q_l k_l) = 1 - 0 = 1$$
+$$
+\text{Var}(q_l k_l) = 1 - 0 = 1
+$$
 
 **Étape 2. Variance de la somme $q \cdot k = \sum_{l=1}^{d_k} q_l k_l$**
 
 Les termes $q_l k_l$ sont indépendants entre eux (les indices $l$ sont distincts), donc la variance de leur somme est la somme de leurs variances :
 
-$$\text{Var}(q \cdot k) = \sum_{l=1}^{d_k} \text{Var}(q_l k_l) = \sum_{l=1}^{d_k} 1 = d_k$$
+$$
+\text{Var}(q \cdot k) = \sum_{l=1}^{d_k} \text{Var}(q_l k_l) = \sum_{l=1}^{d_k} 1 = d_k
+$$
 
 **Étape 3. Écart-type**
 
-$$\sigma(q \cdot k) = \sqrt{\text{Var}(q \cdot k)} = \sqrt{d_k}$$
+$$
+\sigma(q \cdot k) = \sqrt{\text{Var}(q \cdot k)} = \sqrt{d_k}
+$$
 
 **Étape 4. Après mise à l'échelle par $\sqrt{d_k}$**
 
-$$\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{1}{(\sqrt{d_k})^2}\,\text{Var}(q \cdot k) = \frac{d_k}{d_k} = 1$$
+$$
+\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{1}{(\sqrt{d_k})^2}\,\text{Var}(q \cdot k) = \frac{d_k}{d_k} = 1
+$$
 
 La variance est ramenée à 1 quelle que soit la valeur de $d_k$. $\blacksquare$    
 
@@ -541,7 +568,9 @@ Or le gradient de la softmax est $w_i(1 - w_i)$ : quand $w_i \to 1$ ou $w_i \to 
 
 En divisant par $\sqrt{d_k}$, on ramène la variance du score à 1 :
 
-$$\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{d_k}{d_k} = 1$$
+$$
+\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{d_k}{d_k} = 1
+$$
 
 Les entrées de la softmax restent dans des plages raisonnables quel que soit $d_k$ : les poids d'attention ne s'écrasent plus vers 0 ou 1, et les gradients restent exploitables.
 
@@ -568,11 +597,15 @@ La différence fondamentale avec la version simplifiée : on somme les **vecteur
 
 Explicitement, le vecteur de contexte de $x^{(2)}$ s'écrit :
 
-$$z^{(2)} = \sum_{j=1}^{T} \alpha_{2j} \cdot v^{(j)} = \sum_{j=1}^{T} \alpha_{2j} \cdot x^{(j)} W_V$$
+$$
+z^{(2)} = \sum_{j=1}^{T} \alpha_{2j} \cdot v^{(j)} = \sum_{j=1}^{T} \alpha_{2j} \cdot x^{(j)} W_V
+$$
 
 En forme matricielle compacte, pour l'ensemble des tokens simultanément :
 
-$$Z = \text{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V$$
+$$
+Z = \text{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V
+$$
 
 où $Q = X W_Q$, $K = X W_K$, $V = X W_V$ sont les projections de toute la séquence, et chaque ligne $i$ de $Z$ est le vecteur de contexte $z^{(i)}$.
 
@@ -638,7 +671,9 @@ tensor([[0.2996, 0.8053],
 
 $K = XW$ est la projection des embeddings d'entrée dans l'espace key, avec $K \in \mathbb{R}^{n \times d_{out}}$ : chaque ligne est le vecteur key d'un token, chaque colonne est une dimension de l'espace key. On s'intéresse au scalaire :
 
-$$y = K_{i,j} = \sum_{k=1}^{d_{in}} x_{i,k}\, W_{k,j}$$
+$$
+y = K_{i,j} = \sum_{k=1}^{d_{in}} x_{i,k}\, W_{k,j}
+$$
 
 la $j$-ième composante du vecteur key du token $i$. C'est cette somme dont on analyse la variance pour quantifier l'effet de l'initialisation.
 
@@ -646,33 +681,51 @@ la $j$-ième composante du vecteur key du token $i$. C'est cette somme dont on a
 
 **Variance d'un terme $x_k W_k$.** Avec $\mathbb{E}[x_k] = 0$ :
 
-$$\operatorname{Var}(x_k W_k) = \mathbb{E}[x_k^2 W_k^2] - \mathbb{E}[x_k W_k]^2 = \mathbb{E}[x_k^2]\,\mathbb{E}[W_k^2] - \underbrace{\mathbb{E}[x_k]^2}_{=\,0}\mathbb{E}[W_k]^2 = \sigma^2\,\mathbb{E}[W_k^2]$$
+$$
+\operatorname{Var}(x_k W_k) = \mathbb{E}[x_k^2 W_k^2] - \mathbb{E}[x_k W_k]^2 = \mathbb{E}[x_k^2]\,\mathbb{E}[W_k^2] - \underbrace{\mathbb{E}[x_k]^2}_{=\,0}\mathbb{E}[W_k]^2 = \sigma^2\,\mathbb{E}[W_k^2]
+$$
 
 La quantité clé est $\mathbb{E}[W_k^2]$, qui se décompose comme :
 
-$$\mathbb{E}[W_k^2] = \operatorname{Var}(W_k) + \mathbb{E}[W_k]^2$$
+$$
+\mathbb{E}[W_k^2] = \operatorname{Var}(W_k) + \mathbb{E}[W_k]^2
+$$
 
 **Rappel : loi uniforme $\mathcal{U}[a,b]$.**
 
-$$\operatorname{Var}(W) = \frac{(b-a)^2}{12}, \qquad \mathbb{E}[W] = \frac{a+b}{2}$$
+$$
+\operatorname{Var}(W) = \frac{(b-a)^2}{12}, \qquad \mathbb{E}[W] = \frac{a+b}{2}
+$$
 
 **Cas `torch.rand` : $W_k \sim \mathcal{U}[0, 1)$.**
 
-$$\mathbb{E}[W_k] = \frac{1}{2}, \qquad \operatorname{Var}(W_k) = \frac{1}{12}$$
+$$
+\mathbb{E}[W_k] = \frac{1}{2}, \qquad \operatorname{Var}(W_k) = \frac{1}{12}
+$$
 
-$$\mathbb{E}[W_k^2] = \frac{1}{12} + \frac{1}{4} = \frac{1}{3}$$
+$$
+\mathbb{E}[W_k^2] = \frac{1}{12} + \frac{1}{4} = \frac{1}{3}
+$$
 
-$$\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3} = \frac{d_{in}\,\sigma^2}{3}$$
+$$
+\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3} = \frac{d_{in}\,\sigma^2}{3}
+$$
 
 La variance croît **linéairement** avec $d_{in}$ : pour $d_{in} = 512$, elle est 512 fois plus grande que la variance d'entrée.
 
 **Cas Kaiming : $W_k \sim \mathcal{U}\!\left(-\dfrac{1}{\sqrt{d_{in}}}, \dfrac{1}{\sqrt{d_{in}}}\right)$.**
 
-$$\mathbb{E}[W_k] = 0, \qquad \operatorname{Var}(W_k) = \frac{\left(\frac{2}{\sqrt{d_{in}}}\right)^2}{12} = \frac{1}{3\,d_{in}}$$
+$$
+\mathbb{E}[W_k] = 0, \qquad \operatorname{Var}(W_k) = \frac{\left(\frac{2}{\sqrt{d_{in}}}\right)^2}{12} = \frac{1}{3\,d_{in}}
+$$
 
-$$\mathbb{E}[W_k^2] = \frac{1}{3\,d_{in}} + 0 = \frac{1}{3\,d_{in}}$$
+$$
+\mathbb{E}[W_k^2] = \frac{1}{3\,d_{in}} + 0 = \frac{1}{3\,d_{in}}
+$$
 
-$$\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3\,d_{in}} = \frac{\sigma^2}{3}$$
+$$
+\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3\,d_{in}} = \frac{\sigma^2}{3}
+$$
 
 Le $d_{in}$ se simplifie : la variance reste constante quelle que soit la dimension d'entrée.
 
@@ -680,7 +733,9 @@ Le $d_{in}$ se simplifie : la variance reste constante quelle que soit la dimens
 
 `nn.Linear` utilise par défaut l'**initialisation de Kaiming** (He, 2015), qui fixe :
 
-$$W_{ij} \sim \mathcal{U}\!\left(-\frac{1}{\sqrt{d_{in}}},\ \frac{1}{\sqrt{d_{in}}}\right) \qquad \Longrightarrow \qquad \operatorname{Var}(W_{ij}) = \frac{1}{3\,d_{in}}$$
+$$
+W_{ij} \sim \mathcal{U}\!\left(-\frac{1}{\sqrt{d_{in}}},\ \frac{1}{\sqrt{d_{in}}}\right) \qquad \Longrightarrow \qquad \operatorname{Var}(W_{ij}) = \frac{1}{3\,d_{in}}
+$$
 
 ce qui maintient la variance du signal constante à travers les couches, quelle que soit la dimension.
 
@@ -688,11 +743,15 @@ ce qui maintient la variance du signal constante à travers les couches, quelle 
 
 **`nn.Linear` comme opérateur linéaire.** Dans `SelfAttention_v1`, on définit $W \in \mathbb{R}^{d_{in} \times d_{out}}$ comme un `nn.Parameter`, et le forward calcule :
 
-$$K = XW, \qquad X \in \mathbb{R}^{n \times d_{in}},\quad K \in \mathbb{R}^{n \times d_{out}}$$
+$$
+K = XW, \qquad X \in \mathbb{R}^{n \times d_{in}},\quad K \in \mathbb{R}^{n \times d_{out}}
+$$
 
 `nn.Linear(d_in, d_out, bias=False)` stocke en interne une matrice $\widetilde{W} \in \mathbb{R}^{d_{out} \times d_{in}}$, et son appel sur $X$ calcule :
 
-$$K = X\,\widetilde{W}^\top$$
+$$
+K = X\,\widetilde{W}^\top
+$$
 
 Les deux expressions sont identiques si et seulement si $\widetilde{W} = W^\top$, ce qui est exactement la convention de stockage de `nn.Linear`. Les deux implémentations sont donc **strictement équivalentes**.
 
@@ -859,11 +918,15 @@ Soit une séquence de $T$ tokens. À chaque token en position $j$ sont associés
 
 Pour un token courant en position $i$, le **score d'attention brut** avec chaque token en position $j$ est :
 
-$$e_{ij} = \frac{q_i^\top k_j}{\sqrt{d_k}} \in \mathbb{R}, \qquad j \in \{1, \dots, T\}$$
+$$
+e_{ij} = \frac{q_i^\top k_j}{\sqrt{d_k}} \in \mathbb{R}, \qquad j \in \{1, \dots, T\}
+$$
 
 La **sortie** du mécanisme d'attention pour le token $i$ est :
 
-$$z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_{j=1}^{T} \alpha_{ij} = 1$$
+$$
+z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_{j=1}^{T} \alpha_{ij} = 1
+$$
 
 ---
 
@@ -873,7 +936,9 @@ $$z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_
 
 On calcule les poids d'attention sans aucune restriction :
 
-$$\alpha_{ij} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$
+\alpha_{ij} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}
+$$
 
 Tous les tokens contribuent au dénominateur, y compris les tokens futurs.
 
@@ -881,7 +946,9 @@ Tous les tokens contribuent au dénominateur, y compris les tokens futurs.
 
 On annule les poids correspondant aux tokens futurs :
 
-$$\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} & \text{si } j \leq i \\ 0 & \text{si } j > i \end{cases}$$
+$$
+\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} & \text{si } j \leq i \\ 0 & \text{si } j > i \end{cases}
+$$
 
 Après cette étape, les poids ne somment plus à 1 : on a retiré de la masse de probabilité.
 
@@ -889,31 +956,45 @@ Après cette étape, les poids ne somment plus à 1 : on a retiré de la masse d
 
 On divise chaque poids par la somme de la ligne :
 
-$$\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}}$$
+$$
+\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}}
+$$
 
 **Développement explicite.** On simplifie séparément le numérateur et le dénominateur.
 
 Au numérateur, on distingue deux cas selon la position de $j$ par rapport à $i$, en appliquant successivement la définition de $\tilde{\alpha}_{ij}$ (Étape 2) puis celle de $\alpha_{ij}$ (Étape 1) :
 
-$$\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} = \dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} & \text{si } j \leq i \\[10pt] 0 & \text{si } j > i \end{cases}$$
+$$
+\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} = \dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} & \text{si } j \leq i \\[10pt] 0 & \text{si } j > i \end{cases}
+$$
 
 Au dénominateur, on développe $\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}$ en séparant les positions visibles ($k \leq i$) et futures ($k > i$), puis on applique successivement la définition de $\tilde{\alpha}_{ik}$ (Étape 2) puis celle de $\alpha_{ik}$ (Étape 1) :
 
-$$\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \sum_{k \leq i} \underbrace{\tilde{\alpha}_{ik}}_{=\,\alpha_{ik}} + \sum_{k > i} \underbrace{\tilde{\alpha}_{ik}}_{=\,0} = \sum_{k \leq i} \alpha_{ik} = \sum_{k \leq i} \frac{e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$
+\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \sum_{k \leq i} \underbrace{\tilde{\alpha}_{ik}}_{=\,\alpha_{ik}} + \sum_{k > i} \underbrace{\tilde{\alpha}_{ik}}_{=\,0} = \sum_{k \leq i} \alpha_{ik} = \sum_{k \leq i} \frac{e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}
+$$
 
 Le terme $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ est une constante par rapport à $k$, on peut le factoriser :
 
-$$\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \frac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$
+\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \frac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}
+$$
 
 On substitue numérateur et dénominateur dans l'expression de $\alpha_{ij}^{(1)}$ pour $j \leq i$ :
 
-$$\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}} = \frac{\quad\dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}\quad}{\dfrac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}}$$
+$$
+\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}} = \frac{\quad\dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}\quad}{\dfrac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}}
+$$
 
 Le facteur $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ est présent au numérateur **et** au dénominateur : il se simplifie exactement :
 
-$$\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} \times \frac{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}}$$
+$$
+\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} \times \frac{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}}
+$$
 
-$$\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{pour } j \leq i, \qquad \alpha_{ij}^{(1)} = 0 \quad \text{pour } j > i}$$
+$$
+\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{pour } j \leq i, \qquad \alpha_{ij}^{(1)} = 0 \quad \text{pour } j > i}
+$$
 
 ---
 
@@ -923,23 +1004,33 @@ $$\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 On remplace les scores des tokens futurs par $-\infty$ avant tout calcul :
 
-$$\tilde{e}_{ij} = \begin{cases} e_{ij} & \text{si } j \leq i \\ -\infty & \text{si } j > i \end{cases}$$
+$$
+\tilde{e}_{ij} = \begin{cases} e_{ij} & \text{si } j \leq i \\ -\infty & \text{si } j > i \end{cases}
+$$
 
 **Étape 2. Softmax unique sur les scores masqués.**
 
-$$\alpha_{ij}^{(2)} = \frac{e^{\,\tilde{e}_{ij}}}{\displaystyle\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}}}$$
+$$
+\alpha_{ij}^{(2)} = \frac{e^{\,\tilde{e}_{ij}}}{\displaystyle\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}}}
+$$
 
 **Développement explicite.** On décompose le dénominateur en séparant les positions visibles et futures, puis on applique la définition de $\tilde{e}_{ik}$ :
 
-$$\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}} = \sum_{k \leq i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{e_{ik}}} + \sum_{k > i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{-\infty}\,=\,0} = \sum_{k \leq i} e^{e_{ik}}$$
+$$
+\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}} = \sum_{k \leq i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{e_{ik}}} + \sum_{k > i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{-\infty}\,=\,0} = \sum_{k \leq i} e^{e_{ik}}
+$$
 
 De même au numérateur, en appliquant la définition de $\tilde{e}_{ij}$ :
 
-$$e^{\,\tilde{e}_{ij}} = \begin{cases} e^{e_{ij}} & \text{si } j \leq i \\ e^{-\infty} = 0 & \text{si } j > i \end{cases}$$
+$$
+e^{\,\tilde{e}_{ij}} = \begin{cases} e^{e_{ij}} & \text{si } j \leq i \\ e^{-\infty} = 0 & \text{si } j > i \end{cases}
+$$
 
 On obtient donc :
 
-$$\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{pour } j \leq i, \qquad \alpha_{ij}^{(2)} = 0 \quad \text{pour } j > i}$$
+$$
+\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{pour } j \leq i, \qquad \alpha_{ij}^{(2)} = 0 \quad \text{pour } j > i}
+$$
 
 ---
 
@@ -947,13 +1038,19 @@ $$\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 La comparaison terme à terme des deux résultats encadrés est immédiate :
 
-$$\text{Pour } j \leq i : \quad \alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} = \alpha_{ij}^{(2)}$$
+$$
+\text{Pour } j \leq i : \quad \alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} = \alpha_{ij}^{(2)}
+$$
 
-$$\text{Pour } j > i : \quad \alpha_{ij}^{(1)} = 0 = \alpha_{ij}^{(2)}$$
+$$
+\text{Pour } j > i : \quad \alpha_{ij}^{(1)} = 0 = \alpha_{ij}^{(2)}
+$$
 
 On conclut :
 
-$$\boxed{\alpha_{ij}^{(1)} = \alpha_{ij}^{(2)} \qquad \forall\, j \in \{1, \dots, T\}}$$
+$$
+\boxed{\alpha_{ij}^{(1)} = \alpha_{ij}^{(2)} \qquad \forall\, j \in \{1, \dots, T\}}
+$$
 
 Il s'agit d'une **égalité algébrique exacte**. Dans la Méthode 1, le facteur $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ introduit par la première softmax s'annule exactement lors de la renormalisation. La présence initiale des tokens futurs dans le calcul n'a laissé **aucune trace** dans le résultat final : le dénominateur ne contient plus que $\displaystyle\sum_{k \leq i} e^{e_{ik}}$, exactement comme dans la Méthode 2 où les tokens futurs n'ont jamais été inclus. Il n'y a donc **aucune fuite d'information**.
 
@@ -1341,17 +1438,23 @@ Pour comprendre `.view()`, il faut d'abord comprendre comment PyTorch stocke les
 
 **La mémoire est un couloir de cases numérotées.** Quand PyTorch crée un tenseur, il réserve un bloc de cases consécutives en mémoire (RAM), une case par nombre. Par exemple, une matrice $2 \times 3$
 
-$$M = \begin{pmatrix} a & b & c \\ d & e & f \end{pmatrix}$$
+$$
+M = \begin{pmatrix} a & b & c \\ d & e & f \end{pmatrix}
+$$
 
 est stockée en mémoire comme une simple file de 6 cases :
 
-$$\boxed{a}\;\boxed{b}\;\boxed{c}\;\boxed{d}\;\boxed{e}\;\boxed{f}$$
+$$
+\boxed{a}\;\boxed{b}\;\boxed{c}\;\boxed{d}\;\boxed{e}\;\boxed{f}
+$$
 
 PyTorch mémorise juste deux informations séparément : (1) l'adresse de la première case, et (2) la forme `(2, 3)` qui lui permet de calculer où trouver chaque élément : l'élément en ligne $i$, colonne $j$ se trouve à la case $3i + j$.
 
 **`.view()` change la grille de lecture, pas la position physique des données.** Appeler `.view(3, 2)` sur cette même mémoire revient à décider de la lire comme
 
-$$M' = \begin{pmatrix} a & b \\ c & d \\ e & f \end{pmatrix}$$
+$$
+M' = \begin{pmatrix} a & b \\ c & d \\ e & f \end{pmatrix}
+$$
 
 Ainsi, PyTorch va simplement mettre à jour la forme de `(2, 3)` à `(3, 2)` et recalculer la formule d'accès : l'élément $(i, j)$ est maintenant à la case $2i + j$. C'est tout.
 
@@ -1381,7 +1484,9 @@ $d_{out} = H \cdot d_h$ comme deux dimensions imbriquées". Sans rien déplacer
 en mémoire, le même token $i$ est maintenant accessible comme un bloc
 $(H, d_h)$ :
 
-$$K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \mathbf{k}_{i,2} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}$$
+$$
+K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \mathbf{k}_{i,2} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}
+$$
 
 La $j$-ième ligne de ce bloc est exactement $\mathbf{k}_{i,j}$, le vecteur clé
 du token $i$ pour la tête $j$.
@@ -1418,22 +1523,35 @@ Comme `.view()`, `.transpose()` ne déplace rien en mémoire : il change juste l
 
 Reprenons la matrice $2 \times 3$ :
 
-$$M = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}$$
+$$
+M = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}
+$$
 
 Mémoire physique : $\boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$
 
 Avec `.view(3, 2)`, PyTorch relisait ces mêmes cases en disant "3 lignes de 2 colonnes", et chaque ligne consécutive était bien côte à côte en mémoire. Pas de problème.
 
-Soit $$ M.view(3, 2) \Rightarrow \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pmatrix}$$
+Soit :
+
+$$
+M.view(3, 2) \Rightarrow \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pmatrix}
+$$
 
 Avec `.transpose()`, on obtient logiquement :
 
-$$M^\top = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
+$$
+M^\top = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}
+$$
 
 Pour lire la première ligne de $M^\top$ (les éléments $1$ et $4$), PyTorch doit sauter des cases : il prend la case 0 (1), puis la case 3 (4). Entre eux, il y a les cases 1 et 2 qui appartiennent logiquement à d'autres lignes. L'ordre logique et l'ordre mémoire divergent :
 
-$$\text{Ordre mémoire (intact)} : \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$$
-$$\text{Ordre logique (après transposition)} : 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
+$$
+\text{Ordre mémoire (intact)} : \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}
+$$
+
+$$
+\text{Ordre logique (après transposition)} : 1\quad 4\quad 2\quad 5\quad 3\quad 6
+$$
 
 Un tenseur est **non contigu** quand lire ses éléments dans l'ordre logique exige de **sauter des cases** en mémoire.
 
@@ -1444,7 +1562,9 @@ Dans la forme `(b, num_tokens, H, d_h)` issue de `.view()`, la dimension
 d'itération principale est le token. Pour un token $i$ fixé, le bloc
 $K[\,b,\,i,\,:,\,:]$ regroupe les projections de toutes les têtes pour ce token :
 
-$$K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}$$
+$$
+K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}
+$$
 
 On lit le tenseur *tête par tête pour un token donné*. En mémoire, les données
 sont rangées dans l'ordre : toutes les têtes du token 1, puis toutes les têtes
@@ -1458,7 +1578,9 @@ Après `.transpose(1, 2)`, la forme est `(b, H, num_tokens, d_h)`. Pour une têt
 fixée, le bloc $K[\,b,\,j,\,:,\,:] = K_j$ regroupe les projections de tous les
 tokens pour cette tête :
 
-$$K[\,b,\,j,\,:,\,:] = K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix} \in \mathbb{R}^{T \times d_h}$$
+$$
+K[\,b,\,j,\,:,\,:] = K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix} \in \mathbb{R}^{T \times d_h}
+$$
 
 On lit le tenseur *token par token pour une tête donnée*. Chaque $K_j$ forme
 un bloc logique indépendant. Mais comme vu ci-dessus, `.transpose()` n'a pas
@@ -1489,7 +1611,9 @@ attn_scores = queries @ keys.transpose(2, 3)
 calcule $Q_j K_j^\top$ simultanément pour toutes les têtes et tous les éléments du
 batch :
 
-$$\texttt{attn\_scores}[\,b,\,j,\,:,\,:] = Q_j K_j^\top \in \mathbb{R}^{T \times T}$$
+$$
+\texttt{attn\_scores}[\,b,\,j,\,:,\,:] = Q_j K_j^\top \in \mathbb{R}^{T \times T}
+$$
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/mha_explained_2.png" alt="mha_explained_2" class="rounded-xl shadow-2xl" />
@@ -1523,12 +1647,19 @@ les données dans l'ordre qui correspond à la forme logique actuelle.
 Avec notre exemple numérique : après `.transpose()`, le tenseur est logiquement
 $M^\top$ mais la mémoire contient encore $1, 2, 3, 4, 5, 6$ :
 
-$$\text{Ordre mémoire} : \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$$
-$$\text{Ordre logique} : 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
+$$
+\text{Ordre mémoire} : \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}
+$$
+
+$$
+\text{Ordre logique} : 1\quad 4\quad 2\quad 5\quad 3\quad 6
+$$
 
 `.contiguous()` crée un nouveau bloc où les deux ordres coïncident :
 
-$$\text{Nouvelle mémoire} : \boxed{1}\;\boxed{4}\;\boxed{2}\;\boxed{5}\;\boxed{3}\;\boxed{6}$$
+$$
+\text{Nouvelle mémoire} : \boxed{1}\;\boxed{4}\;\boxed{2}\;\boxed{5}\;\boxed{3}\;\boxed{6}
+$$
 
 `.view()` peut alors s'appliquer sans risque.
 

@@ -60,11 +60,17 @@ $C$ est un petit perceptron multicouche. Sa dernière couche utilise un **softma
 
 La base de connaissances $\mathcal{K}$ contient trois formules :
 
-$$C(a, l_a)$$
+$$
+C(a, l_a)
+$$
 
-$$C(b, l_b)$$
+$$
+C(b, l_b)
+$$
 
-$$\forall x_1, x_2, l\ \Big(\mathrm{Sim}(x_1, x_2) \implies \big(C(x_1, l) \leftrightarrow C(x_2, l)\big)\Big)$$
+$$
+\forall x_1, x_2, l\ \Big(\mathrm{Sim}(x_1, x_2) \implies \big(C(x_1, l) \leftrightarrow C(x_2, l)\big)\Big)
+$$
 
 où :
 
@@ -77,7 +83,9 @@ Les deux premières formules imposent que $a$ soit reconnu comme étant de class
 
 L'objectif est d'apprendre $C$ de façon à maximiser la satisfaction globale de $\mathcal{K}$. En notant $\theta$ les poids du réseau qui implémente $C$, on cherche :
 
-$$\theta^\ast = \underset{\theta \in \Theta}{\mathrm{argmax}}\ \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_\theta(\phi)$$
+$$
+\theta^\ast = \underset{\theta \in \Theta}{\mathrm{argmax}}\ \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_\theta(\phi)
+$$
 
 où $\mathrm{SatAgg}$ agrège les degrés de vérité de toutes les formules de $\mathcal{K}$ en une seule valeur. On y reviendra un peu plus bas.
 
@@ -178,13 +186,17 @@ Dans ces formules, $u$ et $v$ sont des **scalaires** : des degrés de vérité i
 
 On prend 3 points au lieu de 19 :
 
-$$q_0 = (0, 0) \qquad q_1 = (3, 3) \qquad q_2 = (0.1,\ 0.1)$$
+$$
+q_0 = (0, 0) \qquad q_1 = (3, 3) \qquad q_2 = (0.1,\ 0.1)
+$$
 
 $x_1$ et $x_2$ parcourent **indépendamment** ce même domaine, donc toute formule $\phi(x_1, x_2)$ se calcule sur le produit cartésien, une grille $3 \times 3$ indexée par $(i, j)$.
 
 **Étape 1 : Sim(x1, x2)**
 
-$$\mathrm{Sim}[i, j] = \begin{pmatrix} 1 & 0.014 & 0.868 \\ 0.014 & 1 & 0.017 \\ 0.868 & 0.017 & 1 \end{pmatrix}$$
+$$
+\mathrm{Sim}[i, j] = \begin{pmatrix} 1 & 0.014 & 0.868 \\ 0.014 & 1 & 0.017 \\ 0.868 & 0.017 & 1 \end{pmatrix}
+$$
 
 La matrice est symétrique, et sa diagonale vaut 1 puisque chaque point est identique à lui-même. $q_0$ et $q_2$ sont très proches, $q_1$ est loin des deux autres.
 
@@ -192,19 +204,27 @@ La matrice est symétrique, et sa diagonale vaut 1 puisque chaque point est iden
 
 $C$ est une fonction d'**un seul point** et d'un label. Supposons que le réseau, pas encore entraîné, donne les confiances suivantes (une ligne par point, une colonne par label) :
 
-$$C(x, l) = \begin{pmatrix} 0.9 & 0.1 \\ 0.2 & 0.8 \\ 0.5 & 0.5 \end{pmatrix}, \qquad x \in \{q_0, q_1, q_2\}$$
+$$
+C(x, l) = \begin{pmatrix} 0.9 & 0.1 \\ 0.2 & 0.8 \\ 0.5 & 0.5 \end{pmatrix}, \qquad x \in \{q_0, q_1, q_2\}
+$$
 
 $x_1$ et $x_2$ parcourent le même domaine avec le même prédicat : $C(x_1, l)$ et $C(x_2, l)$ sont la même fonction, évaluée à des indices différents ($i$ pour $x_1$, $j$ pour $x_2$). Pour un label fixé, on extrait donc un **vecteur** indexé par les points :
 
-$$c_A = \big(C(q_0, A),\ C(q_1, A),\ C(q_2, A)\big) = (0.9,\ 0.2,\ 0.5)$$
+$$
+c_A = \big(C(q_0, A),\ C(q_1, A),\ C(q_2, A)\big) = (0.9,\ 0.2,\ 0.5)
+$$
 
-$$c_B = \big(C(q_0, B),\ C(q_1, B),\ C(q_2, B)\big) = (0.1,\ 0.8,\ 0.5)$$
+$$
+c_B = \big(C(q_0, B),\ C(q_1, B),\ C(q_2, B)\big) = (0.1,\ 0.8,\ 0.5)
+$$
 
 Grâce au softmax, les deux colonnes somment à 1 : $c_B = 1 - c_A$ terme à terme.
 
 **Étape 3 : Equiv(C(x1, l), C(x2, l))**
 
-$$M_l[i, j] = \mathrm{Equiv}\big(c_l[i],\ c_l[j]\big), \qquad (i, j) \in \{0, 1, 2\}^2$$
+$$
+M_l[i, j] = \mathrm{Equiv}\big(c_l[i],\ c_l[j]\big), \qquad (i, j) \in \{0, 1, 2\}^2
+$$
 
 $u = c_l[i]$ et $v = c_l[j]$ sont deux valeurs **du même vecteur**, prises à deux indices. Pour $l = A$, avec $c_A = (0.9,\ 0.2,\ 0.5)$ :
 
@@ -219,15 +239,21 @@ $u = c_l[i]$ et $v = c_l[j]$ sont deux valeurs **du même vecteur**, prises à d
 
 La matrice est symétrique, puisque $\mathrm{Equiv}(u, v) = \mathrm{Equiv}(v, u)$ par construction :
 
-$$M_A = \begin{pmatrix} 0.8281 & 0.2744 & 0.5225 \\ 0.2744 & 0.7056 & 0.5400 \\ 0.5225 & 0.5400 & 0.5625 \end{pmatrix}$$
+$$
+M_A = \begin{pmatrix} 0.8281 & 0.2744 & 0.5225 \\ 0.2744 & 0.7056 & 0.5400 \\ 0.5225 & 0.5400 & 0.5625 \end{pmatrix}
+$$
 
 **Pourquoi $M_B = M_A$ ?** Comme $c_B = 1 - c_A$, on a $M_B[i, j] = \mathrm{Equiv}(1 - c_A[i],\ 1 - c_A[j])$. Or :
 
-$$\mathrm{Implies}(1 - u,\ 1 - v) = 1 - (1 - u) + (1 - u)(1 - v) = 1 - v + uv = \mathrm{Implies}(v, u)$$
+$$
+\mathrm{Implies}(1 - u,\ 1 - v) = 1 - (1 - u) + (1 - u)(1 - v) = 1 - v + uv = \mathrm{Implies}(v, u)
+$$
 
 donc :
 
-$$\mathrm{Equiv}(1 - u,\ 1 - v) = \mathrm{Implies}(v, u) \times \mathrm{Implies}(u, v) = \mathrm{Equiv}(u, v)$$
+$$
+\mathrm{Equiv}(1 - u,\ 1 - v) = \mathrm{Implies}(v, u) \times \mathrm{Implies}(u, v) = \mathrm{Equiv}(u, v)
+$$
 
 Les deux matrices ont exactement les mêmes 9 valeurs, pour une raison algébrique et non par coïncidence.
 
@@ -235,9 +261,13 @@ Les deux matrices ont exactement les mêmes 9 valeurs, pour une raison algébriq
 
 $\mathrm{Sim}[i, j]$ et $M_l[i, j]$ sont indexés par la même grille $(i, j)$, puisque les deux viennent du grounding de $x_1$ et $x_2$. L'implication se calcule donc case par case :
 
-$$N_l[i, j] = \mathrm{Implies}\big(\mathrm{Sim}[i, j],\ M_l[i, j]\big) = 1 - \mathrm{Sim}[i, j] + \mathrm{Sim}[i, j] \cdot M_l[i, j]$$
+$$
+N_l[i, j] = \mathrm{Implies}\big(\mathrm{Sim}[i, j],\ M_l[i, j]\big) = 1 - \mathrm{Sim}[i, j] + \mathrm{Sim}[i, j] \cdot M_l[i, j]
+$$
 
-$$N_A = N_B = \begin{pmatrix} 0.8281 & 0.9896 & 0.5855 \\ 0.9896 & 0.7056 & 0.9924 \\ 0.5855 & 0.9924 & 0.5625 \end{pmatrix}$$
+$$
+N_A = N_B = \begin{pmatrix} 0.8281 & 0.9896 & 0.5855 \\ 0.9896 & 0.7056 & 0.9924 \\ 0.5855 & 0.9924 & 0.5625 \end{pmatrix}
+$$
 
 On y lit bien la règle : quand deux points sont éloignés ($\mathrm{Sim}$ proche de 0), l'implication est presque vraie quel que soit leur désaccord, car la règle ne dit rien sur eux. Quand ils sont proches, c'est l'accord de leurs confiances qui décide.
 
@@ -258,7 +288,9 @@ Une valeur de $0.5855$, loin de 1, signale une violation de l'axiome : deux poin
 
 `Forall([x1, x2, l], …)` agrège les $3 \times 3 \times 2 = 18$ cellules avec `pMeanError` et $p = 2$ :
 
-$$\mathrm{pME} = 1 - \left(\frac{1}{18} \sum_{l} \sum_{i, j} \big(1 - N_l[i, j]\big)^2\right)^{1/2}$$
+$$
+\mathrm{pME} = 1 - \left(\frac{1}{18} \sum_{l} \sum_{i, j} \big(1 - N_l[i, j]\big)^2\right)^{1/2}
+$$
 
 | $(i, j)$ | $N_l[i, j]$ | $1 - N_l[i, j]$ | $(1 - N_l[i, j])^2$ | nombre de cases par label |
 |---|---|---|---|---|
@@ -271,7 +303,9 @@ $$\mathrm{pME} = 1 - \left(\frac{1}{18} \sum_{l} \sum_{i, j} \big(1 - N_l[i, j]\
 
 Pour un label, la somme vaut $0.307627 + 2 \times 0.172001 = 0.651629$, et comme $N_A = N_B$, on la compte deux fois :
 
-$$\mathrm{pME} = 1 - \left(\frac{1.303258}{18}\right)^{1/2} = 1 - 0.2691 = 0.731$$
+$$
+\mathrm{pME} = 1 - \left(\frac{1.303258}{18}\right)^{1/2} = 1 - 0.2691 = 0.731
+$$
 
 Remarquez la diagonale. On pourrait croire que comparer un point à lui-même est trivialement vrai, mais ce n'est pas le cas en logique floue : $\mathrm{Equiv}(u, u) = (1 - u + u^2)^2$ ne vaut 1 que si $u$ vaut 0 ou 1. Pour $q_2$, dont la confiance est de $0.5$, la cellule $(2, 2)$ ne vaut que $0.5625$, et c'est même la pire cellule du tableau. Le code d'entraînement ci-dessous agrège sur toutes les paires, diagonale comprise : ces cellules poussent donc le réseau à donner des verdicts **tranchés**, proches de 0 ou de 1, plutôt que des confiances indécises.
 
@@ -279,7 +313,9 @@ Remarquez la diagonale. On pourrait croire que comparer un point à lui-même es
 
 La perte combine enfin les trois formules de $\mathcal{K}$ :
 
-$$\text{loss} = 1 - \mathrm{SatAgg}\big(C(a, l_a),\ C(b, l_b),\ 0.731\big)$$
+$$
+\text{loss} = 1 - \mathrm{SatAgg}\big(C(a, l_a),\ C(b, l_b),\ 0.731\big)
+$$
 
 </details>
 
@@ -287,7 +323,9 @@ $$\text{loss} = 1 - \mathrm{SatAgg}\big(C(a, l_a),\ C(b, l_b),\ 0.731\big)$$
 
 On pourrait imaginer une règle plus simple : comparer chaque point inconnu à $a$ et à $b$ seulement, et en déduire sa classe, comme un algorithme des plus proches voisins avec deux voisins de référence :
 
-$$\forall x\ \big(\mathrm{Sim}(x, a) \implies C(x, l_a)\big) \qquad \forall x\ \big(\mathrm{Sim}(x, b) \implies C(x, l_b)\big)$$
+$$
+\forall x\ \big(\mathrm{Sim}(x, a) \implies C(x, l_a)\big) \qquad \forall x\ \big(\mathrm{Sim}(x, b) \implies C(x, l_b)\big)
+$$
 
 Cette règle reviendrait à n'éclairer que les points suffisamment proches des deux seules lampes $a$ et $b$ : un point trop éloigné resterait dans le noir, même entouré de points déjà bien éclairés. La règle de $\mathcal{K}$, elle, compare **toutes les paires** : chaque point éclairé illumine à son tour ses voisins, et la lumière se propage d'un bout à l'autre du nuage de points, même très loin de $a$ et de $b$, tant qu'il existe un chemin de proximités successives.
 

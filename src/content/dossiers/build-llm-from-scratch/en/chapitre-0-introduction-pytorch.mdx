@@ -1109,16 +1109,28 @@ stable_exponentials = torch.exp(stable_logits)
 You might think that changing the logits distorts the final result. But the softmax function is **insensitive to adding or subtracting a constant**! Here is the mathematical proof:
 
 The probability formula for a logit $x_i$ is:  
-$$P(x_i) = \frac{e^{x_i}}{\sum e^{x}}$$
+
+$$
+P(x_i) = \frac{e^{x_i}}{\sum e^{x}}
+$$
 
 If we subtract a constant $C$ (our maximum) from all the logits, the power rule ($e^{a-b} = e^a \times e^{-b}$) gives:  
-$$P_{new}(x_i) = \frac{e^{x_i - C}}{\sum e^{x - C}} = \frac{e^{x_i} \times e^{-C}}{\sum \left( e^{x} \times e^{-C} \right)}$$
+
+$$
+P_{new}(x_i) = \frac{e^{x_i - C}}{\sum e^{x - C}} = \frac{e^{x_i} \times e^{-C}}{\sum \left( e^{x} \times e^{-C} \right)}
+$$
 
 Since $e^{-C}$ appears in every term of the sum in the denominator, we can factor it out:  
-$$P_{new}(x_i) = \frac{e^{x_i} \times e^{-C}}{e^{-C} \times \sum e^{x}}$$
+
+$$
+P_{new}(x_i) = \frac{e^{x_i} \times e^{-C}}{e^{-C} \times \sum e^{x}}
+$$
 
 The term $e^{-C}$ appears at the top and bottom of the fraction, so it cancels out:  
-$$P_{new}(x_i) = \frac{e^{x_i}}{\sum e^{x}} = P(x_i)$$
+
+$$
+P_{new}(x_i) = \frac{e^{x_i}}{\sum e^{x}} = P(x_i)
+$$
 
 **Conclusion:** 
 Subtracting the maximum changes the intermediate numbers to avoid the memory crash, but the final division restores the balance. By passing the *logits* directly to `cross_entropy`, PyTorch performs this complex optimization in a single, ultra-fast block.

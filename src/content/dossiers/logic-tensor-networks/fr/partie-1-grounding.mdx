@@ -25,7 +25,9 @@ Tout le vocabulaire de LTN vient de la logique du premier ordre (FOL, *first-ord
 
 Le **domaine** $D$ (ou univers du discours) est l'ensemble de tous les objets dont on parle. Pour un système qui décrit un petit groupe de personnes :
 
-$$D = \{\text{Léonel}, \text{Mélène}, \text{Alice}, \text{Abdel}\}$$
+$$
+D = \{\text{Léonel}, \text{Mélène}, \text{Alice}, \text{Abdel}\}
+$$
 
 Le domaine délimite le terrain de jeu : la logique ne parle que des objets qui y figurent.
 
@@ -44,7 +46,9 @@ Les **quantificateurs** permettent de parler de plusieurs objets sans les nommer
 
 Une **formule** est une phrase logique bien construite qui combine tout cela. Par exemple :
 
-$$\forall x\, \big(\text{EstÉtudiant}(x) \implies \exists y\, \text{EstAmiDe}(x,y)\big)$$
+$$
+\forall x\, \big(\text{EstÉtudiant}(x) \implies \exists y\, \text{EstAmiDe}(x,y)\big)
+$$
 
 se lit « pour tout $x$, si $x$ est étudiant, alors il existe un $y$ tel que $x$ est ami avec $y$ », autrement dit : tout étudiant a au moins un ami.
 
@@ -53,7 +57,11 @@ se lit « pour tout $x$, si $x$ est étudiant, alors il existe un $y$ tel que $x
 Jusqu'ici, les symboles ne sont que des étiquettes vides. L'**interprétation** $\mathcal{I}$ fait le pont entre la syntaxe et le sens : elle assigne à chaque symbole un objet concret, dans un domaine choisi au préalable. Ce n'est pas une règle unique mais trois assignations, une par type de symbole.
 
 1. **Une constante devient un élément du domaine.** Avec $D = \{\text{Alice}, \text{Bob}, \text{Chloé}\}$, on peut décider que $\mathcal{I}(c_1) = \text{Alice}$.
-2. **Un prédicat $n$-aire devient un sous-ensemble de $D^n$.** Pourquoi un sous-ensemble plutôt que « vrai ou faux » ? Parce qu'un prédicat doit pouvoir être évalué sur toutes les combinaisons d'objets possibles, et la façon la plus propre de le faire est de lister exactement celles pour lesquelles il est vrai. $\mathcal{I}(\text{EstÉtudiant}) = \{\text{Alice}, \text{Chloé}\}$ signifie que le prédicat est vrai pour Alice et Chloé, et faux pour Bob. Pour un prédicat binaire, on liste des paires : $\mathcal{I}(\text{EstAmiDe}) = \{(\text{Alice},\text{Bob}), (\text{Bob},\text{Alice}), (\text{Chloé},\text{Alice})\}$.
+2. **Un prédicat $n$-aire devient un sous-ensemble de $D^n$.** Pourquoi un sous-ensemble plutôt que « vrai ou faux » ? Parce qu'un prédicat doit pouvoir être évalué sur toutes les combinaisons d'objets possibles, et la façon la plus propre de le faire est de lister exactement celles pour lesquelles il est vrai. $\mathcal{I}(\text{EstÉtudiant}) = \{\text{Alice}, \text{Chloé}\}$ signifie que le prédicat est vrai pour Alice et Chloé, et faux pour Bob. Pour un prédicat binaire, on liste des paires :
+
+   $$
+   \mathcal{I}(\text{EstAmiDe}) = \{(\text{Alice},\text{Bob}), (\text{Bob},\text{Alice}), (\text{Chloé},\text{Alice})\}
+   $$
 3. **Une fonction devient une vraie fonction mathématique** $\mathcal{I}(f) : D^n \to D$.
 
 Évaluer une formule revient alors à remonter symbole par symbole. Pour $\text{EstÉtudiant}(c_1)$ : $c_1$ désigne Alice, $\text{EstÉtudiant}$ désigne $\{\text{Alice}, \text{Chloé}\}$, Alice appartient à cet ensemble, donc la formule est **vraie** sous $\mathcal{I}$.
@@ -135,7 +143,9 @@ Un prédicat LTN est une fonction qui associe à ses $n$ arguments une valeur da
 
 ### Un prédicat défini par une formule
 
-$$P_1(x) = \exp\big(-\|x - \mu\|\big)$$
+$$
+P_1(x) = \exp\big(-\|x - \mu\|\big)
+$$
 
 où $\|x - \mu\|$ est la distance euclidienne entre $x$ et un point fixe $\mu$. Si $x = \mu$, la distance est nulle et $P_1(x) = e^0 = 1$ : vérité maximale. Plus $x$ s'éloigne de $\mu$, plus $P_1(x)$ tend vers 0. La sortie reste toujours dans $(0, 1]$ : c'est bien un prédicat valide.
 

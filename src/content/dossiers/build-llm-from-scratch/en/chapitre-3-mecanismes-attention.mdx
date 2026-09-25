@@ -196,7 +196,9 @@ In practice, **softmax** is always preferred, for two deep reasons.
 
 **Reason 1. Numerical stability.** The naive softmax computes:
 
-$$\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}$$
+$$
+\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}
+$$
 
 In float32, $e^x$ gives `inf` as soon as $x \approx 89$ (*overflow*) and rounds to zero as soon as
 $x \approx -104$ (*underflow*). On long sequences, attention scores can
@@ -211,7 +213,9 @@ We then get `inf/inf = NaN` or `0/0 = NaN`, and the gradient becomes unusable.
 PyTorch gets around this with the **log-sum-exp** trick: subtract the maximum score
 before exponentiating,
 
-$$\text{softmax}(x_i) = \frac{e^{x_i - \max(x)}}{\sum_j e^{x_j - \max(x)}}$$
+$$
+\text{softmax}(x_i) = \frac{e^{x_i - \max(x)}}{\sum_j e^{x_j - \max(x)}}
+$$
 
 which is mathematically identical (the $e^{-\max(x)}$ cancels out between numerator and
 denominator) but numerically stable: the largest value becomes $e^0 = 1$,
@@ -254,7 +258,10 @@ positive scores, which the dot product does not guarantee.
 > $$
 >
 > Both cases combine using the Kronecker delta $\delta_{ij}$:
-> $$\boxed{\frac{\partial w_i}{\partial x_j} = w_i(\delta_{ij} - w_j)}$$
+>
+> $$
+> \boxed{\frac{\partial w_i}{\partial x_j} = w_i(\delta_{ij} - w_j)}
+> $$
 
 This Jacobian has three concrete advantages:
 
@@ -294,7 +301,9 @@ to produce the attention weights $\alpha_{21}$ to $\alpha_{2T}$, which sum to 1.
 The context vector $z^{(2)}$ is the **weighted sum** of all the input vectors,
 each multiplied by its attention weight:
 
-$$z^{(2)} = \sum_{i} \alpha_{2i} \cdot x^{(i)}$$
+$$
+z^{(2)} = \sum_{i} \alpha_{2i} \cdot x^{(i)}
+$$
 
 ```python
 context_vec_2 = torch.zeros(query.shape)
@@ -395,7 +404,9 @@ The structural difference from the simplified version is the introduction of **t
 
 Each input token $x^{(i)}$ is projected into **three distinct subspaces** through these matrices:
 
-$$q^{(i)} = x^{(i)} W_Q \qquad k^{(i)} = x^{(i)} W_K \qquad v^{(i)} = x^{(i)} W_V$$
+$$
+q^{(i)} = x^{(i)} W_Q \qquad k^{(i)} = x^{(i)} W_K \qquad v^{(i)} = x^{(i)} W_V
+$$
 
 The terms *query*, *key* and *value* come from databases and information retrieval:
 
@@ -492,7 +503,9 @@ This is the justification that gives the architecture its name: *scaled dot-prod
 
 Assume the components of $q$ and $k$ are approximately i.i.d. with distribution $\mathcal{N}(0, 1)$. The dot product $q \cdot k = \sum_{l=1}^{d_k} q_l k_l$ is then a sum of $d_k$ independent random variables with mean 0 and variance 1, so:
 
-$$\text{Var}(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqrt{d_k}$$
+$$
+\text{Var}(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqrt{d_k}
+$$
 
 <details>
 <summary>Proof</summary>
@@ -501,33 +514,47 @@ $$\text{Var}(q \cdot k) = d_k \qquad \Rightarrow \qquad \sigma(q \cdot k) = \sqr
 
 **Step 1. Variance of the product $q_l k_l$**
 
-$$\text{Var}(q_l k_l) = \mathbb{E}[q_l^2 k_l^2] - \mathbb{E}[q_l k_l]^2$$
+$$
+\text{Var}(q_l k_l) = \mathbb{E}[q_l^2 k_l^2] - \mathbb{E}[q_l k_l]^2
+$$
 
 Since $q_l, k_l \sim \mathcal{N}(0,1)$ are independent, their squares follow independent chi-squared distributions with 1 degree of freedom:
 
-$$q_l^2 \sim \chi^2(1) \qquad k_l^2 \sim \chi^2(1) \quad \text{independent}$$
+$$
+q_l^2 \sim \chi^2(1) \qquad k_l^2 \sim \chi^2(1) \quad \text{independent}
+$$
 
 For a $\chi^2(1)$ distribution: $\mathbb{E}[X] = 1$. By independence of $q_l^2$ and $k_l^2$:
 
-$$\mathbb{E}[q_l^2 k_l^2] = \mathbb{E}[q_l^2]\,\mathbb{E}[k_l^2] = 1 \times 1 = 1$$
+$$
+\mathbb{E}[q_l^2 k_l^2] = \mathbb{E}[q_l^2]\,\mathbb{E}[k_l^2] = 1 \times 1 = 1
+$$
 
 And $\mathbb{E}[q_l k_l] = \mathbb{E}[q_l]\,\mathbb{E}[k_l] = 0$, so:
 
-$$\text{Var}(q_l k_l) = 1 - 0 = 1$$
+$$
+\text{Var}(q_l k_l) = 1 - 0 = 1
+$$
 
 **Step 2. Variance of the sum $q \cdot k = \sum_{l=1}^{d_k} q_l k_l$**
 
 The terms $q_l k_l$ are independent of each other (the indices $l$ are distinct), so the variance of their sum is the sum of their variances:
 
-$$\text{Var}(q \cdot k) = \sum_{l=1}^{d_k} \text{Var}(q_l k_l) = \sum_{l=1}^{d_k} 1 = d_k$$
+$$
+\text{Var}(q \cdot k) = \sum_{l=1}^{d_k} \text{Var}(q_l k_l) = \sum_{l=1}^{d_k} 1 = d_k
+$$
 
 **Step 3. Standard deviation**
 
-$$\sigma(q \cdot k) = \sqrt{\text{Var}(q \cdot k)} = \sqrt{d_k}$$
+$$
+\sigma(q \cdot k) = \sqrt{\text{Var}(q \cdot k)} = \sqrt{d_k}
+$$
 
 **Step 4. After scaling by $\sqrt{d_k}$**
 
-$$\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{1}{(\sqrt{d_k})^2}\,\text{Var}(q \cdot k) = \frac{d_k}{d_k} = 1$$
+$$
+\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{1}{(\sqrt{d_k})^2}\,\text{Var}(q \cdot k) = \frac{d_k}{d_k} = 1
+$$
 
 The variance is brought back to 1 whatever the value of $d_k$. $\blacksquare$    
 
@@ -541,7 +568,9 @@ But the gradient of softmax is $w_i(1 - w_i)$: when $w_i \to 1$ or $w_i \to 0$, 
 
 Dividing by $\sqrt{d_k}$ brings the variance of the score back to 1:
 
-$$\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{d_k}{d_k} = 1$$
+$$
+\text{Var}\!\left(\frac{q \cdot k}{\sqrt{d_k}}\right) = \frac{d_k}{d_k} = 1
+$$
 
 The softmax inputs stay within reasonable ranges whatever $d_k$ is: the attention weights no longer collapse toward 0 or 1, and the gradients remain usable.
 
@@ -568,11 +597,15 @@ The fundamental difference from the simplified version: we sum the **value vecto
 
 Explicitly, the context vector of $x^{(2)}$ is:
 
-$$z^{(2)} = \sum_{j=1}^{T} \alpha_{2j} \cdot v^{(j)} = \sum_{j=1}^{T} \alpha_{2j} \cdot x^{(j)} W_V$$
+$$
+z^{(2)} = \sum_{j=1}^{T} \alpha_{2j} \cdot v^{(j)} = \sum_{j=1}^{T} \alpha_{2j} \cdot x^{(j)} W_V
+$$
 
 In compact matrix form, for all the tokens at once:
 
-$$Z = \text{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V$$
+$$
+Z = \text{softmax}\!\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V
+$$
 
 where $Q = X W_Q$, $K = X W_K$, $V = X W_V$ are the projections of the whole sequence, and each row $i$ of $Z$ is the context vector $z^{(i)}$.
 
@@ -638,7 +671,9 @@ tensor([[0.2996, 0.8053],
 
 $K = XW$ is the projection of the input embeddings into key space, with $K \in \mathbb{R}^{n \times d_{out}}$: each row is a token's key vector, each column a dimension of key space. We look at the scalar:
 
-$$y = K_{i,j} = \sum_{k=1}^{d_{in}} x_{i,k}\, W_{k,j}$$
+$$
+y = K_{i,j} = \sum_{k=1}^{d_{in}} x_{i,k}\, W_{k,j}
+$$
 
 the $j$-th component of token $i$'s key vector. It is the variance of this sum that we analyze to quantify the effect of the initialization.
 
@@ -646,33 +681,51 @@ the $j$-th component of token $i$'s key vector. It is the variance of this sum t
 
 **Variance of one term $x_k W_k$.** With $\mathbb{E}[x_k] = 0$:
 
-$$\operatorname{Var}(x_k W_k) = \mathbb{E}[x_k^2 W_k^2] - \mathbb{E}[x_k W_k]^2 = \mathbb{E}[x_k^2]\,\mathbb{E}[W_k^2] - \underbrace{\mathbb{E}[x_k]^2}_{=\,0}\mathbb{E}[W_k]^2 = \sigma^2\,\mathbb{E}[W_k^2]$$
+$$
+\operatorname{Var}(x_k W_k) = \mathbb{E}[x_k^2 W_k^2] - \mathbb{E}[x_k W_k]^2 = \mathbb{E}[x_k^2]\,\mathbb{E}[W_k^2] - \underbrace{\mathbb{E}[x_k]^2}_{=\,0}\mathbb{E}[W_k]^2 = \sigma^2\,\mathbb{E}[W_k^2]
+$$
 
 The key quantity is $\mathbb{E}[W_k^2]$, which breaks down as:
 
-$$\mathbb{E}[W_k^2] = \operatorname{Var}(W_k) + \mathbb{E}[W_k]^2$$
+$$
+\mathbb{E}[W_k^2] = \operatorname{Var}(W_k) + \mathbb{E}[W_k]^2
+$$
 
 **Refresher: the uniform distribution $\mathcal{U}[a,b]$.**
 
-$$\operatorname{Var}(W) = \frac{(b-a)^2}{12}, \qquad \mathbb{E}[W] = \frac{a+b}{2}$$
+$$
+\operatorname{Var}(W) = \frac{(b-a)^2}{12}, \qquad \mathbb{E}[W] = \frac{a+b}{2}
+$$
 
 **Case `torch.rand`: $W_k \sim \mathcal{U}[0, 1)$.**
 
-$$\mathbb{E}[W_k] = \frac{1}{2}, \qquad \operatorname{Var}(W_k) = \frac{1}{12}$$
+$$
+\mathbb{E}[W_k] = \frac{1}{2}, \qquad \operatorname{Var}(W_k) = \frac{1}{12}
+$$
 
-$$\mathbb{E}[W_k^2] = \frac{1}{12} + \frac{1}{4} = \frac{1}{3}$$
+$$
+\mathbb{E}[W_k^2] = \frac{1}{12} + \frac{1}{4} = \frac{1}{3}
+$$
 
-$$\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3} = \frac{d_{in}\,\sigma^2}{3}$$
+$$
+\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3} = \frac{d_{in}\,\sigma^2}{3}
+$$
 
 The variance grows **linearly** with $d_{in}$: for $d_{in} = 512$, it is 512 times larger than the input variance.
 
 **Kaiming case: $W_k \sim \mathcal{U}\!\left(-\dfrac{1}{\sqrt{d_{in}}}, \dfrac{1}{\sqrt{d_{in}}}\right)$.**
 
-$$\mathbb{E}[W_k] = 0, \qquad \operatorname{Var}(W_k) = \frac{\left(\frac{2}{\sqrt{d_{in}}}\right)^2}{12} = \frac{1}{3\,d_{in}}$$
+$$
+\mathbb{E}[W_k] = 0, \qquad \operatorname{Var}(W_k) = \frac{\left(\frac{2}{\sqrt{d_{in}}}\right)^2}{12} = \frac{1}{3\,d_{in}}
+$$
 
-$$\mathbb{E}[W_k^2] = \frac{1}{3\,d_{in}} + 0 = \frac{1}{3\,d_{in}}$$
+$$
+\mathbb{E}[W_k^2] = \frac{1}{3\,d_{in}} + 0 = \frac{1}{3\,d_{in}}
+$$
 
-$$\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3\,d_{in}} = \frac{\sigma^2}{3}$$
+$$
+\operatorname{Var}(y) = \sum_{k=1}^{d_{in}} \sigma^2 \cdot \frac{1}{3\,d_{in}} = \frac{\sigma^2}{3}
+$$
 
 The $d_{in}$ cancels out: the variance stays constant whatever the input dimension.
 
@@ -680,7 +733,9 @@ The $d_{in}$ cancels out: the variance stays constant whatever the input dimensi
 
 By default, `nn.Linear` uses **Kaiming initialization** (He, 2015), which sets:
 
-$$W_{ij} \sim \mathcal{U}\!\left(-\frac{1}{\sqrt{d_{in}}},\ \frac{1}{\sqrt{d_{in}}}\right) \qquad \Longrightarrow \qquad \operatorname{Var}(W_{ij}) = \frac{1}{3\,d_{in}}$$
+$$
+W_{ij} \sim \mathcal{U}\!\left(-\frac{1}{\sqrt{d_{in}}},\ \frac{1}{\sqrt{d_{in}}}\right) \qquad \Longrightarrow \qquad \operatorname{Var}(W_{ij}) = \frac{1}{3\,d_{in}}
+$$
 
 which keeps the variance of the signal constant across layers, whatever the dimension.
 
@@ -688,11 +743,15 @@ which keeps the variance of the signal constant across layers, whatever the dime
 
 **`nn.Linear` as a linear operator.** In `SelfAttention_v1`, we define $W \in \mathbb{R}^{d_{in} \times d_{out}}$ as an `nn.Parameter`, and the forward pass computes:
 
-$$K = XW, \qquad X \in \mathbb{R}^{n \times d_{in}},\quad K \in \mathbb{R}^{n \times d_{out}}$$
+$$
+K = XW, \qquad X \in \mathbb{R}^{n \times d_{in}},\quad K \in \mathbb{R}^{n \times d_{out}}
+$$
 
 `nn.Linear(d_in, d_out, bias=False)` internally stores a matrix $\widetilde{W} \in \mathbb{R}^{d_{out} \times d_{in}}$, and calling it on $X$ computes:
 
-$$K = X\,\widetilde{W}^\top$$
+$$
+K = X\,\widetilde{W}^\top
+$$
 
 The two expressions are identical if and only if $\widetilde{W} = W^\top$, which is exactly how `nn.Linear` stores its weights. The two implementations are therefore **strictly equivalent**.
 
@@ -859,11 +918,15 @@ Consider a sequence of $T$ tokens. Each token at position $j$ has three vectors,
 
 For the current token at position $i$, the **raw attention score** with each token at position $j$ is:
 
-$$e_{ij} = \frac{q_i^\top k_j}{\sqrt{d_k}} \in \mathbb{R}, \qquad j \in \{1, \dots, T\}$$
+$$
+e_{ij} = \frac{q_i^\top k_j}{\sqrt{d_k}} \in \mathbb{R}, \qquad j \in \{1, \dots, T\}
+$$
 
 The **output** of the attention mechanism for token $i$ is:
 
-$$z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_{j=1}^{T} \alpha_{ij} = 1$$
+$$
+z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_{j=1}^{T} \alpha_{ij} = 1
+$$
 
 ---
 
@@ -873,7 +936,9 @@ $$z_i = \sum_{j=1}^{T} \alpha_{ij}\, v_j, \qquad \alpha_{ij} \geq 0, \quad \sum_
 
 We compute the attention weights with no restriction:
 
-$$\alpha_{ij} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$
+\alpha_{ij} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}
+$$
 
 All the tokens contribute to the denominator, including future ones.
 
@@ -881,7 +946,9 @@ All the tokens contribute to the denominator, including future ones.
 
 We zero out the weights corresponding to future tokens:
 
-$$\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} & \text{if } j \leq i \\ 0 & \text{if } j > i \end{cases}$$
+$$
+\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} & \text{if } j \leq i \\ 0 & \text{if } j > i \end{cases}
+$$
 
 After this step, the weights no longer sum to 1: some probability mass has been removed.
 
@@ -889,31 +956,45 @@ After this step, the weights no longer sum to 1: some probability mass has been 
 
 We divide each weight by the sum of its row:
 
-$$\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}}$$
+$$
+\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}}
+$$
 
 **Explicit expansion.** We simplify the numerator and the denominator separately.
 
 For the numerator, we distinguish two cases depending on the position of $j$ relative to $i$, applying first the definition of $\tilde{\alpha}_{ij}$ (Step 2) and then that of $\alpha_{ij}$ (Step 1):
 
-$$\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} = \dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} & \text{if } j \leq i \\[10pt] 0 & \text{if } j > i \end{cases}$$
+$$
+\tilde{\alpha}_{ij} = \begin{cases} \alpha_{ij} = \dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} & \text{if } j \leq i \\[10pt] 0 & \text{if } j > i \end{cases}
+$$
 
 For the denominator, we expand $\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}$ by separating the visible positions ($k \leq i$) from the future ones ($k > i$), then apply first the definition of $\tilde{\alpha}_{ik}$ (Step 2) and then that of $\alpha_{ik}$ (Step 1):
 
-$$\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \sum_{k \leq i} \underbrace{\tilde{\alpha}_{ik}}_{=\,\alpha_{ik}} + \sum_{k > i} \underbrace{\tilde{\alpha}_{ik}}_{=\,0} = \sum_{k \leq i} \alpha_{ik} = \sum_{k \leq i} \frac{e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$
+\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \sum_{k \leq i} \underbrace{\tilde{\alpha}_{ik}}_{=\,\alpha_{ik}} + \sum_{k > i} \underbrace{\tilde{\alpha}_{ik}}_{=\,0} = \sum_{k \leq i} \alpha_{ik} = \sum_{k \leq i} \frac{e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}
+$$
 
 The term $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ is constant with respect to $k$, so we can factor it out:
 
-$$\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \frac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}$$
+$$
+\sum_{k=1}^{T} \tilde{\alpha}_{ik} = \frac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}
+$$
 
 We substitute the numerator and denominator into the expression of $\alpha_{ij}^{(1)}$ for $j \leq i$:
 
-$$\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}} = \frac{\quad\dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}\quad}{\dfrac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}}$$
+$$
+\alpha_{ij}^{(1)} = \frac{\tilde{\alpha}_{ij}}{\displaystyle\sum_{k=1}^{T} \tilde{\alpha}_{ik}} = \frac{\quad\dfrac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}\quad}{\dfrac{\displaystyle\sum_{k \leq i} e^{e_{ik}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}}
+$$
 
 The factor $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ appears in the numerator **and** in the denominator, so it cancels out exactly:
 
-$$\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} \times \frac{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}}$$
+$$
+\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{m=1}^{T} e^{e_{im}}} \times \frac{\displaystyle\sum_{m=1}^{T} e^{e_{im}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}}
+$$
 
-$$\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{for } j \leq i, \qquad \alpha_{ij}^{(1)} = 0 \quad \text{for } j > i}$$
+$$
+\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{for } j \leq i, \qquad \alpha_{ij}^{(1)} = 0 \quad \text{for } j > i}
+$$
 
 ---
 
@@ -923,23 +1004,33 @@ $$\boxed{\alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 We replace the scores of future tokens with $-\infty$ before any computation:
 
-$$\tilde{e}_{ij} = \begin{cases} e_{ij} & \text{if } j \leq i \\ -\infty & \text{if } j > i \end{cases}$$
+$$
+\tilde{e}_{ij} = \begin{cases} e_{ij} & \text{if } j \leq i \\ -\infty & \text{if } j > i \end{cases}
+$$
 
 **Step 2. A single softmax over the masked scores.**
 
-$$\alpha_{ij}^{(2)} = \frac{e^{\,\tilde{e}_{ij}}}{\displaystyle\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}}}$$
+$$
+\alpha_{ij}^{(2)} = \frac{e^{\,\tilde{e}_{ij}}}{\displaystyle\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}}}
+$$
 
 **Explicit expansion.** We split the denominator into visible and future positions, then apply the definition of $\tilde{e}_{ik}$:
 
-$$\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}} = \sum_{k \leq i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{e_{ik}}} + \sum_{k > i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{-\infty}\,=\,0} = \sum_{k \leq i} e^{e_{ik}}$$
+$$
+\sum_{k=1}^{T} e^{\,\tilde{e}_{ik}} = \sum_{k \leq i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{e_{ik}}} + \sum_{k > i} \underbrace{e^{\,\tilde{e}_{ik}}}_{=\,e^{-\infty}\,=\,0} = \sum_{k \leq i} e^{e_{ik}}
+$$
 
 Likewise for the numerator, applying the definition of $\tilde{e}_{ij}$:
 
-$$e^{\,\tilde{e}_{ij}} = \begin{cases} e^{e_{ij}} & \text{if } j \leq i \\ e^{-\infty} = 0 & \text{if } j > i \end{cases}$$
+$$
+e^{\,\tilde{e}_{ij}} = \begin{cases} e^{e_{ij}} & \text{if } j \leq i \\ e^{-\infty} = 0 & \text{if } j > i \end{cases}
+$$
 
 We therefore get:
 
-$$\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{for } j \leq i, \qquad \alpha_{ij}^{(2)} = 0 \quad \text{for } j > i}$$
+$$
+\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} \quad \text{for } j \leq i, \qquad \alpha_{ij}^{(2)} = 0 \quad \text{for } j > i}
+$$
 
 ---
 
@@ -947,13 +1038,19 @@ $$\boxed{\alpha_{ij}^{(2)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e
 
 Comparing the two boxed results term by term is immediate:
 
-$$\text{For } j \leq i: \quad \alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} = \alpha_{ij}^{(2)}$$
+$$
+\text{For } j \leq i: \quad \alpha_{ij}^{(1)} = \frac{e^{e_{ij}}}{\displaystyle\sum_{k \leq i} e^{e_{ik}}} = \alpha_{ij}^{(2)}
+$$
 
-$$\text{For } j > i: \quad \alpha_{ij}^{(1)} = 0 = \alpha_{ij}^{(2)}$$
+$$
+\text{For } j > i: \quad \alpha_{ij}^{(1)} = 0 = \alpha_{ij}^{(2)}
+$$
 
 We conclude:
 
-$$\boxed{\alpha_{ij}^{(1)} = \alpha_{ij}^{(2)} \qquad \forall\, j \in \{1, \dots, T\}}$$
+$$
+\boxed{\alpha_{ij}^{(1)} = \alpha_{ij}^{(2)} \qquad \forall\, j \in \{1, \dots, T\}}
+$$
 
 This is an **exact algebraic equality**. In Method 1, the factor $\displaystyle\sum_{m=1}^{T} e^{e_{im}}$ introduced by the first softmax cancels out exactly during renormalization. The initial presence of the future tokens in the computation leaves **no trace** in the final result: the denominator only contains $\displaystyle\sum_{k \leq i} e^{e_{ik}}$, exactly as in Method 2, where the future tokens were never included. There is therefore **no information leakage**.
 
@@ -1341,17 +1438,23 @@ To understand `.view()`, you first need to understand how PyTorch stores data.
 
 **Memory is a hallway of numbered slots.** When PyTorch creates a tensor, it reserves a block of consecutive slots in memory (RAM), one slot per number. For example, a $2 \times 3$ matrix
 
-$$M = \begin{pmatrix} a & b & c \\ d & e & f \end{pmatrix}$$
+$$
+M = \begin{pmatrix} a & b & c \\ d & e & f \end{pmatrix}
+$$
 
 is stored in memory as a simple row of 6 slots:
 
-$$\boxed{a}\;\boxed{b}\;\boxed{c}\;\boxed{d}\;\boxed{e}\;\boxed{f}$$
+$$
+\boxed{a}\;\boxed{b}\;\boxed{c}\;\boxed{d}\;\boxed{e}\;\boxed{f}
+$$
 
 PyTorch just remembers two pieces of information separately: (1) the address of the first slot, and (2) the shape `(2, 3)`, which lets it compute where to find each element: the element in row $i$, column $j$ is in slot $3i + j$.
 
 **`.view()` changes the reading grid, not where the data physically sits.** Calling `.view(3, 2)` on the same memory amounts to deciding to read it as
 
-$$M' = \begin{pmatrix} a & b \\ c & d \\ e & f \end{pmatrix}$$
+$$
+M' = \begin{pmatrix} a & b \\ c & d \\ e & f \end{pmatrix}
+$$
 
 PyTorch simply updates the shape from `(2, 3)` to `(3, 2)` and recomputes the access formula: element $(i, j)$ is now in slot $2i + j$. That's all.
 
@@ -1381,7 +1484,9 @@ $d_{out} = H \cdot d_h$ as two nested dimensions". Without moving anything
 in memory, the same token $i$ is now accessible as an
 $(H, d_h)$ block:
 
-$$K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \mathbf{k}_{i,2} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}$$
+$$
+K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \mathbf{k}_{i,2} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}
+$$
 
 The $j$-th row of this block is exactly $\mathbf{k}_{i,j}$, the key vector
 of token $i$ for head $j$.
@@ -1418,22 +1523,35 @@ Like `.view()`, `.transpose()` moves nothing in memory: it just changes the acce
 
 Let's go back to the $2 \times 3$ matrix:
 
-$$M = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}$$
+$$
+M = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}
+$$
 
 Physical memory: $\boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$
 
 With `.view(3, 2)`, PyTorch reread these same slots as "3 rows of 2 columns", and each consecutive row really was side by side in memory. No problem.
 
-That is, $$ M.view(3, 2) \Rightarrow \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pmatrix}$$
+That is:
+
+$$
+M.view(3, 2) \Rightarrow \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pmatrix}
+$$
 
 With `.transpose()`, we logically get:
 
-$$M^\top = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}$$
+$$
+M^\top = \begin{pmatrix} 1 & 4 \\ 2 & 5 \\ 3 & 6 \end{pmatrix}
+$$
 
 To read the first row of $M^\top$ (the elements $1$ and $4$), PyTorch has to skip slots: it takes slot 0 (1), then slot 3 (4). In between are slots 1 and 2, which logically belong to other rows. The logical order and the memory order diverge:
 
-$$\text{Memory order (untouched)}: \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$$
-$$\text{Logical order (after transposing)}: 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
+$$
+\text{Memory order (untouched)}: \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}
+$$
+
+$$
+\text{Logical order (after transposing)}: 1\quad 4\quad 2\quad 5\quad 3\quad 6
+$$
 
 A tensor is **non-contiguous** when reading its elements in logical order requires **skipping slots** in memory.
 
@@ -1444,7 +1562,9 @@ In the `(b, num_tokens, H, d_h)` shape produced by `.view()`, the main
 iteration dimension is the token. For a fixed token $i$, the block
 $K[\,b,\,i,\,:,\,:]$ gathers the projections of all the heads for that token:
 
-$$K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}$$
+$$
+K[\,b,\,i,\,:,\,:] = \begin{pmatrix} \mathbf{k}_{i,1} \\ \vdots \\ \mathbf{k}_{i,H} \end{pmatrix} \in \mathbb{R}^{H \times d_h}
+$$
 
 We read the tensor *head by head for a given token*. In memory, the data
 is laid out in this order: all the heads of token 1, then all the heads
@@ -1458,7 +1578,9 @@ After `.transpose(1, 2)`, the shape is `(b, H, num_tokens, d_h)`. For a fixed he
 the block $K[\,b,\,j,\,:,\,:] = K_j$ gathers the projections of all the
 tokens for that head:
 
-$$K[\,b,\,j,\,:,\,:] = K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix} \in \mathbb{R}^{T \times d_h}$$
+$$
+K[\,b,\,j,\,:,\,:] = K_j = \begin{pmatrix} \mathbf{k}_{1,j} \\ \vdots \\ \mathbf{k}_{T,j} \end{pmatrix} \in \mathbb{R}^{T \times d_h}
+$$
 
 We read the tensor *token by token for a given head*. Each $K_j$ forms
 an independent logical block. But as seen above, `.transpose()` has not
@@ -1489,7 +1611,9 @@ attn_scores = queries @ keys.transpose(2, 3)
 computes $Q_j K_j^\top$ for all the heads and all the batch elements
 at once:
 
-$$\texttt{attn\_scores}[\,b,\,j,\,:,\,:] = Q_j K_j^\top \in \mathbb{R}^{T \times T}$$
+$$
+\texttt{attn\_scores}[\,b,\,j,\,:,\,:] = Q_j K_j^\top \in \mathbb{R}^{T \times T}
+$$
 
 <figure class="my-8 flex flex-col items-center gap-3">
     <img src="/images/dossiers/build-llm-from-scratch/chapitre-3/mha_explained_2.png" alt="mha_explained_2" class="rounded-xl shadow-2xl" />
@@ -1523,12 +1647,19 @@ the data into it in the order that matches the current logical shape.
 With our numerical example: after `.transpose()`, the tensor is logically
 $M^\top$ but the memory still holds $1, 2, 3, 4, 5, 6$:
 
-$$\text{Memory order}: \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}$$
-$$\text{Logical order}: 1\quad 4\quad 2\quad 5\quad 3\quad 6$$
+$$
+\text{Memory order}: \boxed{1}\;\boxed{2}\;\boxed{3}\;\boxed{4}\;\boxed{5}\;\boxed{6}
+$$
+
+$$
+\text{Logical order}: 1\quad 4\quad 2\quad 5\quad 3\quad 6
+$$
 
 `.contiguous()` creates a new block where the two orders match:
 
-$$\text{New memory}: \boxed{1}\;\boxed{4}\;\boxed{2}\;\boxed{5}\;\boxed{3}\;\boxed{6}$$
+$$
+\text{New memory}: \boxed{1}\;\boxed{4}\;\boxed{2}\;\boxed{5}\;\boxed{3}\;\boxed{6}
+$$
 
 `.view()` can then be applied safely.
 

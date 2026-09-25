@@ -29,11 +29,27 @@ On considère deux tâches, construites à partir du jeu de données MNIST de ch
 
 **L'addition de deux chiffres.** Soit le prédicat $\mathrm{addition}(X, Y, n)$, où $X$ et $Y$ sont des images de chiffres et $n$ un entier égal à leur somme. Il doit estimer la validité de l'addition : $\mathrm{addition}(\mathrm{img}(8), \mathrm{img}(3), 11)$ est valide, $\mathrm{addition}(\mathrm{img}(3), \mathrm{img}(3), 5)$ ne l'est pas. Ici, $\mathrm{img}(x)$ désigne simplement « une image du chiffre $x$ », pas une fonction logique.
 
-**L'addition de nombres à deux chiffres.** Le prédicat devient $\mathrm{addition}([\mathrm{img}(X_1), \mathrm{img}(X_2)], [\mathrm{img}(Y_1), \mathrm{img}(Y_2)], n)$, où chaque liste représente un nombre à deux chiffres. $\mathrm{addition}([\mathrm{img}(2), \mathrm{img}(0)], [\mathrm{img}(1), \mathrm{img}(7)], 37)$ est valide, $\mathrm{addition}([\mathrm{img}(5), \mathrm{img}(4)], [\mathrm{img}(9), \mathrm{img}(0)], 50)$ ne l'est pas.
+**L'addition de nombres à deux chiffres.** Le prédicat devient :
+
+$$
+\mathrm{addition}([\mathrm{img}(X_1), \mathrm{img}(X_2)],\ [\mathrm{img}(Y_1), \mathrm{img}(Y_2)],\ n)
+$$
+
+où chaque liste représente un nombre à deux chiffres. La première addition ci-dessous est valide, la seconde ne l'est pas :
+
+$$
+\mathrm{addition}([\mathrm{img}(2), \mathrm{img}(0)],\ [\mathrm{img}(1), \mathrm{img}(7)],\ 37)
+$$
+
+$$
+\mathrm{addition}([\mathrm{img}(5), \mathrm{img}(4)],\ [\mathrm{img}(9), \mathrm{img}(0)],\ 50)
+$$
 
 L'approche neuro-symbolique consiste à apprendre un **classifieur de chiffre unique**, et à s'appuyer sur ce qu'on sait déjà de l'addition. Si un prédicat $\mathrm{digit}(x, d)$ donne la vraisemblance que l'image $x$ représente le chiffre $d$, l'addition $\mathrm{addition}(\mathrm{img}(3), \mathrm{img}(8), 11)$ s'écrit en LTN :
 
-$$\exists d_1, d_2 : d_1 + d_2 = 11\ \ \big(\mathrm{digit}(\mathrm{img}(3), d_1) \land \mathrm{digit}(\mathrm{img}(8), d_2)\big)$$
+$$
+\exists d_1, d_2 : d_1 + d_2 = 11\ \ \big(\mathrm{digit}(\mathrm{img}(3), d_1) \land \mathrm{digit}(\mathrm{img}(8), d_2)\big)
+$$
 
 La difficulté est qu'**aucune étiquette de chiffre individuel** n'est fournie pendant l'entraînement : on ne connaît que la somme de chaque paire. Le classifieur n'est donc jamais entraîné directement sur sa propre tâche. Sa sortie reste une information latente, que seule la logique exploite. Ce n'est pas un problème pour LTN, puisque le gradient se propage à travers toute la structure logique, jusqu'aux poids du classifieur.
 
@@ -54,11 +70,15 @@ La difficulté est qu'**aucune étiquette de chiffre individuel** n'est fournie 
 
 **Axiomes.** Pour l'addition de deux chiffres :
 
-$$\forall\, \mathrm{Diag}(x, y, n)\ \ \Big(\exists d_1, d_2 : d_1 + d_2 = n\ \ \big(\mathrm{digit}(x, d_1) \land \mathrm{digit}(y, d_2)\big)\Big)$$
+$$
+\forall\, \mathrm{Diag}(x, y, n)\ \ \Big(\exists d_1, d_2 : d_1 + d_2 = n\ \ \big(\mathrm{digit}(x, d_1) \land \mathrm{digit}(y, d_2)\big)\Big)
+$$
 
 et pour l'addition de nombres à deux chiffres :
 
-$$\forall\, \mathrm{Diag}(x_1, x_2, y_1, y_2, n)\ \ \Big(\exists d_1, d_2, d_3, d_4 : 10d_1 + d_2 + 10d_3 + d_4 = n\ \ \big(\mathrm{digit}(x_1, d_1) \land \mathrm{digit}(x_2, d_2) \land \mathrm{digit}(y_1, d_3) \land \mathrm{digit}(y_2, d_4)\big)\Big)$$
+$$
+\forall\, \mathrm{Diag}(x_1, x_2, y_1, y_2, n)\ \ \Big(\exists d_1, d_2, d_3, d_4 : 10d_1 + d_2 + 10d_3 + d_4 = n\ \ \big(\mathrm{digit}(x_1, d_1) \land \mathrm{digit}(x_2, d_2) \land \mathrm{digit}(y_1, d_3) \land \mathrm{digit}(y_2, d_4)\big)\Big)
+$$
 
 On retrouve deux mécanismes de la [partie 2](/fr/blog/dossier/logic-tensor-networks/partie-2-connecteurs-quantificateurs/) :
 
@@ -79,7 +99,7 @@ La figure de l'article original résume le graphe de calcul complet pour l'addit
 
 ![Graphe de calcul LTN pour l'addition de deux chiffres](/images/dossiers/logic-tensor-networks/paper-mnist-graphe.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Le graphe de calcul pour l'addition de deux chiffres. Le même réseau convolutif produit une distribution sur les chiffres pour x et pour y ; la conjonction T_P les combine pour chaque couple (d₁, d₂) ; le masque d₁ + d₂ = n ne garde que les couples compatibles avec le résultat ; enfin l'existentiel (A_pM) agrège sur les couples et l'universel (A_pME) sur les exemples, avec Diag(x, y, n). Source : Badreddine et al. (2022).*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Le graphe de calcul pour l'addition de deux chiffres. Le même réseau convolutif produit une distribution sur les chiffres pour $x$ et pour $y$ ; la conjonction $T_P$ les combine pour chaque couple $(d_1, d_2)$ ; le masque $d_1 + d_2 = n$ ne garde que les couples compatibles avec le résultat ; enfin l'existentiel ($A_{pM}$) agrège sur les couples et l'universel ($A_{pME}$) sur les exemples, avec $\mathrm{Diag}(x, y, n)$. Source : Badreddine et al. (2022).*</figcaption>
 </figure>
 
 ## Le jeu de données
@@ -473,11 +493,15 @@ La baseline est entraînée plus longtemps (30 epochs contre 20), comme dans le 
 
 Notons $D$ l'ensemble des exemples. L'objectif est :
 
-$$\mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow D}(\phi)$$
+$$
+\mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow D}(\phi)
+$$
 
 c'est-à-dire que chaque formule de $\mathcal{K}$ est évaluée sur les exemples de $D$ avec le modèle de paramètres $\theta$, puis que $\mathrm{SatAgg}$ agrège ces satisfactions. En pratique, l'optimiseur minimise, sur un mini-batch $B$ tiré de $D$ :
 
-$$L = 1 - \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow B}(\phi)$$
+$$
+L = 1 - \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_{\theta,\, x \leftarrow B}(\phi)
+$$
 
 Comme la base de connaissances ne contient ici qu'un seul axiome, `SatAgg` n'est pas utilisé explicitement : appliqué à une seule valeur, il la renverrait inchangée. Le résultat de `Forall` sert directement de niveau de satisfaction.
 
@@ -1059,7 +1083,7 @@ plot_task_with_baseline(history_multi, history_baseline_multi, "15000")
 
 ![Précision et satisfaction pour l'addition de deux chiffres](/images/dossiers/logic-tensor-networks/mnist-resultats-1-chiffre.png)
 
-<figcaption class="text-sm text-center text-gray-400 italic">*Addition de deux chiffres (30 000 exemples). À gauche, la précision du LTN et de la baseline ; à droite, la satisfaction du LTN, avec les paliers de p.*</figcaption>
+<figcaption class="text-sm text-center text-gray-400 italic">*Addition de deux chiffres (30 000 exemples). À gauche, la précision du LTN et de la baseline ; à droite, la satisfaction du LTN, avec les paliers de $p$.*</figcaption>
 </figure>
 
 <figure class="my-8 flex flex-col items-center gap-3">

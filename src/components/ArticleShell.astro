@@ -124,9 +124,21 @@ const base = import.meta.env.BASE_URL;
 			)
 		}
 
-		<article class="article prose mt-8" data-code-blocks>
+		<article class="article prose mt-8" data-code-blocks data-zoomable>
 			<slot />
 		</article>
+
+		<dialog class="lightbox" data-lightbox aria-label={lang === "fr" ? "Image agrandie" : "Enlarged image"}>
+			<button type="button" class="lightbox-close" data-lightbox-close aria-label={lang === "fr" ? "Fermer" : "Close"}>
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+					<path d="M18 6 6 18M6 6l12 12" />
+				</svg>
+			</button>
+			<figure class="lightbox-figure">
+				<img alt="" />
+				<figcaption></figcaption>
+			</figure>
+		</dialog>
 
 		<slot name="after" />
 
@@ -157,6 +169,47 @@ const base = import.meta.env.BASE_URL;
 			} catch {}
 		});
 	});
+</script>
+
+<script is:inline define:vars={{ enlargeLabel: lang === "fr" ? "Agrandir l'image" : "Enlarge image" }}>
+	// Opens article images full screen on click (or Enter), with their caption.
+	// Closes on any click, the close button or Escape.
+	(() => {
+		const dialog = document.querySelector("[data-lightbox]");
+		if (!dialog) return;
+		const big = dialog.querySelector("img");
+		const caption = dialog.querySelector("figcaption");
+
+		const open = (img) => {
+			big.src = img.currentSrc || img.src;
+			big.alt = img.alt;
+			// Used on phones only: up to 2.5 screens wide, never beyond the file's own size
+			big.style.setProperty("--lightbox-width", `${Math.min(img.naturalWidth || 0, document.documentElement.clientWidth * 2.5) || document.documentElement.clientWidth}px`);
+			// Copy the rendered caption, so its formulas stay typeset
+			const source = img.closest("figure")?.querySelector("figcaption");
+			caption.innerHTML = source ? source.innerHTML : "";
+			caption.hidden = !source?.textContent.trim();
+			dialog.showModal();
+			document.documentElement.classList.add("lightbox-open");
+		};
+
+		dialog.addEventListener("close", () => document.documentElement.classList.remove("lightbox-open"));
+		dialog.addEventListener("click", () => dialog.close());
+
+		document.querySelectorAll("[data-zoomable] img").forEach((img) => {
+			img.classList.add("zoomable");
+			img.tabIndex = 0;
+			img.setAttribute("role", "button");
+			img.setAttribute("aria-label", img.alt ? `${enlargeLabel} (${img.alt})` : enlargeLabel);
+			img.addEventListener("click", () => open(img));
+			img.addEventListener("keydown", (event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					open(img);
+				}
+			});
+		});
+	})();
 </script>
 
 <script is:inline define:vars={{ copyLabel: lang === "fr" ? "Copier" : "Copy", copiedLabel: lang === "fr" ? "Copié" : "Copied", outputLabel: lang === "fr" ? "Sortie" : "Output" }}>

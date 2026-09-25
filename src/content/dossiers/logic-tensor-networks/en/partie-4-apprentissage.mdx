@@ -60,11 +60,17 @@ $C$ is a small multilayer perceptron. Its last layer uses a **softmax** rather t
 
 The knowledge base $\mathcal{K}$ contains three formulas:
 
-$$C(a, l_a)$$
+$$
+C(a, l_a)
+$$
 
-$$C(b, l_b)$$
+$$
+C(b, l_b)
+$$
 
-$$\forall x_1, x_2, l\ \Big(\mathrm{Sim}(x_1, x_2) \implies \big(C(x_1, l) \leftrightarrow C(x_2, l)\big)\Big)$$
+$$
+\forall x_1, x_2, l\ \Big(\mathrm{Sim}(x_1, x_2) \implies \big(C(x_1, l) \leftrightarrow C(x_2, l)\big)\Big)
+$$
 
 where:
 
@@ -77,7 +83,9 @@ The first two formulas require $a$ to be recognized as class $A$, and $b$ as cla
 
 The goal is to learn $C$ so as to maximize the overall satisfaction of $\mathcal{K}$. Writing $\theta$ for the weights of the network that implements $C$, we are looking for:
 
-$$\theta^\ast = \underset{\theta \in \Theta}{\mathrm{argmax}}\ \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_\theta(\phi)$$
+$$
+\theta^\ast = \underset{\theta \in \Theta}{\mathrm{argmax}}\ \mathrm{SatAgg}_{\phi \in \mathcal{K}}\ \mathcal{G}_\theta(\phi)
+$$
 
 where $\mathrm{SatAgg}$ aggregates the degrees of truth of all the formulas of $\mathcal{K}$ into a single value. We will come back to it a little further down.
 
@@ -178,13 +186,17 @@ In these formulas, $u$ and $v$ are **scalars**: individual degrees of truth in $
 
 We take 3 points instead of 19:
 
-$$q_0 = (0, 0) \qquad q_1 = (3, 3) \qquad q_2 = (0.1,\ 0.1)$$
+$$
+q_0 = (0, 0) \qquad q_1 = (3, 3) \qquad q_2 = (0.1,\ 0.1)
+$$
 
 $x_1$ and $x_2$ range **independently** over this same domain, so any formula $\phi(x_1, x_2)$ is computed over the Cartesian product, a $3 \times 3$ grid indexed by $(i, j)$.
 
 **Step 1: Sim(x1, x2)**
 
-$$\mathrm{Sim}[i, j] = \begin{pmatrix} 1 & 0.014 & 0.868 \\ 0.014 & 1 & 0.017 \\ 0.868 & 0.017 & 1 \end{pmatrix}$$
+$$
+\mathrm{Sim}[i, j] = \begin{pmatrix} 1 & 0.014 & 0.868 \\ 0.014 & 1 & 0.017 \\ 0.868 & 0.017 & 1 \end{pmatrix}
+$$
 
 The matrix is symmetric, and its diagonal is 1 since each point is identical to itself. $q_0$ and $q_2$ are very close, $q_1$ is far from both.
 
@@ -192,19 +204,27 @@ The matrix is symmetric, and its diagonal is 1 since each point is identical to 
 
 $C$ is a function of **a single point** and a label. Suppose the network, not yet trained, gives the following confidences (one row per point, one column per label):
 
-$$C(x, l) = \begin{pmatrix} 0.9 & 0.1 \\ 0.2 & 0.8 \\ 0.5 & 0.5 \end{pmatrix}, \qquad x \in \{q_0, q_1, q_2\}$$
+$$
+C(x, l) = \begin{pmatrix} 0.9 & 0.1 \\ 0.2 & 0.8 \\ 0.5 & 0.5 \end{pmatrix}, \qquad x \in \{q_0, q_1, q_2\}
+$$
 
 $x_1$ and $x_2$ range over the same domain with the same predicate: $C(x_1, l)$ and $C(x_2, l)$ are the same function, evaluated at different indices ($i$ for $x_1$, $j$ for $x_2$). For a fixed label, we therefore extract a **vector** indexed by the points:
 
-$$c_A = \big(C(q_0, A),\ C(q_1, A),\ C(q_2, A)\big) = (0.9,\ 0.2,\ 0.5)$$
+$$
+c_A = \big(C(q_0, A),\ C(q_1, A),\ C(q_2, A)\big) = (0.9,\ 0.2,\ 0.5)
+$$
 
-$$c_B = \big(C(q_0, B),\ C(q_1, B),\ C(q_2, B)\big) = (0.1,\ 0.8,\ 0.5)$$
+$$
+c_B = \big(C(q_0, B),\ C(q_1, B),\ C(q_2, B)\big) = (0.1,\ 0.8,\ 0.5)
+$$
 
 Thanks to the softmax, the two columns sum to 1: $c_B = 1 - c_A$ element-wise.
 
 **Step 3: Equiv(C(x1, l), C(x2, l))**
 
-$$M_l[i, j] = \mathrm{Equiv}\big(c_l[i],\ c_l[j]\big), \qquad (i, j) \in \{0, 1, 2\}^2$$
+$$
+M_l[i, j] = \mathrm{Equiv}\big(c_l[i],\ c_l[j]\big), \qquad (i, j) \in \{0, 1, 2\}^2
+$$
 
 $u = c_l[i]$ and $v = c_l[j]$ are two values **of the same vector**, taken at two indices. For $l = A$, with $c_A = (0.9,\ 0.2,\ 0.5)$:
 
@@ -219,15 +239,21 @@ $u = c_l[i]$ and $v = c_l[j]$ are two values **of the same vector**, taken at tw
 
 The matrix is symmetric, since $\mathrm{Equiv}(u, v) = \mathrm{Equiv}(v, u)$ by construction:
 
-$$M_A = \begin{pmatrix} 0.8281 & 0.2744 & 0.5225 \\ 0.2744 & 0.7056 & 0.5400 \\ 0.5225 & 0.5400 & 0.5625 \end{pmatrix}$$
+$$
+M_A = \begin{pmatrix} 0.8281 & 0.2744 & 0.5225 \\ 0.2744 & 0.7056 & 0.5400 \\ 0.5225 & 0.5400 & 0.5625 \end{pmatrix}
+$$
 
 **Why is $M_B = M_A$?** Since $c_B = 1 - c_A$, we have $M_B[i, j] = \mathrm{Equiv}(1 - c_A[i],\ 1 - c_A[j])$. Now:
 
-$$\mathrm{Implies}(1 - u,\ 1 - v) = 1 - (1 - u) + (1 - u)(1 - v) = 1 - v + uv = \mathrm{Implies}(v, u)$$
+$$
+\mathrm{Implies}(1 - u,\ 1 - v) = 1 - (1 - u) + (1 - u)(1 - v) = 1 - v + uv = \mathrm{Implies}(v, u)
+$$
 
 so:
 
-$$\mathrm{Equiv}(1 - u,\ 1 - v) = \mathrm{Implies}(v, u) \times \mathrm{Implies}(u, v) = \mathrm{Equiv}(u, v)$$
+$$
+\mathrm{Equiv}(1 - u,\ 1 - v) = \mathrm{Implies}(v, u) \times \mathrm{Implies}(u, v) = \mathrm{Equiv}(u, v)
+$$
 
 The two matrices have exactly the same 9 values, for an algebraic reason and not by coincidence.
 
@@ -235,9 +261,13 @@ The two matrices have exactly the same 9 values, for an algebraic reason and not
 
 $\mathrm{Sim}[i, j]$ and $M_l[i, j]$ are indexed by the same $(i, j)$ grid, since both come from the grounding of $x_1$ and $x_2$. The implication is therefore computed entry by entry:
 
-$$N_l[i, j] = \mathrm{Implies}\big(\mathrm{Sim}[i, j],\ M_l[i, j]\big) = 1 - \mathrm{Sim}[i, j] + \mathrm{Sim}[i, j] \cdot M_l[i, j]$$
+$$
+N_l[i, j] = \mathrm{Implies}\big(\mathrm{Sim}[i, j],\ M_l[i, j]\big) = 1 - \mathrm{Sim}[i, j] + \mathrm{Sim}[i, j] \cdot M_l[i, j]
+$$
 
-$$N_A = N_B = \begin{pmatrix} 0.8281 & 0.9896 & 0.5855 \\ 0.9896 & 0.7056 & 0.9924 \\ 0.5855 & 0.9924 & 0.5625 \end{pmatrix}$$
+$$
+N_A = N_B = \begin{pmatrix} 0.8281 & 0.9896 & 0.5855 \\ 0.9896 & 0.7056 & 0.9924 \\ 0.5855 & 0.9924 & 0.5625 \end{pmatrix}
+$$
 
 The rule can be read directly: when two points are far apart ($\mathrm{Sim}$ close to 0), the implication is almost true whatever their disagreement, because the rule says nothing about them. When they are close, the agreement of their confidences decides.
 
@@ -258,7 +288,9 @@ A value of $0.5855$, far from 1, signals a violation of the axiom: two nearby po
 
 `Forall([x1, x2, l], …)` aggregates the $3 \times 3 \times 2 = 18$ entries with `pMeanError` and $p = 2$:
 
-$$\mathrm{pME} = 1 - \left(\frac{1}{18} \sum_{l} \sum_{i, j} \big(1 - N_l[i, j]\big)^2\right)^{1/2}$$
+$$
+\mathrm{pME} = 1 - \left(\frac{1}{18} \sum_{l} \sum_{i, j} \big(1 - N_l[i, j]\big)^2\right)^{1/2}
+$$
 
 | $(i, j)$ | $N_l[i, j]$ | $1 - N_l[i, j]$ | $(1 - N_l[i, j])^2$ | entries per label |
 |---|---|---|---|---|
@@ -271,7 +303,9 @@ $$\mathrm{pME} = 1 - \left(\frac{1}{18} \sum_{l} \sum_{i, j} \big(1 - N_l[i, j]\
 
 For one label, the sum is $0.307627 + 2 \times 0.172001 = 0.651629$, and since $N_A = N_B$, it is counted twice:
 
-$$\mathrm{pME} = 1 - \left(\frac{1.303258}{18}\right)^{1/2} = 1 - 0.2691 = 0.731$$
+$$
+\mathrm{pME} = 1 - \left(\frac{1.303258}{18}\right)^{1/2} = 1 - 0.2691 = 0.731
+$$
 
 Notice the diagonal. One might think that comparing a point with itself is trivially true, but that is not the case in fuzzy logic: $\mathrm{Equiv}(u, u) = (1 - u + u^2)^2$ only equals 1 when $u$ is 0 or 1. For $q_2$, whose confidence is $0.5$, entry $(2, 2)$ is only $0.5625$, and it is even the worst entry in the table. The training code below aggregates over all pairs, diagonal included: these entries therefore push the network toward **clear-cut** verdicts, close to 0 or 1, rather than undecided confidences.
 
@@ -279,7 +313,9 @@ Notice the diagonal. One might think that comparing a point with itself is trivi
 
 The loss finally combines the three formulas of $\mathcal{K}$:
 
-$$\text{loss} = 1 - \mathrm{SatAgg}\big(C(a, l_a),\ C(b, l_b),\ 0.731\big)$$
+$$
+\text{loss} = 1 - \mathrm{SatAgg}\big(C(a, l_a),\ C(b, l_b),\ 0.731\big)
+$$
 
 </details>
 
@@ -287,7 +323,9 @@ $$\text{loss} = 1 - \mathrm{SatAgg}\big(C(a, l_a),\ C(b, l_b),\ 0.731\big)$$
 
 One could imagine a simpler rule: compare each unknown point with $a$ and $b$ only, and infer its class from that, like a nearest-neighbor algorithm with two reference neighbors:
 
-$$\forall x\ \big(\mathrm{Sim}(x, a) \implies C(x, l_a)\big) \qquad \forall x\ \big(\mathrm{Sim}(x, b) \implies C(x, l_b)\big)$$
+$$
+\forall x\ \big(\mathrm{Sim}(x, a) \implies C(x, l_a)\big) \qquad \forall x\ \big(\mathrm{Sim}(x, b) \implies C(x, l_b)\big)
+$$
 
 This rule would only light up the points close enough to the two lamps $a$ and $b$: a point too far away would stay in the dark, even if surrounded by points that are already well lit. The rule of $\mathcal{K}$ compares **every pair**: each lit point in turn lights up its neighbors, and the light spreads from one end of the point cloud to the other, even very far from $a$ and $b$, as long as there is a path of successive proximities.
 

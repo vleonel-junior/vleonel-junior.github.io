@@ -25,7 +25,8 @@ const processedChapters = (await chaptersFor(dossier.slug, lang)).map((chapter) 
 	return { ...chapter, readingTime };
 });
 
-const title = `${dossier.title} - ${t("blog.readingNotes")}`;
+const isSeries = dossier.kind === "series";
+const title = `${dossier.title} - ${t(isSeries ? "blog.series" : "blog.readingNotes")}`;
 const description = tr(dossier.description, lang);
 ---
 
@@ -59,9 +60,21 @@ const description = tr(dossier.description, lang);
 				)
 			}
 			<div>
-				<p class="eyebrow text-accent">{t("post.readingSeries")}</p>
+				<p class="eyebrow text-accent">
+					{t(isSeries ? "post.articleSeries" : "post.readingSeries")}
+				</p>
 				<h1 class="mt-2 text-3xl font-bold tracking-tight text-fg">{dossier.title}</h1>
-				<p class="mt-1 text-fg-subtle">{t("blog.by")} {dossier.bookAuthor}</p>
+				{dossier.bookAuthor && (
+					<p class="mt-1 text-fg-subtle">{t("blog.by")} {dossier.bookAuthor}</p>
+				)}
+				{dossier.repoUrl && (
+					<a
+						href={dossier.repoUrl}
+						class="mt-1 inline-block text-sm text-fg-subtle underline decoration-accent/50 underline-offset-2 hover:text-fg"
+					>
+						{t("post.viewCode")}
+					</a>
+				)}
 				<p class="mt-4 leading-relaxed text-fg-muted">{description}</p>
 				<div class="mt-4 flex flex-wrap gap-1.5">
 					{dossier.tags.map((tagName) => <span class="tag">{tagName}</span>)}
@@ -71,7 +84,7 @@ const description = tr(dossier.description, lang);
 
 		<aside
 			class="mt-8 rounded-lg border border-border bg-surface px-4 py-3 text-sm leading-relaxed text-fg-muted [&_a]:text-fg [&_a]:underline [&_a]:decoration-accent/50 [&_a]:underline-offset-2"
-			set:html={t("series.notice")}
+			set:html={tr(dossier.notice, lang)}
 		/>
 
 		<section class="mt-10">

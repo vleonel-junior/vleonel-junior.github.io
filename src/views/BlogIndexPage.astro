@@ -19,10 +19,15 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 
-// Reading-notes series, with their published chapters in this language
+// Dossiers with their published chapters in this language, one section per
+// kind: notes on books, then series of my own articles
 const series = await Promise.all(
 	dossiers.map(async (d) => ({ ...d, published: await chaptersFor(d.slug, lang) })),
 );
+const sections = [
+	{ title: t("blog.readingNotes"), items: series.filter((d) => d.kind === "reading-notes") },
+	{ title: t("blog.series"), items: series.filter((d) => d.kind === "series") },
+].filter((s) => s.items.length > 0);
 
 // One entry per article, in this language when translated
 const posts = (await postsFor(lang)).map((post) => {
@@ -42,12 +47,13 @@ const posts = (await postsFor(lang)).map((post) => {
 		</h1>
 		<p class="mt-3 text-lg text-fg-muted">{t("blog.description")}</p>
 
-		<!-- Reading-notes series -->
+		<!-- Dossiers: reading notes and article series -->
+		{sections.map((section) => (
 		<section class="mt-14">
-			<SectionTitle title={t("blog.readingNotes")} />
+			<SectionTitle title={section.title} />
 			{
-				series.map((d) => (
-					<div class="card overflow-hidden">
+				section.items.map((d) => (
+					<div class="card mb-4 overflow-hidden">
 						<a
 							href={localizePath(`blog/dossier/${d.slug}/`, lang)}
 							class="group flex gap-5 p-5 sm:p-6"
@@ -70,9 +76,11 @@ const posts = (await postsFor(lang)).map((post) => {
 								<h2 class="mt-1.5 text-lg font-semibold text-fg group-hover:text-accent">
 									{d.title}
 								</h2>
-								<p class="text-sm text-fg-subtle">
-									{t("blog.by")} {d.bookAuthor}
-								</p>
+								{d.bookAuthor && (
+									<p class="text-sm text-fg-subtle">
+										{t("blog.by")} {d.bookAuthor}
+									</p>
+								)}
 								<p class="mt-2 text-sm leading-relaxed text-fg-muted">
 									{tr(d.description, lang)}
 								</p>
@@ -110,6 +118,7 @@ const posts = (await postsFor(lang)).map((post) => {
 				))
 			}
 		</section>
+		))}
 
 		<!-- Articles -->
 		<section class="mt-16">

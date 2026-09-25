@@ -1,0 +1,465 @@
+---
+title: "Connecteurs et quantificateurs"
+description: "Comment LTN remplace les tables de vérité par des opérateurs flous différentiables, et les quantificateurs ∀ et ∃ par des moyennes généralisées, avec la quantification diagonale et les quantificateurs gardés."
+pubDate: 2026-09-25
+author: "Léonel VODOUNOU"
+dossier: "logic-tensor-networks"
+lang: "fr"
+chapter: 2
+order: 2
+tags: ["Logic Tensor Networks", "IA neuro-symbolique", "Logique floue", "PyTorch"]
+draft: false
+---
+
+Dans la [partie 1](/fr/blog/dossier/logic-tensor-networks/partie-1-grounding/), on a vu comment LTN ancre les symboles non logiques (constantes, variables, fonctions et prédicats) dans des tenseurs. Il reste la partie logique du langage : les **connecteurs** ($\lnot$, $\land$, $\lor$, $\implies$) et les **quantificateurs** ($\forall$, $\exists$). C'est elle qui permet d'assembler des prédicats en formules complètes, et d'obtenir pour chaque formule un seul degré de vérité.
+
+## Les connecteurs
+
+Les connecteurs classiques ne peuvent pas être utilisés tels quels en LTN : leurs tables de vérité ne sont définies que pour des valeurs dans $\{0, 1\}$, alors que les prédicats LTN renvoient des degrés de vérité dans tout l'intervalle $[0, 1]$. LTN les remplace donc par des opérateurs de **logique floue**, définis sur tout l'intervalle continu.
+
+Il existe plusieurs familles d'opérateurs flous valides (Gödel, produit, Łukasiewicz), mais elles ne se valent pas pour l'entraînement. Le $\min$/$\max$ de Gödel, par exemple, ne fait circuler le gradient que vers un seul de ses arguments à la fois, ce qui peut ralentir, voire bloquer, l'apprentissage. LTN recommande en général la configuration suivante, où $u$ et $v$ sont deux degrés de vérité dans $[0, 1]$ :
+
+| Connecteur | Opérateur flou | Formule |
+|---|---|---|
+| $\lnot u$ | négation standard | $1 - u$ |
+| $u \land v$ | t-norme produit | $uv$ |
+| $u \lor v$ | t-conorme produit (somme probabiliste) | $u + v - uv$ |
+| $u \implies v$ | implication de Reichenbach | $1 - u + uv$ |
+
+Ce choix n'a rien d'arbitraire. Contrairement au $\min$/$\max$, le produit répartit le gradient sur ses deux arguments à la fois, ce qui le rend plus stable numériquement. Ce compromis entre fidélité logique et comportement du gradient fera l'objet de la partie 3.
+
+On remarque d'ailleurs que ces formules retrouvent les tables de vérité classiques sur les valeurs extrêmes : avec $u = 1$ et $v = 0$, l'implication vaut $1 - 1 + 0 = 0$, comme « vrai implique faux ». Entre les deux, elles varient continûment.
+
+En LTN, un connecteur se crée avec le constructeur `Connective()`, qui prend une sémantique floue choisie dans le module `ltn.fuzzy_ops` :
+
+```python
+import ltn
+import torch
+
+Not = ltn.Connective(ltn.fuzzy_ops.NotStandard())
+And = ltn.Connective(ltn.fuzzy_ops.AndProd())
+Or = ltn.Connective(ltn.fuzzy_ops.OrProbSum())
+Implies = ltn.Connective(ltn.fuzzy_ops.ImpliesReichenbach())
+```
+
+### Le broadcasting
+
+Le wrapper `ltn.Connective` ne se contente pas d'appliquer la formule floue. Il gère aussi la combinaison de sous-formules qui ne portent pas sur les mêmes variables. On l'a vu dans la partie 1 : une formule sur $x$ seul a la forme $(n_x,)$, une formule sur $x$ et $y$ a la forme $(n_x, n_y)$. Avant d'appliquer l'opérateur terme à terme, le connecteur doit donc étendre ces formes pour les rendre compatibles. C'est le **broadcasting**.
+
+Pour l'observer, on définit deux variables de tailles différentes, deux constantes, et un prédicat de similarité : la même construction $\exp(-\|x - y\|)$ que dans la partie 1, qui vaut 1 quand les deux points coïncident et tend vers 0 quand ils s'éloignent.
+
+```python
+x = ltn.Variable('x', torch.randn((10, 2)))  # 10 points de R^2
+y = ltn.Variable('y', torch.randn((5, 2)))   # 5 points de R^2
+
+c1 = ltn.Constant(torch.tensor([0.5, 0.0]))
+c2 = ltn.Constant(torch.tensor([4.0, 2.0]))
+
+Eq = ltn.Predicate(func=lambda x, y: torch.exp(-torch.norm(x - y, dim=1)))
+
+Eq(c1, c2).value
+```
+
+```text
+tensor(0.0178)
+```
+
+$c_1$ et $c_2$ sont éloignés, donc leur similarité est proche de 0. Voyons maintenant les connecteurs sur des cas concrets :
+
+```python
+Not(Eq(c1, c2)).value
+```
+
+```text
+tensor(0.9822)
+```
+
+On retrouve bien $1 - 0.0178 = 0.9822$.
+
+```python
+Implies(Eq(c1, c2), Eq(c2, c1)).value
+```
+
+```text
+tensor(0.9825)
+```
+
+Avec $u = v = 0.0178$, l'implication de Reichenbach donne $1 - u + uv \approx 0.9825$ : une prémisse presque fausse rend l'implication presque vraie, comme en logique classique.
+
+Les deux exemples suivants sont les plus instructifs, car ils montrent deux situations différentes vis-à-vis des variables.
+
+```python
+And(Eq(x, c1), Eq(x, c2)).shape()
+```
+
+```text
+torch.Size([10])
+```
+
+Dans `And(Eq(x, c1), Eq(x, c2))`, seule la variable $x$ apparaît dans les deux sous-formules. Les deux résultats ont déjà la même forme $(10,)$, donc aucun broadcasting n'est nécessaire : `And` les combine directement, individu par individu.
+
+```python
+Or(Eq(x, c1), Eq(x, y)).shape()
+```
+
+```text
+torch.Size([10, 5])
+```
+
+Dans `Or(Eq(x, c1), Eq(x, y))`, la situation est différente. `Eq(x, c1)` ne dépend que de $x$ et a la forme $(10,)$, tandis que `Eq(x, y)` dépend de $x$ et de $y$ et a la forme $(10, 5)$ : une évaluation sur deux variables produit toutes les combinaisons. Le connecteur détecte cet écart et étend le premier résultat le long de l'axe manquant, celui de $y$, en répétant chaque valeur pour les 5 individus de $y$. Il applique ensuite `Or` terme à terme, d'où la forme finale $(10, 5)$.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Un connecteur appliqué terme à terme à p(x) et q(y)](/images/dossiers/logic-tensor-networks/paper-connecteur.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*Un connecteur appliqué terme à terme, ici p(x) ∧ q(y). Comme x et y sont deux variables différentes, le résultat contient un degré de vérité dans [0, 1] pour chaque combinaison d'individus de x et de y. Source : Badreddine et al. (2022).*</figcaption>
+</figure>
+
+Comme les prédicats et les fonctions, les connecteurs renvoient des `LTNObject` : on lit le résultat avec `.value` et sa forme avec `shape()`.
+
+## Les quantificateurs
+
+Les quantificateurs ne peuvent pas non plus être utilisés sous leur forme classique. $\forall$ et $\exists$ supposent de vérifier une propriété sur un domaine entier, alors qu'en LTN une variable ne représente qu'un batch fini d'individus, avec des degrés de vérité continus. LTN les remplace donc par des **opérateurs d'agrégation**, qui condensent les degrés de vérité d'un batch en une seule valeur.
+
+Pour une liste de degrés de vérité $u_1, \dots, u_n$ dans $[0, 1]$, les deux opérateurs recommandés sont :
+
+- pour $\exists$, la **moyenne généralisée** (`pMean`) :
+
+$$\mathrm{pM}(u_1, \dots, u_n) = \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p}, \qquad p \geq 1$$
+
+- pour $\forall$, la **moyenne généralisée des écarts à la vérité** (`pMeanError`) :
+
+$$\mathrm{pME}(u_1, \dots, u_n) = 1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}, \qquad p \geq 1$$
+
+Ces formules ne sont pas choisies au hasard : `pMean` approxime le **maximum** et `pMeanError` le **minimum**. C'est bien l'esprit de $\exists$, pour lequel il suffit qu'un seul individu satisfasse la propriété, et de $\forall$, pour lequel c'est le pire cas qui compte. On le démontrera un peu plus loin.
+
+Un quantificateur se crée avec le constructeur `Quantifier()`, qui prend une sémantique d'agrégation et le type de quantification : `"e"` pour l'existentielle, `"f"` pour l'universelle.
+
+```python
+Forall = ltn.Quantifier(ltn.fuzzy_ops.AggregPMeanError(p=2), quantifier="f")
+Exists = ltn.Quantifier(ltn.fuzzy_ops.AggregPMean(p=2), quantifier="e")
+```
+
+### Quantifier, c'est agréger le long d'un axe
+
+Le wrapper `ltn.Quantifier` choisit lui-même les dimensions à agréger d'après les variables qu'on lui passe. Quantifier sur une variable revient à appliquer l'agrégateur le long de l'axe de cette variable, ce qui fait **disparaître cet axe** du résultat. C'est là que les labels des variables, vus dans la partie 1, prennent tout leur sens.
+
+```python
+x = ltn.Variable('x', torch.randn((10, 2)))  # 10 points de R^2
+y = ltn.Variable('y', torch.randn((5, 2)))   # 5 points de R^2
+
+Eq = ltn.Predicate(func=lambda x, y: torch.exp(-torch.norm(x - y, dim=1)))
+
+Eq(x, y).shape()
+```
+
+```text
+torch.Size([10, 5])
+```
+
+Quantifions sur $x$ seul :
+
+```python
+Forall(x, Eq(x, y)).shape()
+```
+
+```text
+torch.Size([5])
+```
+
+L'axe de $x$ a disparu, il ne reste que celui de $y$. Le résultat est encore une fonction de $y$ : pour chacun des 5 individus de $y$, il indique à quel degré la propriété est vraie pour tous les $x$.
+
+Quand la quantification porte sur les deux variables, les deux axes disparaissent et on obtient un scalaire, un seul degré de satisfaction pour toute la formule :
+
+```python
+Forall([x, y], Eq(x, y)).value
+```
+
+```text
+tensor(0.1521)
+```
+
+```python
+Exists([x, y], Eq(x, y)).value
+```
+
+```text
+tensor(0.2211)
+```
+
+```python
+Forall(x, Exists(y, Eq(x, y))).value
+```
+
+```text
+tensor(0.1846)
+```
+
+Le dernier exemple imbrique deux quantificateurs : « pour tout $x$, il existe un $y$ similaire ». `Exists(y, …)` fait d'abord disparaître l'axe de $y$ et laisse un vecteur de forme $(10,)$, que `Forall(x, …)` réduit ensuite à un scalaire.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Agrégation implémentant ∀y ∃x p(x, y)](/images/dossiers/logic-tensor-networks/paper-quantificateurs.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*Une agrégation qui implémente la quantification ∀y ∃x p(x, y) : ∃x fait disparaître l'axe de x, puis ∀y celui de y. Le résultat est un seul nombre dans [0, 1]. Source : Badreddine et al. (2022).*</figcaption>
+</figure>
+
+Un point de syntaxe à retenir : une seule variable se passe directement au quantificateur, plusieurs variables doivent être regroupées dans une liste, comme `[x, y]`.
+
+### Pourquoi `pMean` tend vers le maximum, et `pMeanError` vers le minimum
+
+On a annoncé que `pMean` approxime le maximum et `pMeanError` le minimum. Démontrons-le.
+
+**`pMean` tend vers le maximum.** On veut montrer que, pour $u_1, \dots, u_n \in [0, 1]$ :
+
+$$\lim_{p \to +\infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = \max(u_1, \dots, u_n)$$
+
+Notons $M = \max(u_1, \dots, u_n)$. Le cas $M = 0$ est trivial (tous les $u_i$ sont nuls et `pMean` vaut 0) ; on suppose donc $M > 0$, ce qui permet de factoriser :
+
+$$\left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot \left(\frac{1}{n} \sum_{i=1}^n \left(\frac{u_i}{M}\right)^p\right)^{1/p}$$
+
+Posons $r_i = u_i / M$, qui est dans $[0, 1]$ puisque $u_i \leq M$. Deux cas se présentent :
+
+- pour un indice qui réalise le maximum, $r_i = 1$, donc $r_i^p = 1$ pour tout $p$ ;
+- pour tout autre indice, $r_i \in [0, 1)$, et un nombre strictement inférieur à 1 élevé à une puissance qui grandit indéfiniment tend vers 0.
+
+En notant $k \geq 1$ le nombre d'indices qui réalisent le maximum (en général $k = 1$, mais des égalités restent possibles) :
+
+$$\lim_{p \to \infty} \frac{1}{n} \sum_{i=1}^n r_i^p = \frac{k}{n}$$
+
+Reste la racine $p$-ième. Comme $k/n$ est une constante strictement positive, on utilise le résultat classique $\lim_{p \to \infty} c^{1/p} = 1$ pour tout $c > 0$ : il suffit d'écrire $c^{1/p} = e^{\frac{1}{p} \ln c}$ et de remarquer que $\frac{1}{p} \ln c \to 0$. D'où :
+
+$$\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot 1 = \max(u_1, \dots, u_n)$$
+
+**`pMeanError` tend vers le minimum.** On veut montrer que :
+
+$$\lim_{p \to +\infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = \min(u_1, \dots, u_n)$$
+
+L'astuce consiste à appliquer le résultat précédent non pas aux $u_i$, mais à leurs compléments $1 - u_i$, qui sont eux aussi dans $[0, 1]$ :
+
+$$\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p} = \max_i (1 - u_i)$$
+
+Or $\max_i (1 - u_i) = 1 - \min_i u_i$.
+
+<details>
+<summary><strong>Justification</strong></summary>
+
+Soit $m = \min_i u_i$. Pour tout $i$, $u_i \geq m$, donc $1 - u_i \leq 1 - m$ : $1 - m$ majore la famille, et $\max_i (1 - u_i) \leq 1 - m$.
+
+Le minimum d'une famille finie est atteint : il existe $i^*$ tel que $u_{i^*} = m$, donc $1 - m = 1 - u_{i^*}$ est l'un des termes de la famille. Le maximum étant supérieur ou égal à chaque terme, $\max_i (1 - u_i) \geq 1 - m$.
+
+Les deux inégalités donnent l'égalité.
+
+</details>
+
+On en déduit :
+
+$$\lim_{p \to \infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = 1 - (1 - \min_i u_i) = \min_i u_i$$
+
+### Le rôle de p
+
+`pMean` est donc un maximum adouci : pour $p = 1$, c'est une simple moyenne, et quand $p \to +\infty$, elle tend vers le maximum strict. De même, `pMeanError` est un minimum adouci, qui va de la moyenne ($p = 1$) au minimum strict ($p \to +\infty$).
+
+Le paramètre $p$ règle en fait un compromis entre **fidélité logique** et **tolérance aux cas difficiles** du batch.
+
+Quand $p$ est élevé, `pMeanError` se rapproche du vrai minimum, et $\forall$ retrouve son sens strict : un seul individu avec un faible degré de vérité suffit à faire chuter le résultat, comme on l'attend d'un « pour tout » rigoureux. C'est fidèle, mais exigeant : pour obtenir un score élevé, tous les individus sans exception doivent avoir un degré de vérité élevé. Symétriquement, `pMean` se rapproche du vrai maximum, et $\exists$ redevient facile à satisfaire : un seul bon individu suffit.
+
+Quand $p$ se rapproche de 1, les deux opérateurs se rapprochent d'une moyenne où chaque individu pèse à peu près autant. Les cas extrêmes cessent alors de dominer : un très mauvais individu peut être compensé par plusieurs bons, et inversement. Cette compensation rend $\forall$ plus tolérant (un individu défaillant ne suffit plus à tout faire chuter) et $\exists$ plus exigeant (un seul bon individu ne suffit plus). C'est un écart volontaire par rapport à la sémantique logique stricte, utile en pratique pour absorber le bruit dans les données ou pour mieux répartir le gradient à l'entraînement.
+
+Le choix de $p$ dépend donc de l'objectif : un $p$ élevé pour une formule qui doit rester stricte et ne tolérer aucune exception, un $p$ proche de 1 pour une formule robuste aux données bruitées ou aux valeurs aberrantes. Ce choix a aussi des conséquences importantes sur l'entraînement, qu'on verra dans la partie 3.
+
+On peut fixer $p$ à la création de l'opérateur, ou le changer à chaque appel :
+
+```python
+Forall(x, Eq(x, c1), p=2).value
+```
+
+```text
+tensor(0.1942)
+```
+
+```python
+Forall(x, Eq(x, c1), p=10).value
+```
+
+```text
+tensor(0.1232)
+```
+
+```python
+Exists(x, Eq(x, c1), p=2).value
+```
+
+```text
+tensor(0.3085)
+```
+
+```python
+Exists(x, Eq(x, c1), p=10).value
+```
+
+```text
+tensor(0.6013)
+```
+
+Quand $p$ passe de 2 à 10, $\forall$ baisse (de 0.19 à 0.12) parce qu'il se rapproche du pire individu, et $\exists$ monte (de 0.31 à 0.60) parce qu'il se rapproche du meilleur.
+
+## La quantification diagonale
+
+Jusqu'ici, évaluer un prédicat sur deux variables produisait toujours toutes les combinaisons de leurs individus. Ce n'est pas toujours ce qu'on veut. Dans un dataset supervisé, chaque donnée $x_i$ a son propre label $l_i$ : on veut évaluer le prédicat sur les paires $(x_0, l_0)$, $(x_1, l_1)$, etc., jamais sur des combinaisons croisées comme $(x_0, l_3)$, qui n'ont aucun sens.
+
+C'est ce que permet `ltn.diag` : au lieu de croiser toutes les combinaisons, il ne garde que les paires en **correspondance un à un**, comme un `zip` en Python plutôt que deux boucles imbriquées. Cela impose que les variables aient le même nombre d'individus.
+
+Prenons l'exemple suivant :
+
+- la variable $x$ contient 100 individus dans $\mathbb{R}^{2 \times 2}$ ;
+- la variable $l$ contient les 100 labels correspondants, encodés en one-hot (3 classes) ;
+- chaque paire $(x_i, l_i)$ est un exemple du dataset ;
+- le classifieur $C(x, l)$ renvoie un degré de confiance dans $[0, 1]$ que l'échantillon $x$ corresponde au label $l$.
+
+```python
+# Valeurs aléatoires pour l'illustration ; en pratique, elles viendraient d'un dataset
+samples = torch.randn((100, 2, 2))         # 100 valeurs de R^{2x2}
+labels = torch.randint(0, 3, size=(100,))  # le label (classe 0, 1 ou 2) de chaque échantillon
+onehot_labels = torch.nn.functional.one_hot(labels, num_classes=3)
+
+x = ltn.Variable("x", samples)
+l = ltn.Variable("l", onehot_labels)
+
+class ModelC(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.elu = torch.nn.ELU()
+        self.softmax = torch.nn.Softmax(dim=1)
+        self.dense1 = torch.nn.Linear(4, 5)
+        self.dense2 = torch.nn.Linear(5, 3)
+
+    def forward(self, x, l):
+        x = torch.flatten(x, start_dim=1)   # la matrice 2 x 2 devient un vecteur de taille 4
+        x = self.elu(self.dense1(x))
+        x = self.softmax(self.dense2(x))    # une probabilité par classe
+        return torch.sum(x * l, dim=1)      # on garde la probabilité de la classe l
+
+C = ltn.Predicate(ModelC())
+```
+
+La dernière ligne du `forward` mérite une explication. Si le réseau sort $[0.1, 0.7, 0.2]$ pour un échantillon dont le label est $[0, 1, 0]$, le produit terme à terme suivi de la somme donne $0 \times 0.1 + 1 \times 0.7 + 0 \times 0.2 = 0.7$ : la probabilité que le réseau attribue à la bonne classe.
+
+Sans `ltn.diag`, `C(x, l)` évalue les $100 \times 100$ combinaisons. Réduisons l'exemple à 4 individus pour voir le problème : sur les 16 paires produites, seules les 4 de la diagonale, $(x_0, l_0)$ à $(x_3, l_3)$, correspondent à de vrais exemples. Toutes les autres posent une question qu'on n'a jamais voulu poser, comme « l'échantillon $x_0$ a-t-il le label de l'exemple 1 ? ».
+
+`ltn.diag(x, l)` ne garde que les 100 paires correspondantes : la forme du résultat passe de $(100, 100)$ à $(100,)$.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Quantification diagonale sur x1 et x2](/images/dossiers/logic-tensor-networks/paper-diagonale.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*La quantification diagonale : Diag(x₁, x₂) ne quantifie que sur les paires qui associent le i-ème individu de x₁ au i-ème individu de x₂. Elle suppose donc que x₁ et x₂ ont le même nombre d'individus, comme des échantillons et leurs labels en apprentissage supervisé. Source : Badreddine et al. (2022).*</figcaption>
+</figure>
+
+Le mécanisme repose une fois de plus sur les labels des variables : `ltn.diag` donne temporairement à $x$ et $l$ le **même label**, préfixé par `diag_`. Comme LTN se base sur les labels pour décider si deux variables sont croisées ou parcourues ensemble, partager le même label suffit à passer du croisement complet à la correspondance un à un. `ltn.undiag` restaure les labels d'origine.
+
+```python
+print(C(x, l).shape())  # les 100 x 100 combinaisons
+ltn.diag(x, l)          # active la correspondance un à un
+print(C(x, l).shape())  # les 100 paires correspondantes
+print(x.free_vars)
+print(l.free_vars)
+ltn.undiag(x, l)        # rétablit le comportement normal
+print(C(x, l).shape())  # de nouveau les 100 x 100 combinaisons
+```
+
+```text
+torch.Size([100, 100])
+torch.Size([100])
+['diag_x_l']
+['diag_x_l']
+torch.Size([100, 100])
+```
+
+En pratique, `ltn.diag` s'utilise juste avant un quantificateur. Chaque quantificateur appelle automatiquement `ltn.undiag` une fois l'agrégation faite, si bien que les variables retrouvent leur comportement normal en dehors de la formule.
+
+```python
+x, l = ltn.diag(x, l)
+print(x.free_vars)
+print(l.free_vars)
+print(Forall([x, l], C(x, l)).value)  # agrège seulement sur les 100 paires correspondantes
+print(x.free_vars)                    # undiag a été appelé automatiquement
+print(l.free_vars)
+```
+
+```text
+['diag_x_l']
+['diag_x_l']
+tensor(0.3384, grad_fn=<RsubBackward1>)
+['x']
+['l']
+```
+
+$\forall [x, l]\ C(x, l)$ pose exactement la question d'un problème de classification supervisée : à quel degré le modèle attribue-t-il une bonne confiance à chaque exemple associé à son vrai label ? Le réseau n'étant pas entraîné, le score est faible.
+
+## Les quantificateurs gardés
+
+On veut parfois quantifier non pas sur tous les individus d'une variable, mais seulement sur ceux qui satisfont une condition. Cette condition n'est pas un degré de vérité continu comme un prédicat LTN : c'est un **masque booléen**, strictement 0 ou 1, qui sert uniquement à choisir quels individus participent à l'agrégation.
+
+Soit $m$ une fonction de masquage qui renvoie un booléen pour chaque élément du domaine. On peut alors écrire :
+
+- $(\forall x : m(x))\ \phi(x)$ : « tout $x$ qui satisfait $m(x)$ satisfait aussi $\phi(x)$ » ;
+- $(\exists x : m(x))\ \phi(x)$ : « il existe un $x$ qui satisfait $m(x)$ et qui satisfait aussi $\phi(x)$ ».
+
+Le masque peut dépendre d'autres variables de la formule : $\exists y\ (\forall x : m(x, y))\ \phi(x, y)$ est un énoncé valide, où la condition sur $x$ dépend de $y$.
+
+Prenons un exemple qui affirme qu'il existe une distance $d$ en dessous de laquelle toutes les paires de points sont similaires :
+
+$$\exists d\ \big(\forall x, y : \mathrm{dist}(x, y) < d\big)\ \mathrm{Eq}(x, y)$$
+
+$\mathrm{Eq}$ est le prédicat de similarité déjà utilisé, et $\mathrm{dist}$ calcule la distance euclidienne entre deux points.
+
+```python
+Eq = ltn.Predicate(func=lambda x, y: torch.exp(-torch.norm(x - y, dim=1)))
+
+points = torch.rand((50, 2))  # 50 points de [0,1]^2
+x = ltn.Variable("x", points)
+y = ltn.Variable("y", points)
+d = ltn.Variable("d", torch.tensor([.1, .2, .3, .4, .5, .6, .7, .8, .9]))
+```
+
+Un quantificateur gardé prend deux arguments supplémentaires : `cond_vars`, la liste des variables dont dépend la condition, et `cond_fn`, la fonction qui calcule le masque à partir de ces variables.
+
+```python
+dist = lambda x, y: torch.unsqueeze(torch.norm(x.value - y.value, dim=1), 1)
+
+Exists(d,
+      Forall([x, y],
+            Eq(x, y),
+            cond_vars=[x, y, d],
+            cond_fn=lambda x, y, d: dist(x, y) < d.value
+            )).value
+```
+
+```text
+tensor(0.7599, dtype=torch.float64)
+```
+
+Ici, `cond_vars=[x, y, d]` indique que la condition dépend de $x$, $y$ et $d$, et `cond_fn` teste, pour chaque combinaison, si la distance entre $x$ et $y$ est inférieure au seuil $d$. LTN calcule $\mathrm{Eq}(x, y)$ sur toutes les combinaisons, calcule le masque en parallèle, puis n'agrège que les valeurs pour lesquelles le masque est vrai. Les paires trop éloignées sont simplement exclues.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Quantification gardée avec le masque age(x) > age(y)](/images/dossiers/logic-tensor-networks/paper-quantification-gardee.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*Un exemple de quantification gardée : les éléments qui ne satisfont pas la condition, ici age(x) > age(y), sont écartés avant l'application des agrégateurs de ∀ et ∃. Source : Badreddine et al. (2022).*</figcaption>
+</figure>
+
+C'est particulièrement utile pour l'apprentissage : le gradient ne se propage alors que sur la partie du domaine qui vérifie la condition, au lieu de se diluer sur des combinaisons qui n'ont aucun sens pour la règle.
+
+## À retenir
+
+- Les **connecteurs** deviennent des opérateurs flous différentiables. La configuration recommandée : négation standard, produit, somme probabiliste et implication de Reichenbach.
+- Un connecteur **broadcaste** automatiquement des sous-formules qui ne portent pas sur les mêmes variables.
+- Les **quantificateurs** deviennent des agrégations le long de l'axe de la variable quantifiée : `pMeanError` pour $\forall$, un minimum adouci, et `pMean` pour $\exists$, un maximum adouci.
+- Le paramètre **$p$** règle le compromis entre fidélité logique (grand $p$) et tolérance au bruit (petit $p$).
+- **`ltn.diag`** remplace le croisement complet par une correspondance un à un, indispensable pour les paires (donnée, label).
+- Les **quantificateurs gardés** restreignent l'agrégation aux individus qui satisfont un masque booléen.
+
+On sait maintenant évaluer n'importe quelle formule. Mais pour qu'un réseau apprenne à satisfaire ces formules, il faut que leur gradient se comporte bien, et ce n'est pas le cas pour tous les opérateurs. Dans la partie 3, on verra les pièges du gradient et la configuration « produit stable » qui permet de les éviter.
+
+Le notebook complet de cette partie est disponible dans [mon dépôt](https://github.com/vleonel-junior/logic-tensor-networks/blob/main/code/tutorials/2-grounding_connectives.ipynb).

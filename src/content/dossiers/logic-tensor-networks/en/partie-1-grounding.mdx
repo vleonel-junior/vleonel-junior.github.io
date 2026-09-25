@@ -1,0 +1,452 @@
+---
+title: "Grounding: from symbols to tensors"
+description: "How Logic Tensor Networks turns the constants, predicates, functions and variables of first-order logic into tensors and differentiable functions."
+pubDate: 2026-09-25
+author: "Léonel VODOUNOU"
+dossier: "logic-tensor-networks"
+lang: "en"
+chapter: 1
+order: 1
+tags: ["Logic Tensor Networks", "Neuro-symbolic AI", "First-order logic", "PyTorch"]
+draft: false
+---
+
+A neural network is very good at learning from examples, but you cannot directly tell it "every student has at least one friend" or "a digit cannot be both a 3 and an 8". Logic expresses this kind of knowledge without any ambiguity, but it cannot learn.
+
+**Logic Tensor Networks** (LTN) is a neuro-symbolic framework that brings the two together: you write knowledge in first-order logic, and LTN turns it into a loss function that a neural network can minimize by gradient descent.
+
+This series explains LTN step by step, using the [LTNtorch](https://github.com/logictensornetworks/LTNtorch) library. This first part lays the foundation: **grounding**, that is, how each logical symbol becomes a tensor or a differentiable function.
+
+## A refresher on first-order logic
+
+All of LTN's vocabulary comes from first-order logic (FOL). It is a formal language: a set of strict writing rules for describing the world with precise, unambiguous and verifiable sentences, such as "Socrates is a man" or "all men are mortal". It is the standard language of mathematics and symbolic AI.
+
+### The domain
+
+The **domain** $D$ (or universe of discourse) is the set of all the objects we talk about. For a system describing a small group of people:
+
+$$D = \{\text{Léonel}, \text{Mélène}, \text{Alice}, \text{Abdel}\}$$
+
+The domain sets the playing field: logic only talks about the objects it contains.
+
+### The symbols
+
+- A **constant** is a proper name: a symbol that always refers to the same object of the domain. The symbol `abdel` points to Abdel, and nothing else.
+- A **variable** ($x$, $y$, $z$…) is a placeholder that can refer to any element of the domain.
+- A **predicate** is a property or a relation, true or false, that we attribute to one or more objects. $\text{IsStudent}(x)$ takes a single argument: it is a unary predicate. $\text{IsInLoveWith}(x, y)$ takes two: it is a binary predicate, and $\text{IsInLoveWith}(\text{Alice}, \text{Abdel})$ can perfectly well be true without $\text{IsInLoveWith}(\text{Abdel}, \text{Alice})$ being true. The number of arguments is called the **arity**; an $n$-ary predicate is defined on $D^n$, the set of $n$-tuples of objects of the domain.
+- A **function** takes objects of the domain and returns another object of the domain. $\text{FatherOf}(\text{Alice}) = \text{Léonel}$: the output stays in $D$. This is the key difference with a predicate, which returns a truth value.
+
+### Connectives, quantifiers and formulas
+
+**Connectives** combine propositions: negation $\lnot$, conjunction $\land$ ("and"), disjunction $\lor$ ("or") and implication $\implies$, where $P \implies Q$ is equivalent to $\lnot P \lor Q$.
+
+**Quantifiers** let us talk about several objects without naming them one by one: $\forall x\, \phi(x)$ means "for every $x$, $\phi(x)$ is true", and $\exists x\, \phi(x)$ means "there is at least one $x$ for which $\phi(x)$ is true".
+
+A **formula** is a well-formed logical sentence that combines all of these. For example:
+
+$$\forall x\, \big(\text{IsStudent}(x) \implies \exists y\, \text{IsFriendOf}(x,y)\big)$$
+
+reads "for every $x$, if $x$ is a student, then there is a $y$ such that $x$ is a friend of $y$", in other words: every student has at least one friend.
+
+### Interpretation
+
+So far, symbols are just empty labels. The **interpretation** $\mathcal{I}$ bridges syntax and meaning: it assigns each symbol a concrete object, in a domain chosen beforehand. It is not a single rule but three assignments, one per kind of symbol.
+
+1. **A constant becomes an element of the domain.** With $D = \{\text{Alice}, \text{Bob}, \text{Chloé}\}$, we can decide that $\mathcal{I}(c_1) = \text{Alice}$.
+2. **An $n$-ary predicate becomes a subset of $D^n$.** Why a subset rather than "true or false"? Because a predicate must be evaluable on every possible combination of objects, and the cleanest way to do that is to list exactly the combinations for which it is true. $\mathcal{I}(\text{IsStudent}) = \{\text{Alice}, \text{Chloé}\}$ means the predicate is true for Alice and Chloé, and false for Bob. For a binary predicate, we list pairs: $\mathcal{I}(\text{IsFriendOf}) = \{(\text{Alice},\text{Bob}), (\text{Bob},\text{Alice}), (\text{Chloé},\text{Alice})\}$.
+3. **A function becomes an actual mathematical function** $\mathcal{I}(f) : D^n \to D$.
+
+Evaluating a formula then comes down to working up symbol by symbol. For $\text{IsStudent}(c_1)$: $c_1$ refers to Alice, $\text{IsStudent}$ refers to $\{\text{Alice}, \text{Chloé}\}$, Alice belongs to that set, so the formula is **true** under $\mathcal{I}$.
+
+The crucial point is that **an interpretation is only one choice among many**. We could have taken $D = \{1, 2, 3, \dots\}$, interpreted $c_1$ as the number 5 and $P_1$ as "being even". The same formula $P_1(c_1)$ would become "5 is even", which is false, without the syntax changing at all. This is precisely why LTN introduces a new term: *grounding*.
+
+## Real Logic: logic grounded in tensors
+
+In classical logic, the interpretation targets an abstract domain, a plain set of objects with no numerical structure, and every formula is strictly true or false.
+
+**Real Logic**, the semantics used by LTN, departs from this setting: the domain is interpreted concretely by **real tensors**. Since symbols are anchored in numerical features, we no longer speak of interpretation but of **grounding**, written $\mathcal{G}$. The new term signals that $\mathcal{G}$ is not just any interpretation: it is an interpretation constrained to always target the space of tensors.
+
+$\mathcal{G}$ acts on two syntactic categories:
+
+- to every **term** (a constant, a variable, the result of a function), $\mathcal{G}$ assigns a **tensor of reals**;
+- to every **formula** $\phi$, $\mathcal{G}$ assigns **a real number in $[0, 1]$**: a continuous degree of truth, no longer a boolean.
+
+The language has two parts. The **signature** is the vocabulary specific to the problem being modeled: the constants, variables, functions and predicates we choose. The **logical part** is shared by every problem: connectives are modeled by fuzzy operators, and quantifiers by fuzzy aggregators (the subject of part 2).
+
+LTN therefore keeps the whole architecture of first-order logic, but replaces each interpretation target with a numerical, continuous equivalent:
+
+| Classical logic | Real Logic (LTN) |
+|---|---|
+| Abstract objects of a set $D$ | Real tensors |
+| Truth values in $\{0, 1\}$ | Degrees of truth in $[0, 1]$ |
+| Predicate: subset of $D^n$ | Differentiable function to $[0, 1]$ |
+| Truth tables | Differentiable fuzzy operators |
+
+This replacement is what makes logical knowledge usable as differentiable constraints, and therefore trainable by gradient descent.
+
+Let's now see how each symbol is grounded in practice.
+
+## Constants
+
+Each constant $c$ is mapped to a tensor $\mathcal{G}(c) \in \bigcup_{n_1 \dots n_d \in \mathbb{N}^*} \mathbb{R}^{n_1 \times \dots \times n_d}$, that is, the union of all possible tensor spaces, whatever their rank.
+
+The **rank** of a tensor is the number of indices needed to locate an entry: 0 for a scalar, 1 for a vector, 2 for a matrix, and so on. This union means that the constants of a single system do not need to have the same shape: each individual lives in the space that suits it.
+
+```python
+import ltn
+import torch
+
+c1 = ltn.Constant(torch.tensor([2.1, 3]))                       # vector, rank 1
+c2 = ltn.Constant(torch.tensor([[4.2, 3, 2.5], [4, -1.3, 1.8]]))  # 2 x 3 matrix, rank 2
+```
+
+The tensor passed to `Constant` literally **is** $\mathcal{G}(c_i)$: it holds the features of the individual.
+
+A constant can follow two regimes:
+
+- **predefined**: the tensor is fixed once and for all from observed data, like $c_1$ and $c_2$ above;
+- **trainable**: the tensor becomes a parameter of the model, adjusted by backpropagation like the weights of a network.
+
+The second regime is useful when there is no numerical representation of an individual. We initialize its tensor, often at random, and let the system learn the best representation, guided only by the logical constraints and the data. That is the very principle of an *embedding*.
+
+```python
+c3 = ltn.Constant(torch.tensor([0., 0.]), trainable=True)
+
+print(c1.value)
+print(c3.value)
+# detach() is needed before numpy(), because c3 has requires_grad=True
+print(c3.value.detach().numpy())
+```
+
+```text
+tensor([2.1000, 3.0000])
+tensor([0., 0.], requires_grad=True)
+[0. 0.]
+```
+
+Under the hood, `trainable=True` simply turns on `requires_grad` for the tensor: PyTorch's native mechanism for computing and storing its gradient during backpropagation. The value of a constant is read from its `.value` attribute, because LTN wraps every object in an `LTNObject`.
+
+## Predicates
+
+An LTN predicate is a function that maps its $n$ arguments to a value in $[0, 1]$. It can be a neural network or any other function that respects this constraint. The `ltn.Predicate` constructor accepts two forms:
+
+- `func=`: a Python function, recommended for small mathematical operations with no weights to train;
+- `model=`: a `torch.nn.Module`, whose weights will be learned.
+
+### A predicate defined by a formula
+
+$$P_1(x) = \exp\big(-\|x - \mu\|\big)$$
+
+where $\|x - \mu\|$ is the Euclidean distance between $x$ and a fixed point $\mu$. If $x = \mu$, the distance is zero and $P_1(x) = e^0 = 1$: maximal truth. The farther $x$ moves from $\mu$, the closer $P_1(x)$ gets to 0. The output always stays in $(0, 1]$: it is indeed a valid predicate.
+
+```python
+mu = ltn.Constant(torch.tensor([2., 3.]))
+P1 = ltn.Predicate(func=lambda x: torch.exp(-torch.norm(x - mu.value, dim=1)))
+```
+
+Notice the `mu.value`: inside the function, `x` is a raw PyTorch tensor, whereas `mu` is an LTN object. **General rule**: whenever an LTN constant or variable appears in the definition of a predicate, go through its `.value` attribute.
+
+### A predicate defined by a network
+
+```python
+class ModelP2(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.elu = torch.nn.ELU()
+        self.sigmoid = torch.nn.Sigmoid()
+        self.dense1 = torch.nn.Linear(2, 5)
+        self.dense2 = torch.nn.Linear(5, 1)
+
+    def forward(self, x):
+        x = self.elu(self.dense1(x))
+        return self.sigmoid(self.dense2(x))
+
+P2 = ltn.Predicate(model=ModelP2())
+```
+
+The **sigmoid** in the last layer is not a cosmetic detail: it is what guarantees that the output stays in $[0, 1]$, a necessary condition for a function to be a predicate in the sense of Real Logic. Without it, the network could return any real number.
+
+### Querying a predicate
+
+```python
+c1 = ltn.Constant(torch.tensor([2.1, 3]))
+c2 = ltn.Constant(torch.tensor([4.5, 0.8]))
+c3 = ltn.Constant(torch.tensor([3.0, 4.8]))
+
+print(P1(c1).value)
+print(P1(c2).value)
+print(P2(c3).value)
+print(P1(c1))
+```
+
+```text
+tensor(0.9048)
+tensor(0.0358)
+tensor(0.6267, grad_fn=<ViewBackward0>)
+LTNObject(value=tensor(0.9048), free_vars=[])
+```
+
+$c_1 = (2.1, 3)$ is very close to $\mu = (2, 3)$, hence a degree of truth close to 1; $c_2$ is far from it, hence a value close to 0. The degree of truth returned by $P_2$ does not mean anything yet: the network is not trained.
+
+The last line shows the difference between the box (`LTNObject`) and its content (`.value`). A predicate always returns an `LTNObject`; the degree of truth is in `.value`.
+
+### A predicate with several arguments
+
+A standard neural network takes a single input. To make it accept two arguments, the usual method is to **concatenate** the two vectors into one:
+
+```python
+class ModelP4(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.elu = torch.nn.ELU()
+        self.sigmoid = torch.nn.Sigmoid()
+        self.dense1 = torch.nn.Linear(4, 5)   # 2 + 2 features
+        self.dense2 = torch.nn.Linear(5, 1)
+
+    def forward(self, x, y):
+        x = torch.cat([x, y], dim=1)
+        x = self.elu(self.dense1(x))
+        return self.sigmoid(self.dense2(x))
+
+P4 = ltn.Predicate(ModelP4())
+c1 = ltn.Constant(torch.tensor([2.1, 3]))
+c2 = ltn.Constant(torch.tensor([4.5, 0.8]))
+print(P4(c1, c2).value)  # arguments are separated by a comma
+```
+
+```text
+tensor(0.4338, grad_fn=<ViewBackward0>)
+```
+
+If $x$ and $y$ each have 2 components, the concatenation has 4, hence `Linear(4, 5)` as the first layer.
+
+Why `dim=1`? LTN always adds a **batch dimension** in first position, even for a single constant, treated as a batch of size 1. Dimension 0 therefore says *which individual*, and dimension 1 *which features*. Concatenating along `dim=1` merges the features of $x$ and $y$ without touching the batch alignment. This is also why most operations in LTN use `dim=1`.
+
+## Functions
+
+An LTN function maps $n$ individuals to a single individual, in the space of tensors. It is built like a predicate, with `ltn.Function(func=...)` or `ltn.Function(model=...)`.
+
+```python
+f1 = ltn.Function(func=lambda x, y: x - y)
+
+class MyModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.dense1 = torch.nn.Linear(2, 10)
+        self.dense2 = torch.nn.Linear(10, 5)
+        self.relu = torch.nn.ReLU()
+
+    def forward(self, x):
+        x = self.relu(self.dense1(x))
+        return self.dense2(x)
+
+f2 = ltn.Function(model=MyModel())
+
+print(f1(c1, c2).value)
+print(f2(c1).value)
+print(f2(c1))
+```
+
+```text
+tensor([-2.4000,  2.2000])
+tensor([ 0.2885,  0.5843,  0.8049, -0.6174,  1.1797], grad_fn=<ViewBackward0>)
+LTNObject(value=tensor([ 0.2885,  0.5843,  0.8049, -0.6174,  1.1797], grad_fn=<ViewBackward0>), free_vars=[])
+```
+
+$f_1(c_1, c_2) = (2.1 - 4.5,\ 3 - 0.8) = (-2.4,\ 2.2)$: a plain difference, with no constraint on the output. $f_2$ returns a vector of $\mathbb{R}^5$, also wrapped in an `LTNObject`.
+
+**The key difference with a predicate**: no sigmoid here, no constraint on the output. This is consistent with the theory: a function returns an individual of the domain, not a judgment of truth. It can therefore return any tensor.
+
+This gives a useful reading habit: **the presence or absence of a sigmoid in the last layer** is enough to tell, in any LTN code, whether a `torch.nn.Module` defines a predicate or a function.
+
+## Variables
+
+A constant represents a single individual. A **variable** represents a batch of individuals: a *sequence*, not a set, which means the same individual can appear twice. Variables are what let us write $\forall x\, P(x)$: "for every $x$" only makes sense if $x$ ranges over several individuals.
+
+```python
+x = ltn.Variable('x', torch.randn((10, 2)))  # 10 individuals in R^2
+y = ltn.Variable('y', torch.randn((5, 2)))   # 5 individuals in R^2
+```
+
+Every variable must carry a **label** (`'x'`, `'y'`). It is not cosmetic: LTN uses it to know which dimension of a result belongs to which variable. It shows up in the `free_vars` attribute, the list of *free* variables, that is, those not yet captured by a quantifier. A variable on its own is free, so `x.free_vars` is `['x']`. A constant never varies: its `free_vars` is empty.
+
+### One variable: one result per individual
+
+If $x$ contains $n$ individuals, $P(x)$ produces $n$ results, one per individual, exactly like a standard batch in deep learning.
+
+### Two variables: every combination
+
+This is the least intuitive behavior, and the most important one to understand. LTN does not pair the first individual of $x$ with the first of $y$, the second with the second, and so on. It evaluates **every possible combination**, like a two-way multiplication table.
+
+If $x$ has $n_x$ individuals and $y$ has $n_y$, $P(x, y)$ produces a matrix of shape $(n_x, n_y)$ whose entry $(i, j)$ holds $P(x_i, y_j)$:
+
+```python
+res1 = P4(x, y)
+print(res1.shape())      # shortcut for res1.value.shape
+print(res1.free_vars)    # axis 0 is x, axis 1 is y
+print(res1.value[2, 0])  # P4 on the 3rd individual of x and the 1st of y
+print(res1.value)
+```
+
+```text
+torch.Size([10, 5])
+['x', 'y']
+tensor(0.4597, grad_fn=<SelectBackward0>)
+tensor([[0.4123, 0.4681, 0.3839, 0.3185, 0.2287],
+        [0.4042, 0.4494, 0.3715, 0.3273, 0.2354],
+        [0.4597, 0.4880, 0.4254, 0.4086, 0.3080],
+        [0.3982, 0.4541, 0.3704, 0.3040, 0.2186],
+        [0.3614, 0.4152, 0.3405, 0.2670, 0.1971],
+        [0.3598, 0.4134, 0.3394, 0.2654, 0.1964],
+        [0.4314, 0.4773, 0.3979, 0.3487, 0.2536],
+        [0.4165, 0.4724, 0.3881, 0.3226, 0.2318],
+        [0.3488, 0.4017, 0.3307, 0.2552, 0.1909],
+        [0.4301, 0.4840, 0.4008, 0.3352, 0.2425]], grad_fn=<ViewBackward0>)
+```
+
+We do get 50 evaluations, one per pair. The value `0.4597` returned by `res1.value[2, 0]` is the entry in the 3rd row and 1st column of the matrix.
+
+`free_vars` is what tells us how to read the result: axis 0 corresponds to $x$ and axis 1 to $y$. This information becomes essential with quantifiers: to compute $\forall x$, LTN will need to know which axis to aggregate over.
+
+With a function, the principle is the same, but since it returns a vector rather than a scalar, an extra axis is added at the end. $f_1$ returns a vector of $\mathbb{R}^2$, so $f_1(x, y)$ has shape $(10, 5, 2)$: the first two axes index the pair of individuals, the third the components of the returned vector.
+
+```python
+res2 = f1(x, y)
+print(res2.shape())
+print(res2.free_vars)
+print(res2.value[2, 0])  # f1 on the 3rd individual of x and the 1st of y
+print(res2.value)
+```
+
+```text
+torch.Size([10, 5, 2])
+['x', 'y']
+tensor([-2.4795,  0.8113])
+tensor([[[ 0.2054, -0.1212],
+         [-0.0711, -0.6304],
+         [ 0.6780, -0.6543],
+         [ 0.4287,  1.4174],
+         [ 1.6607,  0.7982]],
+
+        [[ 0.3505,  2.7907],
+         [ 0.0740,  2.2815],
+         [ 0.8232,  2.2576],
+         [ 0.5738,  4.3293],
+         [ 1.8058,  3.7101]],
+
+        [[-2.4795,  0.8113],
+         [-2.7560,  0.3021],
+         [-2.0068,  0.2782],
+         [-2.2562,  2.3499],
+         [-1.0242,  1.7306]],
+
+        [[ 0.7321,  0.8978],
+         [ 0.4556,  0.3886],
+         [ 1.2048,  0.3647],
+         [ 0.9554,  2.4364],
+         [ 2.1874,  1.8171]],
+
+        [[ 1.4323,  0.0301],
+         [ 1.1558, -0.4791],
+         [ 1.9049, -0.5031],
+         [ 1.6555,  1.5686],
+         [ 2.8875,  0.9494]],
+
+        [[ 1.3249, -0.8637],
+         [ 1.0484, -1.3729],
+         [ 1.7976, -1.3968],
+         [ 1.5482,  0.6749],
+         [ 2.7802,  0.0556]],
+
+        [[-0.3948,  1.6215],
+         [-0.6713,  1.1123],
+         [ 0.0778,  1.0884],
+         [-0.1715,  3.1601],
+         [ 1.0605,  2.5409]],
+
+        [[ 0.1748,  0.4160],
+         [-0.1016, -0.0932],
+         [ 0.6475, -0.1171],
+         [ 0.3981,  1.9545],
+         [ 1.6301,  1.3353]],
+
+        [[ 1.7245,  0.2834],
+         [ 1.4480, -0.2258],
+         [ 2.1972, -0.2497],
+         [ 1.9478,  1.8220],
+         [ 3.1798,  1.2027]],
+
+        [[-0.3727, -0.8452],
+         [-0.6492, -1.3544],
+         [ 0.0999, -1.3783],
+         [-0.1495,  0.6934],
+         [ 1.0825,  0.0742]]])
+```
+
+### A variable and a constant
+
+The answer follows from the above: a constant has nothing to vary, so the Cartesian product only runs over the variable. $P_4(c_1, y)$, with 5 individuals in $y$, gives a plain vector of 5 values:
+
+```python
+c1 = ltn.Constant(torch.tensor([2.1, 3]))
+res3 = P4(c1, y)
+print(res3.shape())    # no axis is associated with the constant
+print(res3.free_vars)
+print(res3.value[0])   # P4 on c1 and the 1st individual of y
+print(res3.value)
+```
+
+```text
+torch.Size([5])
+['y']
+tensor(0.3388, grad_fn=<SelectBackward0>)
+tensor([0.3388, 0.3908, 0.3224, 0.2462, 0.1857], grad_fn=<ViewBackward0>)
+```
+
+### Variables made of trainable constants
+
+One last case, very useful for learning embeddings: a variable whose individuals are themselves trainable constants.
+
+```python
+c1 = ltn.Constant(torch.tensor([2.1, 3]), trainable=True)
+c2 = ltn.Constant(torch.tensor([4.5, 0.8]), trainable=True)
+
+# PyTorch keeps track of the gradients between c1, c2 and x
+x = ltn.Variable('x', torch.stack([c1.value, c2.value]))
+res = P2(x)
+print(res.value)
+
+print(x.value[0])
+print(x.value[1])
+
+print(c1.value.grad_fn)
+print(c2.value.grad_fn)
+```
+
+```text
+tensor([0.6416, 0.5111], grad_fn=<ViewBackward0>)
+tensor([2.1000, 3.0000], grad_fn=<SelectBackward0>)
+tensor([4.5000, 0.8000], grad_fn=<SelectBackward0>)
+None
+None
+```
+
+The two individuals of $x$ are exactly $c_1$ and $c_2$, and they carry a `grad_fn`: they are connected to the computation graph.
+
+Since `torch.stack` is a differentiable operation, the gradient computed on `res` will flow back to $c_1$ and $c_2$. During training, these two constants will therefore be adjusted to better satisfy the logical constraints.
+
+One detail can be confusing: after this computation, `c1.value.grad_fn` is still `None`. That does not mean $c_1$ escapes training. `grad_fn` only indicates that `c1.value` is a *leaf* tensor, created directly rather than as the result of an operation. The gradient will reach it through its `.grad` attribute, and an optimizer will be able to update it normally.
+
+Note also that we pass `c1.value` rather than `c1` to the variable, because an LTN variable only accepts raw PyTorch tensors.
+
+## Key takeaways
+
+- LTN keeps first-order logic, but anchors each symbol in tensors: this is **grounding** $\mathcal{G}$.
+- A **constant** is a tensor, fixed or trainable (an embedding).
+- A **predicate** is a differentiable function to $[0, 1]$; a sigmoid in the last layer guarantees this constraint.
+- A **function** returns any tensor, with no constraint on the output.
+- A **variable** is a batch of individuals. Applying a predicate to several variables evaluates every combination, and `free_vars` tells which axis belongs to which variable.
+
+Symbols now have a numerical meaning. In part 2, we will see how **connectives** ($\lnot$, $\land$, $\lor$, $\implies$) and **quantifiers** ($\forall$, $\exists$) in turn become differentiable operations, so that whole formulas can be evaluated.
+
+The full notebook for this part is available in [my repository](https://github.com/vleonel-junior/logic-tensor-networks/blob/main/code/tutorials/1-grounding_non_logical_symbols.ipynb).

@@ -280,6 +280,15 @@
 .article :where(figure) {
     margin: 2em 0;
 }
+/* Inside a figure, the image and its wrapping paragraph drop their prose
+   margins so the caption sits right under the image */
+.article :where(figure > p, figure img) {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.article :where(figure > figcaption) {
+    margin-top: 0;
+}
 .article :where(figcaption),
 .article :where(figcaption *) {
     font-style: normal;

@@ -1,0 +1,465 @@
+---
+title: "Connectives and quantifiers"
+description: "How LTN replaces truth tables with differentiable fuzzy operators, and the quantifiers ∀ and ∃ with generalized means, along with diagonal quantification and guarded quantifiers."
+pubDate: 2026-09-25
+author: "Léonel VODOUNOU"
+dossier: "logic-tensor-networks"
+lang: "en"
+chapter: 2
+order: 2
+tags: ["Logic Tensor Networks", "Neuro-symbolic AI", "Fuzzy logic", "PyTorch"]
+draft: false
+---
+
+In [part 1](/blog/dossier/logic-tensor-networks/partie-1-grounding/), we saw how LTN grounds the non-logical symbols (constants, variables, functions and predicates) in tensors. What remains is the logical part of the language: the **connectives** ($\lnot$, $\land$, $\lor$, $\implies$) and the **quantifiers** ($\forall$, $\exists$). This is what lets us assemble predicates into complete formulas, and obtain a single degree of truth for each formula.
+
+## Connectives
+
+Classical connectives cannot be used as they are in LTN: their truth tables are only defined for values in $\{0, 1\}$, whereas LTN predicates return degrees of truth anywhere in the interval $[0, 1]$. LTN therefore replaces them with **fuzzy logic** operators, defined over the whole continuous interval.
+
+There are several valid families of fuzzy operators (Gödel, product, Łukasiewicz), but they are not equally good for training. Gödel's $\min$/$\max$, for instance, only lets the gradient flow to one of its arguments at a time, which can slow down or even block learning. LTN generally recommends the following configuration, where $u$ and $v$ are two degrees of truth in $[0, 1]$:
+
+| Connective | Fuzzy operator | Formula |
+|---|---|---|
+| $\lnot u$ | standard negation | $1 - u$ |
+| $u \land v$ | product t-norm | $uv$ |
+| $u \lor v$ | product t-conorm (probabilistic sum) | $u + v - uv$ |
+| $u \implies v$ | Reichenbach implication | $1 - u + uv$ |
+
+This choice is not arbitrary. Unlike $\min$/$\max$, the product spreads the gradient over both of its arguments at once, which makes it numerically more stable. This trade-off between logical faithfulness and gradient behavior is the subject of part 3.
+
+Notice also that these formulas recover the classical truth tables at the extreme values: with $u = 1$ and $v = 0$, the implication equals $1 - 1 + 0 = 0$, just like "true implies false". In between, they vary continuously.
+
+In LTN, a connective is created with the `Connective()` constructor, which takes a fuzzy semantics from the `ltn.fuzzy_ops` module:
+
+```python
+import ltn
+import torch
+
+Not = ltn.Connective(ltn.fuzzy_ops.NotStandard())
+And = ltn.Connective(ltn.fuzzy_ops.AndProd())
+Or = ltn.Connective(ltn.fuzzy_ops.OrProbSum())
+Implies = ltn.Connective(ltn.fuzzy_ops.ImpliesReichenbach())
+```
+
+### Broadcasting
+
+The `ltn.Connective` wrapper does more than apply the fuzzy formula. It also handles combining subformulas that do not involve the same variables. As we saw in part 1, a formula on $x$ alone has shape $(n_x,)$, and a formula on $x$ and $y$ has shape $(n_x, n_y)$. Before applying the operator element-wise, the connective must therefore extend these shapes to make them compatible. This is **broadcasting**.
+
+To observe it, we define two variables of different sizes, two constants, and a similarity predicate: the same $\exp(-\|x - y\|)$ construction as in part 1, which equals 1 when the two points coincide and tends to 0 as they move apart.
+
+```python
+x = ltn.Variable('x', torch.randn((10, 2)))  # 10 points in R^2
+y = ltn.Variable('y', torch.randn((5, 2)))   # 5 points in R^2
+
+c1 = ltn.Constant(torch.tensor([0.5, 0.0]))
+c2 = ltn.Constant(torch.tensor([4.0, 2.0]))
+
+Eq = ltn.Predicate(func=lambda x, y: torch.exp(-torch.norm(x - y, dim=1)))
+
+Eq(c1, c2).value
+```
+
+```text
+tensor(0.0178)
+```
+
+$c_1$ and $c_2$ are far apart, so their similarity is close to 0. Let's now try the connectives on concrete cases:
+
+```python
+Not(Eq(c1, c2)).value
+```
+
+```text
+tensor(0.9822)
+```
+
+We do get $1 - 0.0178 = 0.9822$.
+
+```python
+Implies(Eq(c1, c2), Eq(c2, c1)).value
+```
+
+```text
+tensor(0.9825)
+```
+
+With $u = v = 0.0178$, the Reichenbach implication gives $1 - u + uv \approx 0.9825$: an almost false premise makes the implication almost true, as in classical logic.
+
+The next two examples are the most instructive, because they show two different situations with respect to the variables.
+
+```python
+And(Eq(x, c1), Eq(x, c2)).shape()
+```
+
+```text
+torch.Size([10])
+```
+
+In `And(Eq(x, c1), Eq(x, c2))`, only the variable $x$ appears in both subformulas. Both results already have the same shape $(10,)$, so no broadcasting is needed: `And` combines them directly, individual by individual.
+
+```python
+Or(Eq(x, c1), Eq(x, y)).shape()
+```
+
+```text
+torch.Size([10, 5])
+```
+
+In `Or(Eq(x, c1), Eq(x, y))`, the situation is different. `Eq(x, c1)` only depends on $x$ and has shape $(10,)$, while `Eq(x, y)` depends on both $x$ and $y$ and has shape $(10, 5)$: an evaluation over two variables produces every combination. The connective detects this mismatch and extends the first result along the missing axis, that of $y$, by repeating each value for the 5 individuals of $y$. It then applies `Or` element-wise, hence the final shape $(10, 5)$.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![A connective applied element-wise to p(x) and q(y)](/images/dossiers/logic-tensor-networks/paper-connecteur.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*A connective applied element-wise, here p(x) ∧ q(y). Since x and y are two different variables, the result holds a degree of truth in [0, 1] for every combination of individuals of x and y. Source: Badreddine et al. (2022).*</figcaption>
+</figure>
+
+Like predicates and functions, connectives return `LTNObject`s: we read the result with `.value` and its shape with `shape()`.
+
+## Quantifiers
+
+Quantifiers cannot be used in their classical form either. $\forall$ and $\exists$ assume that a property is checked over an entire domain, whereas in LTN a variable only represents a finite batch of individuals, with continuous degrees of truth. LTN therefore replaces them with **aggregation operators**, which condense the degrees of truth of a batch into a single value.
+
+For a list of degrees of truth $u_1, \dots, u_n$ in $[0, 1]$, the two recommended operators are:
+
+- for $\exists$, the **generalized mean** (`pMean`):
+
+$$\mathrm{pM}(u_1, \dots, u_n) = \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p}, \qquad p \geq 1$$
+
+- for $\forall$, the **generalized mean of the deviations from truth** (`pMeanError`):
+
+$$\mathrm{pME}(u_1, \dots, u_n) = 1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}, \qquad p \geq 1$$
+
+These formulas are not chosen at random: `pMean` approximates the **maximum** and `pMeanError` the **minimum**. That is exactly the spirit of $\exists$, for which a single individual satisfying the property is enough, and of $\forall$, for which the worst case is what counts. We will prove it a little further down.
+
+A quantifier is created with the `Quantifier()` constructor, which takes an aggregation semantics and the type of quantification: `"e"` for existential, `"f"` for universal.
+
+```python
+Forall = ltn.Quantifier(ltn.fuzzy_ops.AggregPMeanError(p=2), quantifier="f")
+Exists = ltn.Quantifier(ltn.fuzzy_ops.AggregPMean(p=2), quantifier="e")
+```
+
+### Quantifying means aggregating along an axis
+
+The `ltn.Quantifier` wrapper itself picks the dimensions to aggregate, based on the variables passed to it. Quantifying over a variable amounts to applying the aggregator along that variable's axis, which makes **that axis disappear** from the result. This is where the variable labels seen in part 1 really pay off.
+
+```python
+x = ltn.Variable('x', torch.randn((10, 2)))  # 10 points in R^2
+y = ltn.Variable('y', torch.randn((5, 2)))   # 5 points in R^2
+
+Eq = ltn.Predicate(func=lambda x, y: torch.exp(-torch.norm(x - y, dim=1)))
+
+Eq(x, y).shape()
+```
+
+```text
+torch.Size([10, 5])
+```
+
+Let's quantify over $x$ alone:
+
+```python
+Forall(x, Eq(x, y)).shape()
+```
+
+```text
+torch.Size([5])
+```
+
+The axis of $x$ is gone, only that of $y$ remains. The result is still a function of $y$: for each of the 5 individuals of $y$, it tells to what degree the property holds for every $x$.
+
+When the quantification covers both variables, both axes disappear and we get a scalar, a single degree of satisfaction for the whole formula:
+
+```python
+Forall([x, y], Eq(x, y)).value
+```
+
+```text
+tensor(0.1521)
+```
+
+```python
+Exists([x, y], Eq(x, y)).value
+```
+
+```text
+tensor(0.2211)
+```
+
+```python
+Forall(x, Exists(y, Eq(x, y))).value
+```
+
+```text
+tensor(0.1846)
+```
+
+The last example nests two quantifiers: "for every $x$, there is a similar $y$". `Exists(y, …)` first removes the axis of $y$ and leaves a vector of shape $(10,)$, which `Forall(x, …)` then reduces to a scalar.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Aggregation implementing ∀y ∃x p(x, y)](/images/dossiers/logic-tensor-networks/paper-quantificateurs.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*An aggregation implementing the quantification ∀y ∃x p(x, y): ∃x removes the axis of x, then ∀y that of y. The result is a single number in [0, 1]. Source: Badreddine et al. (2022).*</figcaption>
+</figure>
+
+A point of syntax to remember: a single variable is passed to the quantifier directly, while several variables must be grouped in a list, like `[x, y]`.
+
+### Why `pMean` tends to the maximum, and `pMeanError` to the minimum
+
+We claimed that `pMean` approximates the maximum and `pMeanError` the minimum. Let's prove it.
+
+**`pMean` tends to the maximum.** We want to show that, for $u_1, \dots, u_n \in [0, 1]$:
+
+$$\lim_{p \to +\infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = \max(u_1, \dots, u_n)$$
+
+Let $M = \max(u_1, \dots, u_n)$. The case $M = 0$ is trivial (all the $u_i$ are zero and `pMean` equals 0); we therefore assume $M > 0$, which lets us factor it out:
+
+$$\left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot \left(\frac{1}{n} \sum_{i=1}^n \left(\frac{u_i}{M}\right)^p\right)^{1/p}$$
+
+Let $r_i = u_i / M$, which lies in $[0, 1]$ since $u_i \leq M$. Two cases arise:
+
+- for an index that achieves the maximum, $r_i = 1$, so $r_i^p = 1$ for every $p$;
+- for any other index, $r_i \in [0, 1)$, and a number strictly less than 1 raised to an ever-growing power tends to 0.
+
+Writing $k \geq 1$ for the number of indices that achieve the maximum (usually $k = 1$, but ties are possible):
+
+$$\lim_{p \to \infty} \frac{1}{n} \sum_{i=1}^n r_i^p = \frac{k}{n}$$
+
+What remains is the $p$-th root. Since $k/n$ is a strictly positive constant, we use the classical result $\lim_{p \to \infty} c^{1/p} = 1$ for every $c > 0$: just write $c^{1/p} = e^{\frac{1}{p} \ln c}$ and note that $\frac{1}{p} \ln c \to 0$. Hence:
+
+$$\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n u_i^p\right)^{1/p} = M \cdot 1 = \max(u_1, \dots, u_n)$$
+
+**`pMeanError` tends to the minimum.** We want to show that:
+
+$$\lim_{p \to +\infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = \min(u_1, \dots, u_n)$$
+
+The trick is to apply the previous result not to the $u_i$, but to their complements $1 - u_i$, which are also in $[0, 1]$:
+
+$$\lim_{p \to \infty} \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p} = \max_i (1 - u_i)$$
+
+Now, $\max_i (1 - u_i) = 1 - \min_i u_i$.
+
+<details>
+<summary><strong>Justification</strong></summary>
+
+Let $m = \min_i u_i$. For every $i$, $u_i \geq m$, so $1 - u_i \leq 1 - m$: $1 - m$ is an upper bound of the family, and $\max_i (1 - u_i) \leq 1 - m$.
+
+The minimum of a finite family is attained: there is an $i^*$ such that $u_{i^*} = m$, so $1 - m = 1 - u_{i^*}$ is one of the terms of the family. Since the maximum is greater than or equal to every term, $\max_i (1 - u_i) \geq 1 - m$.
+
+The two inequalities give the equality.
+
+</details>
+
+We conclude:
+
+$$\lim_{p \to \infty} \left[1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}\right] = 1 - (1 - \min_i u_i) = \min_i u_i$$
+
+### The role of p
+
+`pMean` is thus a smoothed maximum: for $p = 1$, it is a plain mean, and as $p \to +\infty$, it tends to the strict maximum. Likewise, `pMeanError` is a smoothed minimum, which goes from the mean ($p = 1$) to the strict minimum ($p \to +\infty$).
+
+The parameter $p$ actually sets a trade-off between **logical faithfulness** and **tolerance to the hard cases** of the batch.
+
+When $p$ is high, `pMeanError` gets close to the true minimum, and $\forall$ recovers its strict meaning: a single individual with a low degree of truth is enough to make the result drop, as we expect from a rigorous "for all". This is faithful, but demanding: to get a high score, every individual without exception must have a high degree of truth. Symmetrically, `pMean` gets close to the true maximum, and $\exists$ becomes easy to satisfy again: one good individual is enough.
+
+When $p$ gets close to 1, both operators get close to a mean in which each individual weighs about the same. Extreme cases then stop dominating: a very bad individual can be offset by several good ones, and vice versa. This compensation makes $\forall$ more tolerant (one failing individual is no longer enough to bring everything down) and $\exists$ more demanding (a single good individual is no longer enough). It is a deliberate departure from the strict logical semantics, useful in practice for absorbing noise in the data or for spreading the gradient more evenly during training.
+
+The choice of $p$ therefore depends on the goal: a high $p$ for a formula that must stay strict and tolerate no exception, a $p$ close to 1 for a formula that must be robust to noisy data or outliers. This choice also has major consequences for training, which we will see in part 3.
+
+$p$ can be set when the operator is created, or changed at each call:
+
+```python
+Forall(x, Eq(x, c1), p=2).value
+```
+
+```text
+tensor(0.1942)
+```
+
+```python
+Forall(x, Eq(x, c1), p=10).value
+```
+
+```text
+tensor(0.1232)
+```
+
+```python
+Exists(x, Eq(x, c1), p=2).value
+```
+
+```text
+tensor(0.3085)
+```
+
+```python
+Exists(x, Eq(x, c1), p=10).value
+```
+
+```text
+tensor(0.6013)
+```
+
+When $p$ goes from 2 to 10, $\forall$ drops (from 0.19 to 0.12) because it gets closer to the worst individual, and $\exists$ rises (from 0.31 to 0.60) because it gets closer to the best one.
+
+## Diagonal quantification
+
+So far, evaluating a predicate on two variables always produced every combination of their individuals. That is not always what we want. In a supervised dataset, each data point $x_i$ has its own label $l_i$: we want to evaluate the predicate on the pairs $(x_0, l_0)$, $(x_1, l_1)$, and so on, never on crossed combinations like $(x_0, l_3)$, which make no sense.
+
+This is what `ltn.diag` does: instead of crossing every combination, it only keeps the pairs in **one-to-one correspondence**, like a Python `zip` rather than two nested loops. This requires the variables to have the same number of individuals.
+
+Consider the following example:
+
+- the variable $x$ holds 100 individuals in $\mathbb{R}^{2 \times 2}$;
+- the variable $l$ holds the 100 corresponding labels, one-hot encoded (3 classes);
+- each pair $(x_i, l_i)$ is an example of the dataset;
+- the classifier $C(x, l)$ returns a degree of confidence in $[0, 1]$ that sample $x$ matches label $l$.
+
+```python
+# Random values for illustration; in practice, they would come from a dataset
+samples = torch.randn((100, 2, 2))         # 100 values in R^{2x2}
+labels = torch.randint(0, 3, size=(100,))  # the label (class 0, 1 or 2) of each sample
+onehot_labels = torch.nn.functional.one_hot(labels, num_classes=3)
+
+x = ltn.Variable("x", samples)
+l = ltn.Variable("l", onehot_labels)
+
+class ModelC(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.elu = torch.nn.ELU()
+        self.softmax = torch.nn.Softmax(dim=1)
+        self.dense1 = torch.nn.Linear(4, 5)
+        self.dense2 = torch.nn.Linear(5, 3)
+
+    def forward(self, x, l):
+        x = torch.flatten(x, start_dim=1)   # the 2 x 2 matrix becomes a vector of size 4
+        x = self.elu(self.dense1(x))
+        x = self.softmax(self.dense2(x))    # one probability per class
+        return torch.sum(x * l, dim=1)      # keep the probability of class l
+
+C = ltn.Predicate(ModelC())
+```
+
+The last line of `forward` deserves an explanation. If the network outputs $[0.1, 0.7, 0.2]$ for a sample whose label is $[0, 1, 0]$, the element-wise product followed by the sum gives $0 \times 0.1 + 1 \times 0.7 + 0 \times 0.2 = 0.7$: the probability the network assigns to the correct class.
+
+Without `ltn.diag`, `C(x, l)` evaluates the $100 \times 100$ combinations. Let's shrink the example to 4 individuals to see the problem: of the 16 pairs produced, only the 4 on the diagonal, $(x_0, l_0)$ to $(x_3, l_3)$, are real examples. All the others ask a question we never meant to ask, such as "does sample $x_0$ have the label of example 1?".
+
+`ltn.diag(x, l)` keeps only the 100 matching pairs: the shape of the result goes from $(100, 100)$ to $(100,)$.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Diagonal quantification over x1 and x2](/images/dossiers/logic-tensor-networks/paper-diagonale.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*Diagonal quantification: Diag(x₁, x₂) only quantifies over the pairs that match the i-th individual of x₁ with the i-th individual of x₂. It therefore assumes that x₁ and x₂ have the same number of individuals, like samples and their labels in supervised learning. Source: Badreddine et al. (2022).*</figcaption>
+</figure>
+
+Once again, the mechanism relies on variable labels: `ltn.diag` temporarily gives $x$ and $l$ the **same label**, prefixed with `diag_`. Since LTN relies on labels to decide whether two variables are crossed or traversed together, sharing the same label is enough to switch from the full cross product to one-to-one correspondence. `ltn.undiag` restores the original labels.
+
+```python
+print(C(x, l).shape())  # the 100 x 100 combinations
+ltn.diag(x, l)          # switch on one-to-one correspondence
+print(C(x, l).shape())  # the 100 matching pairs
+print(x.free_vars)
+print(l.free_vars)
+ltn.undiag(x, l)        # restore the normal behavior
+print(C(x, l).shape())  # the 100 x 100 combinations again
+```
+
+```text
+torch.Size([100, 100])
+torch.Size([100])
+['diag_x_l']
+['diag_x_l']
+torch.Size([100, 100])
+```
+
+In practice, `ltn.diag` is used right before a quantifier. Every quantifier automatically calls `ltn.undiag` once the aggregation is done, so the variables recover their normal behavior outside the formula.
+
+```python
+x, l = ltn.diag(x, l)
+print(x.free_vars)
+print(l.free_vars)
+print(Forall([x, l], C(x, l)).value)  # aggregates only over the 100 matching pairs
+print(x.free_vars)                    # undiag was called automatically
+print(l.free_vars)
+```
+
+```text
+['diag_x_l']
+['diag_x_l']
+tensor(0.3384, grad_fn=<RsubBackward1>)
+['x']
+['l']
+```
+
+$\forall [x, l]\ C(x, l)$ asks exactly the question of a supervised classification problem: to what degree does the model assign good confidence to each example paired with its true label? Since the network is not trained, the score is low.
+
+## Guarded quantifiers
+
+Sometimes we want to quantify not over all the individuals of a variable, but only over those that satisfy a condition. This condition is not a continuous degree of truth like an LTN predicate: it is a **boolean mask**, strictly 0 or 1, used only to select which individuals take part in the aggregation.
+
+Let $m$ be a masking function that returns a boolean for each element of the domain. We can then write:
+
+- $(\forall x : m(x))\ \phi(x)$: "every $x$ that satisfies $m(x)$ also satisfies $\phi(x)$";
+- $(\exists x : m(x))\ \phi(x)$: "there is an $x$ that satisfies $m(x)$ and also satisfies $\phi(x)$".
+
+The mask can depend on other variables of the formula: $\exists y\ (\forall x : m(x, y))\ \phi(x, y)$ is a valid statement, where the condition on $x$ depends on $y$.
+
+Take an example stating that there is a distance $d$ below which all pairs of points are similar:
+
+$$\exists d\ \big(\forall x, y : \mathrm{dist}(x, y) < d\big)\ \mathrm{Eq}(x, y)$$
+
+$\mathrm{Eq}$ is the similarity predicate used so far, and $\mathrm{dist}$ computes the Euclidean distance between two points.
+
+```python
+Eq = ltn.Predicate(func=lambda x, y: torch.exp(-torch.norm(x - y, dim=1)))
+
+points = torch.rand((50, 2))  # 50 points in [0,1]^2
+x = ltn.Variable("x", points)
+y = ltn.Variable("y", points)
+d = ltn.Variable("d", torch.tensor([.1, .2, .3, .4, .5, .6, .7, .8, .9]))
+```
+
+A guarded quantifier takes two extra arguments: `cond_vars`, the list of variables the condition depends on, and `cond_fn`, the function that computes the mask from those variables.
+
+```python
+dist = lambda x, y: torch.unsqueeze(torch.norm(x.value - y.value, dim=1), 1)
+
+Exists(d,
+      Forall([x, y],
+            Eq(x, y),
+            cond_vars=[x, y, d],
+            cond_fn=lambda x, y, d: dist(x, y) < d.value
+            )).value
+```
+
+```text
+tensor(0.7599, dtype=torch.float64)
+```
+
+Here, `cond_vars=[x, y, d]` says that the condition depends on $x$, $y$ and $d$, and `cond_fn` checks, for each combination, whether the distance between $x$ and $y$ is below the threshold $d$. LTN computes $\mathrm{Eq}(x, y)$ over every combination, computes the mask in parallel, then only aggregates the values for which the mask is true. Pairs that are too far apart are simply left out.
+
+<figure class="my-8 flex flex-col items-center gap-3">
+
+![Guarded quantification with the mask age(x) > age(y)](/images/dossiers/logic-tensor-networks/paper-quantification-gardee.png)
+
+<figcaption class="text-sm text-center text-gray-400 italic">*An example of guarded quantification: elements that do not satisfy the condition, here age(x) > age(y), are filtered out before the aggregators for ∀ and ∃ are applied. Source: Badreddine et al. (2022).*</figcaption>
+</figure>
+
+This is especially useful for learning: the gradient then only flows through the part of the domain that satisfies the condition, instead of being diluted over combinations that make no sense for the rule.
+
+## Key takeaways
+
+- **Connectives** become differentiable fuzzy operators. The recommended configuration: standard negation, product, probabilistic sum and Reichenbach implication.
+- A connective automatically **broadcasts** subformulas that do not involve the same variables.
+- **Quantifiers** become aggregations along the axis of the quantified variable: `pMeanError` for $\forall$, a smoothed minimum, and `pMean` for $\exists$, a smoothed maximum.
+- The parameter **$p$** sets the trade-off between logical faithfulness (large $p$) and tolerance to noise (small $p$).
+- **`ltn.diag`** replaces the full cross product with one-to-one correspondence, which is essential for (data, label) pairs.
+- **Guarded quantifiers** restrict the aggregation to the individuals that satisfy a boolean mask.
+
+We can now evaluate any formula. But for a network to learn to satisfy these formulas, their gradient must behave well, and that is not the case for every operator. In part 3, we will look at the gradient pitfalls and at the "stable product" configuration that avoids them.
+
+The full notebook for this part is available in [my repository](https://github.com/vleonel-junior/logic-tensor-networks/blob/main/code/tutorials/2-grounding_connectives.ipynb).

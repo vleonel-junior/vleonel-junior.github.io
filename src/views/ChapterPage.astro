@@ -59,7 +59,7 @@ const nextChapter = neighbour(series[index + 1]);
 	author={chapter.data.author}
 	date={formatDate(chapter.data.pubDate, lang)}
 	readingTime={`${readingTime} ${t("blog.minRead")}`}
-	notice={t("series.notice")}
+	notice={dossierMeta && tr(dossierMeta.notice, lang)}
 >
 	<Content />
 

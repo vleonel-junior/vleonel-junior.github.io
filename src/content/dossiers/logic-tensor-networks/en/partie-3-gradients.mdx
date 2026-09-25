@@ -1,0 +1,264 @@
+---
+title: "Operators and their gradients"
+description: "Why fuzzy operators are not all equally good for learning: vanishing gradients, single-passing gradients, exploding gradients, and the stable product configuration that avoids them."
+pubDate: 2026-09-25
+author: "Léonel VODOUNOU"
+dossier: "logic-tensor-networks"
+lang: "en"
+chapter: 3
+order: 3
+tags: ["Logic Tensor Networks", "Neuro-symbolic AI", "Fuzzy logic", "Optimization"]
+draft: false
+---
+
+In [part 2](/blog/dossier/logic-tensor-networks/partie-2-connecteurs-quantificateurs/), we saw that LTN replaces connectives and quantifiers with fuzzy operators. We also settled on a recommended configuration, without really justifying that choice.
+
+This part answers the question we left open. When we only **query** a formula that is already built, any valid fuzzy operator makes sense. But when we want to **learn**, that is, train a model by gradient descent from that formula, they are not all equally good. We will look at the problems some operators cause, and at why the recommended configuration avoids them.
+
+## Querying: operators that give different answers
+
+The `ltn.fuzzy_ops` module provides the most common fuzzy semantics, built from PyTorch operations. Let's compare four operators:
+
+- the product t-norm: $u \land_{\text{prod}} v = uv$;
+- the Łukasiewicz t-norm: $u \land_{\text{luk}} v = \max(u + v - 1,\ 0)$;
+- the minimum aggregator: $\min(u_1, \dots, u_n)$;
+- the `pMeanError` aggregator, seen in part 2: $\mathrm{pME}(u_1, \dots, u_n) = 1 - \left(\frac{1}{n} \sum_{i=1}^n (1 - u_i)^p\right)^{1/p}$.
+
+Each carries a different meaning and can be legitimate depending on the intent of the query. But on the same inputs, they give very different results.
+
+Take $u = 0.4$ and $v = 0.7$. With the product, $u \land_{\text{prod}} v = 0.4 \times 0.7 = 0.28$. With Łukasiewicz, $u \land_{\text{luk}} v = \max(0.1,\ 0) = 0.1$. The result nearly triples depending on the operator: the choice of semantics is not neutral.
+
+The `stable` parameter that appears in the code is explained at the end of this part.
+
+```python
+import ltn
+import torch
+
+x1 = torch.tensor(0.4)
+x2 = torch.tensor(0.7)
+
+and_prod = ltn.fuzzy_ops.AndProd(stable=False)
+and_luk = ltn.fuzzy_ops.AndLuk()
+
+print(and_prod(x1, x2))
+print(and_luk(x1, x2))
+```
+
+```text
+tensor(0.2800)
+tensor(0.1000)
+```
+
+We see the same kind of gap between two aggregators. Take the sequence $u = [1,\ 1,\ 1,\ 0.5,\ 0.3,\ 0.2,\ 0.2,\ 0.1]$. The minimum only looks at the worst value, $0.1$, and completely ignores the other seven. `pMeanError` with $p = 4$ takes the whole sequence into account: the good values, like the three $1$s, partly offset the bad ones, and the result is noticeably higher.
+
+```python
+xs = torch.tensor([1., 1., 1., 0.5, 0.3, 0.2, 0.2, 0.1])
+
+forall_min = ltn.fuzzy_ops.AggregMin()
+forall_pME = ltn.fuzzy_ops.AggregPMeanError(p=4, stable=False)
+
+print(forall_min(xs, dim=0))
+print(forall_pME(xs, dim=0))
+```
+
+```text
+tensor(0.1000)
+tensor(0.3134)
+```
+
+This is what the proof in part 2 announced: with a finite $p$, `pMeanError` is a smoothed version of the minimum, not the minimum itself. That is the whole question of this part: why is this smoothing desirable for training, even though it departs from the strict logical semantics?
+
+## Learning: three gradient pitfalls
+
+Many fuzzy logic operators have derivatives that are poorly suited to gradient-based optimization. For a detailed analysis, see [van Krieken et al., *Analyzing Differentiable Fuzzy Logic Operators* (2020)](https://arxiv.org/abs/2002.06100). Here we illustrate three typical problems on simple cases.
+
+### 1. The vanishing gradient
+
+Some operators have a zero gradient over a whole region of their domain, which blocks learning in that region.
+
+This is the case for the Łukasiewicz conjunction, $u \land_{\text{luk}} v = \max(u + v - 1,\ 0)$. As soon as $u + v - 1 < 0$, the $\max$ returns $0$, and the derivative of $\max(z, 0)$ with respect to $z$ is zero for every strictly negative $z$.
+
+With $u = 0.3$ and $v = 0.5$, we have $u + v - 1 = -0.2 < 0$, so $u \land_{\text{luk}} v = 0$, and the gradient with respect to both $u$ and $v$ is exactly zero.
+
+```python
+x1 = torch.tensor(0.3, requires_grad=True)
+x2 = torch.tensor(0.5, requires_grad=True)
+
+y = and_luk(x1, x2)
+y.backward()  # computes the gradients
+res = y.item()
+gradients = [v.grad for v in [x1, x2]]
+
+print(res)        # result of the conjunction
+print(gradients)  # gradients with respect to x1 and x2
+```
+
+```text
+0.0
+[tensor(0.), tensor(0.)]
+```
+
+The optimizer gets **no signal** telling it to increase $u$ or $v$ to better satisfy the conjunction, even though that is intuitively what it should do. And since the gradient vanishes over a whole region, not at an isolated point, learning can stay stuck there for a long time.
+
+### 2. The single-passing gradient
+
+Some operators only let the gradient through to one input at a time, which deprives all the others of any signal at that step.
+
+This is how the minimum behaves: its derivative with respect to $u_i$ is $1$ for the index that achieves the minimum, and $0$ for all the others, whatever their value.
+
+On the sequence $u = [1,\ 1,\ 1,\ 0.5,\ 0.3,\ 0.2,\ 0.2,\ 0.1]$, only the last term achieves the minimum:
+
+```python
+xs = torch.tensor([1., 1., 1., 0.5, 0.3, 0.2, 0.2, 0.1], requires_grad=True)
+
+y = forall_min(xs, dim=0)
+res = y.item()
+y.backward()
+gradients = xs.grad
+
+print(res)
+print(gradients)
+```
+
+```text
+0.10000000149011612
+tensor([0., 0., 0., 0., 0., 0., 0., 1.])
+```
+
+Only $0.1$ receives a gradient. The seven other values, including those that are far from perfect like $0.3$ or $0.5$, are not updated. On a large batch, this is very inefficient: at each training step, a single individual improves while all the others stay unchanged.
+
+### 3. The exploding gradient
+
+Conversely, some operators have a gradient that becomes huge, or even infinite, over part of their domain.
+
+This is the case for `pMeanError` when all inputs are exactly $1$. Each term $(1 - u_i)$ vanishes, so does the sum, and the expression takes the form $0^{1/p}$. Now, the derivative of $z^{1/p}$ is $\frac{1}{p} z^{1/p - 1}$: with $p > 1$, the exponent $1/p - 1$ is negative, so the derivative grows without bound as $z$ approaches $0$. Numerically, we get an undefined value (`nan`).
+
+```python
+xs = torch.tensor([1., 1., 1.], requires_grad=True)
+
+y = forall_pME(xs, dim=0, p=4)
+res = y.item()
+y.backward()
+gradients = xs.grad
+
+print(res)
+print(gradients)
+```
+
+```text
+1.0
+tensor([nan, nan, nan])
+```
+
+The situation is paradoxical: the best possible case, where every individual is perfectly true, is precisely the one that makes training unstable. A single `nan` is enough to contaminate every weight of the model at the next update.
+
+## The stable product configuration
+
+### The product configuration
+
+The configuration recommended in part 2, called the **product configuration**, is the following:
+
+| Element | Operator | Formula |
+|---|---|---|
+| $\lnot$ | standard negation | $1 - u$ |
+| $\land$ | product t-norm | $uv$ |
+| $\lor$ | product t-conorm | $u + v - uv$ |
+| $\implies$ | Reichenbach implication | $1 - u + uv$ |
+| $\exists$ | `pMean` | $\left(\frac{1}{n} \sum_i u_i^p\right)^{1/p}$ |
+| $\forall$ | `pMeanError` | $1 - \left(\frac{1}{n} \sum_i (1 - u_i)^p\right)^{1/p}$ |
+
+It does not fully escape the problems we just saw, but only at well-identified edge cases:
+
+- the product t-norm has a vanishing gradient when $u = v = 0$ (its derivatives are $v$ and $u$);
+- the product t-conorm has a vanishing gradient when $u = v = 1$ (its derivatives are $1 - v$ and $1 - u$);
+- the Reichenbach implication has a vanishing gradient when $u = 0$ and $v = 1$ (its derivatives are $v - 1$ and $u$);
+- `pMean` has an exploding gradient when all the $u_i$ are $0$;
+- `pMeanError` has an exploding gradient when all the $u_i$ are $1$, exactly the case we just observed.
+
+The difference with Łukasiewicz or the minimum matters: here, the problems only appear at specific points, not over whole regions of the domain.
+
+### The stable version
+
+Since these problems only occur at specific points, a simple trick is enough to fix them, with $\epsilon$ a small positive value (for example $10^{-5}$):
+
+- if the edge case occurs when an input equals $0$, each input $u$ is replaced by $u' = (1 - \epsilon)u + \epsilon$;
+- if the edge case occurs when an input equals $1$, each input $u$ is replaced by $u' = (1 - \epsilon)u$.
+
+By shifting the inputs very slightly so that they never reach exactly $0$ or $1$, we avoid the points where the derivative vanishes or explodes, without noticeably changing the result anywhere else. This corrected version is called **stable**.
+
+It is switched on with the boolean `stable` parameter, which can be set when the operator is created or changed at each call. Let's go back to the case where all inputs were $1$:
+
+```python
+xs = torch.tensor([1., 1., 1.], requires_grad=True)
+
+y = forall_pME(xs, dim=0, p=4, stable=True)  # the gradient no longer explodes
+res = y.item()
+y.backward()
+gradients = xs.grad
+
+print(res)
+print(gradients)
+```
+
+```text
+0.9998999834060669
+tensor([0.3333, 0.3333, 0.3333])
+```
+
+The result goes from $1$ to $0.9999$, a negligible difference, and the gradients are no longer `nan`: each input gets the same finite gradient, which makes sense since they all play the same role.
+
+### Choosing p
+
+We saw in part 2 that $p$ lets us write more or less strict formulas depending on the application. But it must be chosen carefully, because it has major consequences for training.
+
+When $p$ grows large, `pMeanError` falls back into the single-passing gradient problem. This is consistent with the proof in part 2: `pMeanError` tends to the minimum as $p \to \infty$, and the minimum has exactly this flaw. Let's compare the gradients with $p = 4$ and $p = 20$ on the same sequence:
+
+```python
+xs = torch.tensor([1., 1., 1., 0.5, 0.3, 0.2, 0.2, 0.1], requires_grad=True)
+
+y = forall_pME(xs, dim=0, p=4)
+res = y.item()
+y.backward()
+gradients = xs.grad
+
+print(res)
+print(gradients)
+```
+
+```text
+0.31339913606643677
+tensor([0.0000, 0.0000, 0.0000, 0.0483, 0.1325, 0.1977, 0.1977, 0.2815])
+```
+
+```python
+xs = torch.tensor([1., 1., 1., 0.5, 0.3, 0.2, 0.2, 0.1], requires_grad=True)
+
+y = forall_pME(xs, dim=0, p=20)
+res = y.item()
+y.backward()
+gradients = xs.grad
+
+print(res)
+print(gradients)
+```
+
+```text
+0.18157517910003662
+tensor([0.0000e+00, 0.0000e+00, 0.0000e+00, 1.0734e-05, 6.4147e-03, 8.1100e-02,
+        8.1100e-02, 7.6019e-01])
+```
+
+With $p = 4$, the gradient is spread over all the imperfect values, and it is stronger the worse the value: $0.28$ for $0.1$, $0.05$ for $0.5$. The three $1$s get nothing, which is expected since they are already perfectly true. With $p = 20$, the gradient concentrates almost entirely on $0.1$ ($0.76$), and the value $0.5$ gets practically nothing ($10^{-5}$). We are getting close to the strict minimum.
+
+It can therefore be tempting to pick a large $p$ to get logically strict results when querying a formula, but it is a problem for training: the operator becomes nearly single-passing and focuses at each step on the extreme values, at the expense of the rest of the batch. It is recommended not to set $p$ too high during learning.
+
+## Key takeaways
+
+- To **query** a formula, any valid fuzzy operator will do; to **learn**, the behavior of the gradient becomes decisive.
+- Three pitfalls: the **vanishing** gradient (Łukasiewicz), the **single-passing** gradient (minimum and maximum) and the **exploding** gradient (`pMeanError` when every input equals 1).
+- The **product configuration** only has these problems at a few edge points, which the **stable version** avoids by shifting the inputs slightly away from $0$ or $1$.
+- A **$p$ that is too high** makes `pMean` and `pMeanError` nearly single-passing: keep $p$ moderate for training.
+
+We now have all the tools: symbols grounded in tensors, formulas evaluated by differentiable operators, and operators whose gradient behaves well. In part 4, we put everything together to **learn**: a knowledge base becomes a loss function, and a network is trained to satisfy it.
+
+The full notebook for this part is available in [my repository](https://github.com/vleonel-junior/logic-tensor-networks/blob/main/code/tutorials/2b-operators-and-gradients.ipynb).

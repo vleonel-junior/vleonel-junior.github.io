@@ -58,7 +58,7 @@ const base = import.meta.env.BASE_URL;
 	langPaths={langPaths}
 	translated={translated}
 >
-	<div class="mx-auto w-full max-w-[728px] px-4 pb-8 pt-8 sm:px-0 sm:pt-14">
+	<div class="mx-auto w-full max-w-[868px] px-4 pb-8 pt-8 sm:px-6 sm:pt-14">
 		{
 			back && (
 				<a
@@ -168,6 +168,29 @@ const base = import.meta.env.BASE_URL;
 				setTimeout(() => (button.textContent = label), 1500);
 			} catch {}
 		});
+	});
+</script>
+
+<script is:inline>
+	// Keeps punctuation on the same line as the inline formula before it, so
+	// a line never starts with a lone "." or " :" after a formula. Browsers
+	// may break right after a formula whatever white-space says, so the
+	// punctuation moves into the formula's last breakable piece (.base): the
+	// formula can still wrap after = or +, but never before its punctuation.
+	document.querySelectorAll("[data-zoomable] .katex").forEach((formula) => {
+		if (formula.closest(".katex-display")) return;
+		const next = formula.nextSibling;
+		const last = formula.querySelector(".katex-html > .base:last-of-type");
+		if (!last || !next || next.nodeType !== Node.TEXT_NODE) return;
+		const match = next.data.match(/^\s?[.,;:!?)»]+/);
+		if (!match) return;
+		// same look as the surrounding text, not the formula's font
+		const text = getComputedStyle(formula.parentElement);
+		const punct = document.createElement("span");
+		punct.textContent = match[0].replace(/^\s/, " ");
+		punct.style.font = `${text.fontStyle} ${text.fontWeight} ${text.fontSize} ${text.fontFamily}`;
+		last.append(punct);
+		next.data = next.data.slice(match[0].length);
 	});
 </script>
 

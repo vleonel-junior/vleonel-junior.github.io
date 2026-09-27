@@ -32,3 +32,14 @@ cv/*.fdb_latexmk
 cv/build.log
 cv/*.pdf
 cv/pro/
+
+# Local working files: one-off scripts, notes and outputs kept out of the repo
+/*.py
+/*.txt
+/DOCUMENTATION_TECHNIQUE.md
+/INSTRUCTIONS_BLOG.md
+/New_updates.md
+/PLAN_PROJET.md
+/chap0_chunks/
+/public/images/README.md
+.claude/

@@ -1,139 +1,124 @@
-# Portfolio — Léonel VODOUNOU
+# Léonel Vodounou, personal website
 
-Portfolio personnel moderne et performant développé avec **Astro.js** et **Tailwind CSS**.
+Source of [vleonel-junior.github.io](https://vleonel-junior.github.io/): my
+academic profile, projects, and a blog of notes on machine learning, large
+language models and the mathematics behind them. The site is bilingual,
+English at `/` and French under `/fr/`.
 
-🔗 **Site en ligne** : [vleonel-junior.github.io](https://vleonel-junior.github.io/)
+## Contents
 
-## 🚀 Fonctionnalités
+- **Profile**: education, experience, publications, projects,
+  certifications, community involvement, and a downloadable CV.
+- **Articles**: standalone posts, such as a guide to descriptive statistics
+  with interactive figures.
+- **Reading notes**: chapter-by-chapter notes on
+  *Build a Large Language Model (From Scratch)* by Sebastian Raschka.
+- **Article series**: a five-part series on Logic Tensor Networks, from
+  grounding symbols in tensors to a semi-supervised MNIST case study.
 
-- ⚡ **Performance optimale** avec Astro.js
-- 🎨 **Design responsive** avec Tailwind CSS
-- 📝 **Blog intégré** avec support Markdown/MDX
-- 📚 **Dossiers de lecture** — Notes de lecture structurées par chapitres
-- 🌙 **Mode sombre/clair** automatique
-- 🔍 **SEO optimisé** avec meta tags et sitemap
-- 📱 **Mobile-first** design
-- 🚀 **Déploiement automatique** sur GitHub Pages
+## Stack
 
-## 🛠 Technologies
+- [Astro](https://astro.build/) 5, static site generation, with MDX content
+  collections
+- [Tailwind CSS](https://tailwindcss.com/) 4 and its typography plugin
+- [KaTeX](https://katex.org/), through `remark-math` and `rehype-katex`, for
+  formulas
+- [Preact](https://preactjs.com/) for the interactive figures
+- [Supabase](https://supabase.com/) for article comments, and
+  [Buttondown](https://buttondown.com/) for the newsletter
 
-- [Astro.js](https://astro.build/) — Framework de génération de sites statiques
-- [Tailwind CSS](https://tailwindcss.com/) — Framework CSS utilitaire
-- [TypeScript](https://www.typescriptlang.org/) — Typage statique JavaScript
-- [MDX](https://mdxjs.com/) — Markdown enrichi avec composants
-- [Preact](https://preactjs.com/) — Composants interactifs légers
-- [KaTeX](https://katex.org/) — Rendu de formules mathématiques
+## Getting started
 
-## 📦 Installation
-
-1. **Cloner le repository**
-   ```bash
-   git clone https://github.com/vleonel-junior/vleonel-junior.github.io.git
-   cd vleonel-junior.github.io
-   ```
-
-2. **Installer les dépendances**
-   ```bash
-   npm install
-   ```
-
-3. **Démarrer le serveur de développement**
-   ```bash
-   npm run dev
-   ```
-
-4. **Ouvrir dans le navigateur**
-   ```
-   http://localhost:4321
-   ```
-
-## 📝 Scripts disponibles
-
-- `npm run dev` — Démarrer le serveur de développement
-- `npm run build` — Construire le site pour la production
-- `npm run preview` — Prévisualiser le build de production
-- `npm run astro` — Lancer les commandes Astro CLI
-
-## 📁 Structure du projet
-
-```
-├── src/
-│   ├── components/          # Composants réutilisables
-│   │   ├── ui/             # Composants UI de base
-│   │   ├── Navigation.astro
-│   │   ├── TableOfContents.astro
-│   │   └── Footer.astro
-│   ├── content/            # Contenu (Markdown / MDX)
-│   │   ├── blog/           # Articles de blog
-│   │   ├── dossiers/       # Dossiers de lecture (notes par chapitres)
-│   │   └── config.ts       # Configuration des collections
-│   ├── data/               # Données structurées (expériences, projets, etc.)
-│   ├── layouts/            # Layouts de page
-│   │   └── Layout.astro
-│   ├── pages/              # Pages du site
-│   │   ├── index.astro     # Page d'accueil (CV / Resume)
-│   │   ├── projects.astro  # Page projets
-│   │   └── blog/           # Pages du blog et des dossiers
-│   └── styles/             # Styles globaux
-│       └── global.css
-├── public/                 # Assets statiques
-│   └── images/             # Images du site
-└── astro.config.mjs        # Configuration Astro
-```
-
-## ✍️ Ajouter un article de blog
-
-1. **Créer un nouveau fichier** dans `src/content/blog/`
-   ```bash
-   touch src/content/blog/mon-article.mdx
-   ```
-
-2. **Ajouter le front matter** et le contenu
-   ```markdown
-   ---
-   title: "Titre de l'article"
-   description: "Description courte"
-   pubDate: 2026-06-13
-   author: "Léonel VODOUNOU"
-   image: "/images/article-cover.jpg"
-   tags: ["tech", "web"]
-   category: "Development"
-   readTime: 5
-   ---
-
-   Contenu de l'article en Markdown...
-   ```
-
-## 🚀 Déploiement
-
-### GitHub Pages (Automatique)
-
-Le site est déployé automatiquement via GitHub Actions à chaque push sur `main`.
+Requires Node.js 18 or later.
 
 ```bash
-git add .
-git commit -m "Update"
-git push origin main
+npm install
+npm run dev        # development server on http://localhost:4321
+npm run build      # production build in dist/
+npm run preview    # serve the production build
 ```
 
-Le site est disponible à : **https://vleonel-junior.github.io/**
+Comments need a Supabase project. Set these variables in a `.env` file at the
+root; without them the site builds and runs, with comments disabled:
 
-## 📈 Performance
+```
+PUBLIC_SUPABASE_URL=...
+PUBLIC_SUPABASE_ANON_KEY=...
+```
 
-Ce portfolio est optimisé pour la performance :
-- Score Lighthouse 95+ attendu
-- Images optimisées automatiquement
-- CSS et JavaScript minifiés
-- Génération de sitemap automatique
-- Meta tags SEO complets
+## Project structure
 
-## 📞 Contact
+```
+src/
+├── components/     article layout, table of contents, comments, figures
+├── content/
+│   ├── blog/       articles, one file per language in en/ and fr/
+│   └── dossiers/   reading notes and series, one folder per dossier
+├── data/           profile content: education, experience, projects, ...
+├── i18n/           interface strings and language helpers
+├── layouts/        base HTML layout
+├── pages/          routes, English at the root and French under fr/
+├── styles/         global styles and theme tokens
+└── views/          page templates shared by both languages
+public/             images, documents and the CV
+cv/                 LaTeX source of the CV
+```
 
-- **Email** : [vleoneljunior@gmail.com](mailto:vleoneljunior@gmail.com)
-- **LinkedIn** : [Léonel Junior Sêdjro VODOUNOU](https://www.linkedin.com/in/leonel-vodounou)
-- **X (Twitter)** : [@leonelvodounou](https://x.com/leonelvodounou)
-- **GitHub** : [vleonel-junior](https://github.com/vleonel-junior)
+## Writing content
 
+### Articles
+
+An article is written once per language, under the same file name:
+`src/content/blog/en/<slug>.mdx` and `src/content/blog/fr/<slug>.mdx`. If a
+translation is missing, the other language falls back to the existing version.
+
+```yaml
 ---
+title: "Descriptive statistics"
+description: "One or two sentences shown in listings and link previews."
+pubDate: 2026-03-26
+author: "Léonel VODOUNOU"
+category: "Foundations"
+tags: ["Statistics", "Machine Learning"]
+lang: "en"
+---
+```
 
-⭐ N'hésitez pas à donner une étoile si ce projet vous a aidé !
+Optional fields: `image` (cover for listings), `readTime` (minutes, otherwise
+estimated) and `draft: true` to keep an article out of the site.
+
+### Reading notes and series
+
+A dossier groups chapters in `src/content/dossiers/<dossier>/en/` and
+`fr/`. Its title, description, chapter list and source notice are declared in
+`src/data/dossiers.ts`, with `kind: "reading-notes"` for notes on a book or
+`kind: "series"` for a series of my own articles. Each chapter file sets
+`dossier`, `chapter` and `order` in its frontmatter, along with the article
+fields above.
+
+### Formulas and figures
+
+Inline formulas use `$...$`. Display formulas put the `$$` delimiters on their
+own lines:
+
+```
+$$
+\mathcal{G}(x) \in \mathbb{R}^{n}
+$$
+```
+
+A `$$...$$` written on a single line is rendered as an inline formula. Images
+in articles open full screen on click.
+
+## Deployment
+
+Every push to `main` builds the site and publishes it to GitHub Pages through
+the workflow in `.github/workflows/`. The Supabase variables are read from the
+repository secrets.
+
+## Contact
+
+- Email: [vleoneljunior@gmail.com](mailto:vleoneljunior@gmail.com)
+- LinkedIn: [Léonel Junior Sêdjro VODOUNOU](https://www.linkedin.com/in/leonel-vodounou)
+- X: [@leonelvodounou](https://x.com/leonelvodounou)
+- GitHub: [vleonel-junior](https://github.com/vleonel-junior)

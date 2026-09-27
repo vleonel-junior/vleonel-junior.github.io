@@ -166,6 +166,11 @@ export default function CommentSection({ slug, lang = 'en' }: { slug: string; la
     const AUTHOR_EMAIL = "vleoneljunior@gmail.com";
 
     useEffect(() => {
+        // Supabase not configured: comments stay empty instead of crashing
+        if (!supabase) {
+            setLoading(false);
+            return;
+        }
         // Check initial session
         supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
             setUser(session?.user ?? null);

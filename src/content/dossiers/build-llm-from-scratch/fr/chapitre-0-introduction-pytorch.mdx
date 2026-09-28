@@ -1880,7 +1880,7 @@ Le **Ring-AllReduce** élimine ce goulot en supprimant le réducteur central. Vo
 
 **L'optimisation supplémentaire.** Puisque la backpropagation calcule les gradients depuis la dernière couche vers la première, les gradients des couches de sortie sont disponibles bien avant ceux des couches d'entrée. On peut donc démarrer le Ring-AllReduce sur les premiers gradients disponibles pendant que les autres sont encore en cours de calcul, chevauchant communication et calcul. Dans les expériences du papier sur un modèle de 300 millions de paramètres, cela permettait d'économiser 70 à 120 ms par itération.
 
-Pour plus de détails, vous pouvez consulter [Bringing HPC Techniques to Deep Learning](../Introduction to PyTorch/baidu_allreduce_oct6.pdf).
+Pour plus de détails, vous pouvez consulter [Bringing HPC Techniques to Deep Learning](https://www.cse.iitd.ac.in/~rijurekha/col730_2022/baidu_allreduce_oct6.pdf).
 
 ---
 

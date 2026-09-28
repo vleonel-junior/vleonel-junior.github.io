@@ -1880,7 +1880,7 @@ In distributed data-parallel training, each GPU computes its own gradients on it
 
 **The extra optimization.** Since backpropagation computes gradients from the last layer to the first, the gradients of the output layers are available well before those of the input layers. We can therefore start the Ring-AllReduce on the first available gradients while the others are still being computed, overlapping communication and computation. In the paper's experiments on a 300-million-parameter model, this saved 70 to 120 ms per iteration.
 
-For more details, see [Bringing HPC Techniques to Deep Learning](../Introduction to PyTorch/baidu_allreduce_oct6.pdf).
+For more details, see [Bringing HPC Techniques to Deep Learning](https://www.cse.iitd.ac.in/~rijurekha/col730_2022/baidu_allreduce_oct6.pdf).
 
 ---
 

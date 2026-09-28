@@ -5,6 +5,8 @@ export interface EducationItem {
     institution: Text;
     year: string;
     description?: Text;
+    /** School logo, shown next to the degree */
+    logo?: string;
 }
 
 export const educationData: EducationItem[] = [
@@ -18,6 +20,7 @@ export const educationData: EducationItem[] = [
             fr: "École Nationale Supérieure de Génie Mathématique et Modélisation (ENSGMM, UNSTIM, Bénin)",
         },
         year: "2022 - 2025",
+        logo: "/images/education/ensgmm.webp",
         description: {
             en: "Specialized in random modeling, statistics, and machine learning.",
             fr: "Spécialisation en modélisation aléatoire, statistiques et machine learning.",
@@ -33,6 +36,7 @@ export const educationData: EducationItem[] = [
             fr: "Institut National Supérieur de Classes Préparatoires aux Études d'Ingénieur (INSPEI / UNSTIM, Bénin)",
         },
         year: "2020 - 2022",
+        logo: "/images/education/inspei.webp",
         description: {
             en: "Intensive training in Mathematics, Physics, and Engineering Sciences.",
             fr: "Formation intensive en mathématiques, physique et sciences de l'ingénieur.",

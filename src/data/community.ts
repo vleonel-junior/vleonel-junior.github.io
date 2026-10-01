@@ -34,8 +34,8 @@ export const communityData: CommunityItem[] = [
     {
         title: "Deep Learning Indaba 2026",
         organization: {
-            en: "Pan-Atlantic University, Lagos (Nigeria) · Participant",
-            fr: "Pan-Atlantic University, Lagos (Nigeria) · Participant",
+            en: "Pan-Atlantic University, Lagos (Nigeria) · In-person participant",
+            fr: "Pan-Atlantic University, Lagos (Nigeria) · Participant en présentiel",
         },
         period: { en: "Aug 2026", fr: "Août 2026" },
         description: {
